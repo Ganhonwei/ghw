@@ -1,0 +1,53 @@
+[2023-04-04 16:00:19:526 INFO SpringContextShutdownHook] o.s.s.c.ExecutorConfigurationSupport(ExecutorConfigurationSupport.java:218) Shutting down ExecutorService 'applicationTaskExecutor'
+[2023-04-04 16:00:40:528 INFO main] o.s.b.StartupInfoLogger(StartupInfoLogger.java:55) Starting GhwEventApplication on ganhonwei with PID 25704 (D:\workSelf\GHW\ghw-event\target\classes started by msdn in D:\workSelf\GHW)
+[2023-04-04 16:00:40:574 INFO main] o.s.b.SpringApplication(SpringApplication.java:651) No active profile set, falling back to default profiles: default
+[2023-04-04 16:00:42:422 INFO main] o.s.b.w.e.t.TomcatWebServer(TomcatWebServer.java:108) Tomcat initialized with port(s): 8080 (http)
+[2023-04-04 16:00:42:433 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Initializing ProtocolHandler ["http-nio-8080"]
+[2023-04-04 16:00:42:435 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting service [Tomcat]
+[2023-04-04 16:00:42:435 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting Servlet engine: [Apache Tomcat/9.0.43]
+[2023-04-04 16:00:42:615 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Initializing Spring embedded WebApplicationContext
+[2023-04-04 16:00:42:616 INFO main] o.s.b.w.s.c.ServletWebServerApplicationContext(ServletWebServerApplicationContext.java:285) Root WebApplicationContext: initialization completed in 1887 ms
+[2023-04-04 16:00:43:700 INFO main] o.s.s.c.ExecutorConfigurationSupport(ExecutorConfigurationSupport.java:181) Initializing ExecutorService 'applicationTaskExecutor'
+[2023-04-04 16:00:44:737 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting ProtocolHandler ["http-nio-8080"]
+[2023-04-04 16:00:44:776 INFO main] o.s.b.w.e.t.TomcatWebServer(TomcatWebServer.java:220) Tomcat started on port(s): 8080 (http) with context path ''
+[2023-04-04 16:00:44:794 INFO main] o.s.b.StartupInfoLogger(StartupInfoLogger.java:61) Started GhwEventApplication in 5.05 seconds (JVM running for 7.479)
+[2023-04-04 16:01:34:225 INFO SpringContextShutdownHook] o.s.s.c.ExecutorConfigurationSupport(ExecutorConfigurationSupport.java:218) Shutting down ExecutorService 'applicationTaskExecutor'
+[2023-04-04 16:01:40:794 INFO main] o.s.b.StartupInfoLogger(StartupInfoLogger.java:55) Starting GhwEventApplication on ganhonwei with PID 12336 (D:\workSelf\GHW\ghw-event\target\classes started by msdn in D:\workSelf\GHW)
+[2023-04-04 16:01:40:797 INFO main] o.s.b.SpringApplication(SpringApplication.java:651) No active profile set, falling back to default profiles: default
+[2023-04-04 16:01:41:737 INFO main] o.s.b.w.e.t.TomcatWebServer(TomcatWebServer.java:108) Tomcat initialized with port(s): 8080 (http)
+[2023-04-04 16:01:41:745 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Initializing ProtocolHandler ["http-nio-8080"]
+[2023-04-04 16:01:41:746 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting service [Tomcat]
+[2023-04-04 16:01:41:746 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting Servlet engine: [Apache Tomcat/9.0.43]
+[2023-04-04 16:01:41:802 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Initializing Spring embedded WebApplicationContext
+[2023-04-04 16:01:41:802 INFO main] o.s.b.w.s.c.ServletWebServerApplicationContext(ServletWebServerApplicationContext.java:285) Root WebApplicationContext: initialization completed in 937 ms
+[2023-04-04 16:01:41:939 INFO main] o.s.s.c.ExecutorConfigurationSupport(ExecutorConfigurationSupport.java:181) Initializing ExecutorService 'applicationTaskExecutor'
+[2023-04-04 16:01:42:305 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting ProtocolHandler ["http-nio-8080"]
+[2023-04-04 16:01:42:325 INFO main] o.s.b.w.e.t.TomcatWebServer(TomcatWebServer.java:220) Tomcat started on port(s): 8080 (http) with context path ''
+[2023-04-04 16:01:42:335 INFO main] o.s.b.StartupInfoLogger(StartupInfoLogger.java:61) Started GhwEventApplication in 2.066 seconds (JVM running for 3.518)
+[2023-04-04 16:07:34:997 INFO SpringContextShutdownHook] o.s.s.c.ExecutorConfigurationSupport(ExecutorConfigurationSupport.java:218) Shutting down ExecutorService 'applicationTaskExecutor'
+[2023-04-04 16:08:03:881 INFO main] o.s.b.StartupInfoLogger(StartupInfoLogger.java:55) Starting GhwEventApplication on ganhonwei with PID 21388 (D:\workSelf\GHW\ghw-event\target\classes started by msdn in D:\workSelf\GHW)
+[2023-04-04 16:08:03:886 INFO main] o.s.b.SpringApplication(SpringApplication.java:651) No active profile set, falling back to default profiles: default
+[2023-04-04 16:08:06:391 INFO main] o.s.b.w.e.t.TomcatWebServer(TomcatWebServer.java:108) Tomcat initialized with port(s): 8080 (http)
+[2023-04-04 16:08:06:446 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Initializing ProtocolHandler ["http-nio-8080"]
+[2023-04-04 16:08:06:447 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting service [Tomcat]
+[2023-04-04 16:08:06:449 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting Servlet engine: [Apache Tomcat/9.0.43]
+[2023-04-04 16:08:06:665 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Initializing Spring embedded WebApplicationContext
+[2023-04-04 16:08:06:666 INFO main] o.s.b.w.s.c.ServletWebServerApplicationContext(ServletWebServerApplicationContext.java:285) Root WebApplicationContext: initialization completed in 2734 ms
+[2023-04-04 16:08:07:576 INFO main] o.s.s.c.ExecutorConfigurationSupport(ExecutorConfigurationSupport.java:181) Initializing ExecutorService 'applicationTaskExecutor'
+[2023-04-04 16:08:08:338 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting ProtocolHandler ["http-nio-8080"]
+[2023-04-04 16:08:08:368 INFO main] o.s.b.w.e.t.TomcatWebServer(TomcatWebServer.java:220) Tomcat started on port(s): 8080 (http) with context path ''
+[2023-04-04 16:08:08:384 INFO main] o.s.b.StartupInfoLogger(StartupInfoLogger.java:61) Started GhwEventApplication in 4.858 seconds (JVM running for 7.417)
+[2023-04-04 16:08:33:203 INFO SpringContextShutdownHook] o.s.s.c.ExecutorConfigurationSupport(ExecutorConfigurationSupport.java:218) Shutting down ExecutorService 'applicationTaskExecutor'
+[2023-04-04 16:08:39:594 INFO main] o.s.b.StartupInfoLogger(StartupInfoLogger.java:55) Starting GhwEventApplication on ganhonwei with PID 38184 (D:\workSelf\GHW\ghw-event\target\classes started by msdn in D:\workSelf\GHW)
+[2023-04-04 16:08:39:598 INFO main] o.s.b.SpringApplication(SpringApplication.java:651) No active profile set, falling back to default profiles: default
+[2023-04-04 16:08:40:451 INFO main] o.s.b.w.e.t.TomcatWebServer(TomcatWebServer.java:108) Tomcat initialized with port(s): 8080 (http)
+[2023-04-04 16:08:40:460 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Initializing ProtocolHandler ["http-nio-8080"]
+[2023-04-04 16:08:40:461 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting service [Tomcat]
+[2023-04-04 16:08:40:461 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting Servlet engine: [Apache Tomcat/9.0.43]
+[2023-04-04 16:08:40:520 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Initializing Spring embedded WebApplicationContext
+[2023-04-04 16:08:40:520 INFO main] o.s.b.w.s.c.ServletWebServerApplicationContext(ServletWebServerApplicationContext.java:285) Root WebApplicationContext: initialization completed in 872 ms
+[2023-04-04 16:08:40:666 INFO main] o.s.s.c.ExecutorConfigurationSupport(ExecutorConfigurationSupport.java:181) Initializing ExecutorService 'applicationTaskExecutor'
+[2023-04-04 16:08:41:082 INFO main] o.a.j.l.DirectJDKLog(DirectJDKLog.java:173) Starting ProtocolHandler ["http-nio-8080"]
+[2023-04-04 16:08:41:101 INFO main] o.s.b.w.e.t.TomcatWebServer(TomcatWebServer.java:220) Tomcat started on port(s): 8080 (http) with context path ''
+[2023-04-04 16:08:41:112 INFO main] o.s.b.StartupInfoLogger(StartupInfoLogger.java:61) Started GhwEventApplication in 1.924 seconds (JVM running for 4.331)
+[2023-04-04 16:09:19:296 INFO SpringContextShutdownHook] o.s.s.c.ExecutorConfigurationSupport(ExecutorConfigurationSupport.java:218) Shutting down ExecutorService 'applicationTaskExecutor'
