@@ -1,0 +1,136 @@
+<div class="row">
+  <div class="col-xs-12">
+    <form class="form-inline" method="post" action="{{urlfor "StatisticsController.StockInfo"}}">
+    <input type="hidden" name="gtype" value="{{.gtype}}" />
+    {{if .isRoom }}
+    <div class="input-group table_filtrate">
+      房间：
+      <div class="input-group input-group-sm">
+        <select name="roomId">
+          {{range $k,$v := .roomList}}
+          <option value="{{$v.Id}}" {{if eq $.roomId $v.Id}}selected{{end}}>{{$v.Name}}</option>
+          {{end}}
+        </select>
+      </div>
+    </div>
+    <div class="input-group input-group-sm">
+      <button type="submit" class="btn">查询</button>
+    </div>
+    {{end}}
+    </form>
+<div class="space-4"></div>
+
+<div class="row" style="width: 1000px;">
+  <div class="col-xs-12 center">
+
+    <!-- <canvas id="online" width="100" height="120"></canvas> -->
+    <canvas id="info"></canvas>
+    <script src="../../assets/js/Chart.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.js"></script> -->
+    <script>
+      var ctx = document.getElementById('info').getContext('2d');
+      var timelabel = {{.TimedLabel}}; // 日期
+      var Data = {{.CashStocks}}; // 彩金库存
+      // var Data1 = {{.BonusStocks}}; // 奖励金库存
+      // var Data2 = {{.CashMingTaxs}}; // 彩金明税
+      // var Data3 = {{.BonusMingTaxs}}; // 奖励金明税
+      // var Data4 = {{.CashAnTaxs}}; // 彩金暗税
+      // var Data5 = {{.BonusAnTaxs}}; // 奖励金暗税
+      var chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+              labels:timelabel,
+              datasets: [{
+                  label: '彩金库存',
+                  data: Data,
+                  backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                  borderColor: 'rgba(0, 123, 255, 1)',
+                  borderWidth: 1
+              }
+              // ,{
+              //     label: '奖励金库存',
+              //     data: Data1,
+              //     backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+              //     borderColor: 'rgba(255, 99, 132, 1)',
+              //     borderWidth: 1
+              // }
+              // ,{
+              //     label: '彩金明税',
+              //     data: Data2,
+              //     backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+              //     borderColor: 'rgba(252, 186, 3, 1)',
+              //     borderWidth: 1
+              // },{
+              //     label: '奖励金明税',
+              //     data: Data3,
+              //     backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+              //     borderColor: 'rgb(20, 252, 3,1)',
+              //     borderWidth: 1
+              // },{
+              //     label: '彩金暗税',
+              //     data: Data4,
+              //     backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+              //     borderColor: 'rgb(115, 3, 252,1)',
+              //     borderWidth: 1
+              // },{
+              //     label: '奖励金暗税',
+              //     data: Data5,
+              //     backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+              //     borderColor: 'rgba(252, 3, 144, 1)',
+              //     borderWidth: 1
+              // }
+            ]
+          },
+          options: {
+              responsive: true,
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      });
+  </script>
+    <!-- <script>
+
+      var ctx = document.getElementById("online");
+
+var online = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+    datasets: [{
+      label: '# of Votes',
+      data: [12, 19, 3, 5, 2, 3],
+      backgroundColor: [
+        'rgba(255, 99, 132, 0.2)',
+        'rgba(54, 162, 235, 0.2)',
+        'rgba(255, 206, 86, 0.2)',
+        'rgba(75, 192, 192, 0.2)',
+        'rgba(153, 102, 255, 0.2)',
+        'rgba(255, 159, 64, 0.2)'
+      ],
+      borderColor: [
+        'rgba(255,99,132,1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)'
+      ],
+      borderWidth: 1
+    }]
+  },
+  options: {
+    scales: {
+      yAxes: [{
+        ticks: {
+          beginAtZero:true
+        }
+      }]
+    }
+  }
+});
+</script> -->
+  </div>
+</div>

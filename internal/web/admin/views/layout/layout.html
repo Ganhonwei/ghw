@@ -1,0 +1,131 @@
+{{.Header}}
+
+<div id="header">
+	{{.Navbar}}
+</div>
+
+<!-- <div id="crumbs">
+	<ul>
+		<li>1</li>
+		<li>2</li>
+		<li>3</li>
+	</ul>
+</div> -->
+
+<div class="main-container" id="main-container">
+	<script type="text/javascript">
+
+		document.addEventListener("DOMContentLoaded", function () {
+			// 获取<select>元素
+			var selectElement = document.getElementById("pagesize_select");
+			if (selectElement) {
+				// 添加事件监听器
+				selectElement.addEventListener("change", function () {
+					// 获取选中的值
+					var selectedValue = selectElement.value;
+					$.post("/admin/main/setpagesize?page=" + selectedValue, function (data) {
+						// 获取 URL 中的查询参数部分
+						var queryString = window.location.search;
+						// 解析查询参数
+						var params = new URLSearchParams(queryString);
+						var paramValue = params.get('page');
+						if (paramValue != null){
+							// 获取当前页面的 URL
+							var currentUrl = window.location.href;
+							// 解析 URL，提取参数
+							var url = new URL(currentUrl);
+							var searchParams = new URLSearchParams(url.search);
+							// 修改 page 参数
+							searchParams.set('page', '1'); // 修改为新的页码
+							// 生成修改后的 URL
+							var newUrl = url.origin + url.pathname + '?' + searchParams.toString();
+							// 重新加载页面
+							window.location.href = newUrl;
+							
+						}else{
+							location.reload();
+						}
+						// 
+					});
+					// 执行需要的操作，例如输出选中的值
+					console.log("Selected value:", selectedValue);
+				});
+			}
+		});
+		function toPage() {
+			var bPageInput = document.getElementById('input_page');
+			var bTotalPage = document.getElementById('total_page');
+			var page = parseInt(bPageInput.value);
+			var totalPages = parseInt(bTotalPage.value);
+			if (isNaN(page) || page < 1 || page > totalPages) {
+				alert("无效的页码！");
+				return;
+			}
+			// 获取当前页面 URL 参数
+			var urlParams = new URLSearchParams(window.location.search);
+			var query = urlParams.toString() ? "?" + urlParams.toString() : "";
+
+			// 构建新的 URL 参数
+			urlParams.set("page", page);
+			var newQuery = urlParams.toString() ? "?" + urlParams.toString() : "";
+
+			// 将新的 URL 参数拼接到当前页面 URL 上，并重新加载页面
+			window.location.href = window.location.pathname + newQuery;
+			// alert(e)
+			// var iframe = document.getElementById('myFrame');
+			// var bPageInput = iframe.contentWindow.document.getElementById('input_page').value;
+			// // var pages = document.getElementById("input_page")
+			// console.log("输入页面："+bPageInput)
+		}
+		try { ace.settings.check('main-container', 'fixed') } catch (e) { }
+	</script>
+
+	<!--左侧菜单-->
+	<div id="sidebar" class="sidebar">
+		{{.Sidebar}}
+	</div>
+	<!--/左侧菜单-->
+
+	<!--页面主体-->
+	<div class="main-content" id="myFrame">
+		<div class="main-content-inner">
+			<div class="breadcrumbs" id="breadcrumbs">
+				<script type="text/javascript">
+					try { ace.settings.check('breadcrumbs', 'fixed') } catch (e) { }
+				</script>
+
+				<ul class="breadcrumb">
+					<li>
+						<i class="ace-icon fa fa-home home-icon"></i>
+						<a href="/{{.admin}}">首页</a>
+					</li>
+					<li class="active">{{.pageTitle}}</li>
+				</ul><!-- /.breadcrumb -->
+
+			</div>
+
+			<div class="page-content">
+				<div class="row">
+					<div class="col-xs-12">
+
+						{{.LayoutContent}}
+
+					</div>
+				</div>
+
+			</div><!-- /.page-content -->
+		</div>
+	</div>
+	<!-- /.main-content -->
+	<!--/页面主体-->
+
+	<a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse">
+		<i class="ace-icon fa fa-angle-double-up icon-only bigger-110"></i>
+	</a>
+</div><!-- /.main-container -->
+
+<div id="contextMenu" class="context-menu">
+	<div class="context-menu-item" data-action="fixLeft">向左固定</div>
+	<div class="context-menu-item" data-action="fixRight">向右固定</div>
+</div>
+{{.Footer}}

@@ -1,0 +1,448 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <div class="tabbable">
+            <ul class="nav nav-tabs" id="list-tab">
+                <li {{if eq .typeId 0}}class="active" {{end}}>
+                    <a href="{{urlfor "StatisticsController.LtvStat" "typeId" 0}}">表格图</a>
+                </li>
+                <li {{if eq .typeId 2}}class="active" {{end}}>
+                    <a href="{{urlfor "StatisticsController.LtvStat" "typeId" 2}}">总汇</a>
+                </li>
+                <li {{if eq .typeId 1}}class="active" {{end}}>
+                    <a href="{{urlfor "StatisticsController.LtvStat" "typeId" 1}}">折线图</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <form class="form-inline" method="post" action="{{urlfor "StatisticsController.LtvStat"}}">
+                            <input type="hidden" name="typeId" value="{{.typeId}}" />
+                            <input type="hidden" name="status" value="{{.status}}" />
+                            <div class="input-group table_filtrate">
+                                渠道类:
+                                <div class="input-group input-group-sm" id="class_div">
+                                    <select id="selectClass" class="selectpicker" multiple data-live-search="true"
+                                        data-width="100px" style="width: 100px !important;" title="请选择渠道类">
+                                        {{range $k,$v := .packageClassAll}}
+                                        <option value="{{$v.Key}}" {{if eq $.classId $v.Key}}selected{{end}}>{{$v.Name}}
+                                        </option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="class_id" name="class_id" value="{{.classId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                渠道别名:
+                                <div class="input-group input-group-sm" id="alias_div">
+                                    <select id="selectAlias" class="selectpicker" multiple data-live-search="true"
+                                        data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                        {{range $k,$v := .packageAliasList}}
+                                        <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}
+                                        </option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                用户类型:
+                                <div class="input-group" id="tabId_div">
+                                    <select id="selectTabId" class="selectpicker" data-live-search="true"
+                                        data-width="120px" style="width: 120px !important;" title="请选择用户类型">
+                                        <option value="0" {{if eq 0 $.tabId}}selected{{end}}>全部</option>
+                                        <option value="1" {{if eq 1 $.tabId}}selected{{end}}>A类</option>
+                                        <option value="2" {{if eq 2 $.tabId}}selected{{end}}>B类</option>
+                                        <option value="3" {{if eq 3 $.tabId}}selected{{end}}>C类</option>
+                                    </select>
+                                    <input type="hidden" id="tab_id" name="tab_id" value="{{.tabId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                日期:
+                                <div class="input-group input-group-sm" style="width: 90px;">
+                                    <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off" style="border-right:0;padding-right:0;" placeholder="开始日期"/>
+                                </div>
+                                <div class="input-group input-group-sm" style="width: 120px;">
+                                    <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off" style="border-left:0;padding-left:0;" placeholder="结束日期"/>
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <button type="submit" class="btn">查询</button>
+                                {{if ne .typeId 1}}
+                                <!-- <a style="margin-left: 5px;" href="{{urlfor "StatisticsController.LtvStatExport" "typeId" .typeId "class_id" .classId "alias_id" .aliasId "start_date" .startDate "end_date" .endDate "tab_id" .tabId}}" class="btn">导出</a> -->
+                                {{end}}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="space-4"></div>
+
+                {{if or (eq .typeId 0) (eq .typeId 2)}}
+                <div class="table-panel">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">时间</th>
+                                <th rowspan="2">新注册数</th>
+                                <th rowspan="2">新设备数</th>
+                                <th rowspan="2">付费用户数</th>
+                                <th rowspan="2">复购率</th>
+                                <th rowspan="2">人均付费次数</th>
+                                <th rowspan="2">复购人数</th>
+                                <th rowspan="2">总充值单数</th>
+                                {{range $i, $ltvDay := .Slice}}
+                                    <th colspan="6" class="f-th-colspan">D{{$ltvDay}} LTV</th>
+                                {{end}}
+                            </tr>
+                            <tr>
+                                {{if eq .typeId 2}}
+                                    {{range $i, $element := .Slice}}
+                                    <th>总充值</th>
+                                    <th>总提现</th>
+                                    <th>总盈利</th>
+                                    <th>与首日盈利比</th>
+                                    <th>总净值</th>
+                                    <th>与首日净值比</th>
+                                    {{end}}
+                                {{else}}
+                                    {{range $i, $element := .Slice}}
+                                    <th>充值平均值</th>
+                                    <th>提现平均值</th>
+                                    <th>盈利</th>
+                                    <th>与首日盈利比</th>
+                                    <th>ltv净值</th>
+                                    <th>与首日净值比</th>
+                                    {{end}}
+                                {{end}}
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {{if eq .typeId 2}}
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <td>{{$v.SDate}}</td>
+                                <td>{{$v.RegUsers}}</td>
+                                <td>{{$v.RegDevices}}</td>
+                                <td>{{$v.PayUsers}}</td>
+                                <td>{{$v.Pay2UsersRate}}</td>
+                                <td>{{$v.PayOrdersAvg}}</td>
+                                <td>{{$v.Pay2Users}}</td>
+                                <td>{{$v.PayOrders}}</td>
+                                {{range $j, $ltv := $v.Ltvs}}
+                                    <td>{{$ltv.Pays}}</td>
+                                    <td>{{$ltv.Withdraws}}</td>
+                                    <td class="profit">{{$ltv.Profit}}</td>
+                                    <td>{{$ltv.ProfitLtv1Rate}}</td>
+                                    <td class="profit2">{{$ltv.NVProfit}}</td>
+                                    <td>{{$ltv.NVProfitLtv1Rate}}</td>
+                                {{end}}
+                            </tr>
+                            {{end}}
+                        {{else}}
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <td>{{$v.SDate}}</td>
+                                <td>{{$v.RegUsers}}</td>
+                                <td>{{$v.RegDevices}}</td>
+                                <td>{{$v.PayUsers}}</td>
+                                <td>{{$v.Pay2UsersRate}}</td>
+                                <td>{{$v.PayOrdersAvg}}</td>
+                                <td>{{$v.Pay2Users}}</td>
+                                <td>{{$v.PayOrders}}</td>
+                                {{range $j, $ltv := $v.Ltvs}}
+                                    <td>{{$ltv.PayAvg}}</td>
+                                    <td>{{$ltv.WithdrawAvg}}</td>
+                                    <td class="profit">{{$ltv.ProfitAvg}}</td>
+                                    <td>{{$ltv.ProfitAvgLtv1Rate}}</td>
+                                    <td class="profit2">{{$ltv.NVProfitAvg}}</td>
+                                    <td>{{$ltv.NVProfitAvgLtv1Rate}}</td>
+                                {{end}}
+                            </tr>
+                            {{end}}
+                        {{end}}
+
+
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                {{else}}
+                <div>
+                    <div id="app">
+                        <el-select size="small" v-model="indicators" placeholder="" multiple  style="width:300px">
+                            <el-option label="充值平均值" :value="1"></el-option>
+                            <el-option label="提现平均值" :value="2"></el-option>
+                            <el-option label="盈利" :value="3"></el-option>
+                            <el-option label="ltv净值" :value="7"></el-option>
+                            <el-option label="总充值" :value="4"></el-option>
+                            <el-option label="总提现" :value="5"></el-option>
+                            <el-option label="总盈利" :value="6"></el-option>
+                            <el-option label="总净值" :value="8"></el-option>
+                        </el-select>
+                        <el-button size="mini" type="primary" plain  @click="redrawLtvStats" style="margin-left:10px;">重绘</el-button>
+                    </div>
+                    <div>
+                        <div id="ltv-stats" style="width:96%;height:500px;margin-top:10px;"></div>
+                    </div>
+                    <script>
+                        var ltvStats = {{.ltvStats}};
+                        var labels = [];
+                        for (let i = 0; i < 90; i++) {
+                            labels.push('ltv'+(i+1));
+                        }
+                    </script>
+                    <script>
+                        new Vue({
+                            delimiters: ['#{', '}'],
+                            el: '#app',
+                            data() {
+                                return {
+                                    indicators: [3],
+                                }
+                            },
+                            created() {
+                                this.redrawLtvStats();
+                            },
+                            methods: {
+                                redrawLtvStats() {
+                                    var series = [];
+                                    var legends = [];
+                                    var legendsSelected = {};
+                                    for (let indicator of this.indicators) {
+                                        var indicatorName = "";
+                                        var indicatorField = "";
+                                        switch (indicator) {
+                                            case 1:
+                                                indicatorName = "充值平均值"; indicatorField = "payAvg"; break;
+                                            case 2:
+                                                indicatorName = "提现平均值"; indicatorField = "withdrawAvg"; break;
+                                            case 3:
+                                                indicatorName = "盈利"; indicatorField = "profitAvg"; break;
+                                            case 4:
+                                                indicatorName = "总充值"; indicatorField = "pays"; break;
+                                            case 5:
+                                                indicatorName = "总提现"; indicatorField = "withdraws"; break;
+                                            case 6:
+                                                indicatorName = "总盈利"; indicatorField = "profit"; break;
+                                            case 7:
+                                                indicatorName = "ltv净值"; indicatorField = "nvProfitAvg"; break;
+                                            case 8:
+                                                indicatorName = "总净值"; indicatorField = "nvProfit"; break;
+                                        }
+                                        // console.log('indicator', indicatorName,  this.indicators)
+
+                                        for (let i = 0; i < ltvStats.length; i++) {
+                                            var stat = ltvStats[i];
+                                            var name = stat.sdate + "-" + indicatorName;
+                                            legends.push(name);
+                                            legendsSelected[name] = i === ltvStats.length-1 && indicator === this.indicators[this.indicators.length-1];
+                                            var serie = {
+                                                name: name,
+                                                type: 'line',
+                                                data: [],
+                                            };
+                                            for (let j = 0; j < stat.ltvs.length; j++) {
+                                                var ltv = stat.ltvs[j];
+                                                if (ltv.future) {
+                                                    break;
+                                                }
+                                                serie.data.push(ltv[indicatorField]);
+                                            }
+                                            series.push(serie);
+                                        }
+                                    }
+                                    drawLtvStats(labels, legends, legendsSelected, series);
+                                    // console.log('redrawLtvStats', series);
+                                }
+                            },
+                        });
+
+                        function drawLtvStats(labels, legends, legendsSelected, series) {
+                            var trendsChart = echarts.init(document.getElementById('ltv-stats'));
+                            trendsChart.clear();
+                            var option = {
+                                xAxis: {
+                                    type: 'category',
+                                    boundaryGap: false,
+                                    data: labels,
+                                },
+                                yAxis: [
+                                    { type: 'value', name: '金额', position: 'left' },
+                                    // { type: 'value', name: '金额', position: 'right', axisLine: { color: '#f00' } }
+                                ],
+                                tooltip: {
+                                    trigger: 'axis'
+                                },
+                                legend: {
+                                    data: legends,
+                                    selected: legendsSelected,
+                                },
+                                grid: {
+                                    left: '3%',
+                                    right: '4%',
+                                    bottom: '3%',
+                                    containLabel: true
+                                },
+                                toolbox: {
+                                    feature: {
+                                    saveAsImage: {}
+                                    }
+                                },
+                                series: series,
+                            };
+                            // option.legend.data.push(data.name);
+                            // data: datas,
+                            trendsChart.setOption(option);
+                        }
+                    </script>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        // $("#selectPackage").on("change", function () {
+        //     var selectVal = $("#selectPackage").val()
+        //     console.log(selectVal)
+        //     $("#package_id").val(selectVal)
+        // });
+        // 渠道别名
+        $("#selectAlias").on("change", function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias：" + selectVal)
+            $("#alias_id").val(selectVal)
+        });
+        // 用户类型
+        $("#selectTabId").on("change", function () {
+            var selectVal = $("#selectTabId").val()
+            $("#tab_id").val(selectVal)
+        });
+
+        // var packVal = $("#package_id").val()
+        // if (packVal != "") {
+
+        //     var arr = packVal.split(",");
+        //     $('#selectPackage').selectpicker({ width: 200 });
+        //     if (arr != null) {
+        //         $("#selectPackage").val(arr)
+        //         $.each(arr, function (index, value) {
+        //             if (value == "0") {
+        //                 arr[index] = "全部";
+        //             }
+        //             if (value == "-") {
+        //                 arr[index] = "其他";
+        //             }
+        //         });
+        //         var str = arr.join(",");
+        //         $('#package_div .filter-option-inner-inner').html(str)
+        //     }
+        // } else {
+        //     $('#selectPackage').selectpicker({ width: 200 });
+        // }
+
+        // 渠道别名
+        var aliasVal = $("#alias_id").val()
+        if (aliasVal != "") {
+            var arr1 = aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr1:" + arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+
+        // 用户类型
+        var tabIdVal = $("#tab_id").val()
+        if (tabIdVal != "") {
+            $('#selectTabId').selectpicker({ width: 200 });
+            $("#selectTabId").val(tabIdVal);
+            var str = tabIdVal == '0' ? '全部' :
+            tabIdVal == '1' ? 'A类' :
+            tabIdVal == '2' ? 'B类' :
+            tabIdVal == '3' ? 'C类' : '其他';
+            $('#tabId_div .filter-option-inner-inner').html(str);
+        } else {
+            $('#selectTabId').selectpicker({ width: 200 });
+        }
+        
+        // 渠道类
+        $("#selectClass").on("change", function () {
+            var selectVal = $("#selectClass").val()
+            console.log("selectClass" + selectVal)
+            $("#class_id").val(selectVal)
+        });
+
+        // 渠道类
+        var classVal = $("#class_id").val()
+        if (classVal) {
+            var arr1 = classVal.split(",");
+            $('#selectClass').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr2:" + arr1)
+                $("#selectClass").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#class_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectClass').selectpicker({ width: 200 });
+        }
+
+    });
+</script>
+<style>
+    .profit{
+        color: 	#EEAD0E;
+    }
+    .profit2{
+        color: 	#FF4400;
+    }
+    .table>thead>tr>.f-th-colspan {
+        /* background-color: antiquewhite; */
+        position: relative;
+    }
+    .table>thead>tr>.f-th-colspan::after {
+        content: "";
+        display: block;
+        width: 1px;
+        height: 100%;
+        position: absolute;
+        right: 0;
+        top: 0;
+        background-color: #b7b7b7;
+    }
+</style>

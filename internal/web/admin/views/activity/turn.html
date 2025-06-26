@@ -1,0 +1,843 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <div class="tabbable">
+            <ul class="nav nav-tabs" id="list-tab">
+                <li {{if eq .typeId 0}}class="active" {{end}}>
+                    <a href="{{urlfor "ActivityController.Turn" "typeId" 0}}">转盘汇总</a>
+                </li>
+                <li {{if eq .typeId 1}}class="active" {{end}}>
+                    <a href="{{urlfor "ActivityController.Turn" "typeId" 1}}">转盘明细</a>
+                </li>
+                <li {{if eq .typeId 2}}class="active" {{end}}>
+                    <a href="{{urlfor "ActivityController.Turn" "typeId" 2}}">转盘审核</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <form id="main-form" class="form-inline" method="post" action="{{urlfor "ActivityController.Turn"}}">
+                            <input type="hidden" name="typeId" value="{{.typeId}}" />
+                            <input type="hidden" name="status" value="{{.status}}" />
+                            {{if ne .typeId 0}}
+                            <div class="input-group table_filtrate">
+                                账号查询:
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+                                        placeholder="玩家ID" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-users"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            {{end}}
+                            <div class="input-group table_filtrate">
+                                渠道类:
+                                <div class="input-group input-group-sm" id="class_div">
+                                    <select id="selectClass" class="selectpicker" multiple data-live-search="true"
+                                        data-width="100px" style="width: 100px !important;" title="请选择渠道类">
+                                        {{range $k,$v := .packageClassAll}}
+                                        <option value="{{$v.Key}}" {{if eq $.classId $v.Key}}selected{{end}}>{{$v.Name}}
+                                        </option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="class_id" name="class_id" value="{{.classId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                渠道别名:
+                                <div class="input-group input-group-sm" id="alias_div">
+                                    <select id="selectAlias" class="selectpicker" multiple data-live-search="true" data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                        {{range $k,$v := .packageAliasList}}
+                                        <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}" class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            {{if ne .typeId 2}}
+                            <div class="input-group table_filtrate">
+                                账号类型:
+                                <div class="input-group input-group-sm">
+                                    <select name="tab_id" id="tab_id" style="width: 80px;">
+                                        <option value="0" {{if eq 0 $.tabId}}selected{{end}}>全部</option>
+                                        <option value="1" {{if eq 1 $.tabId}}selected{{end}}>A类</option>
+                                        <option value="2" {{if eq 2 $.tabId}}selected{{end}}>B类</option>
+                                        <option value="3" {{if eq 3 $.tabId}}selected{{end}}>C类</option>
+                                    </select>
+                                </div>
+                            </div>
+                            {{end}}
+                            <div class="input-group table_filtrate">
+                                玩家类型:
+                                <div class="input-group input-group-sm" id="utype_id_div">
+                                    <select id="sutype_id" class="selectpicker" multiple data-live-search="true">
+                                        {{range $k,$v := .usertype}}
+                                            {{range $k2,$v2 := $v}}
+                                            <option value="{{$k2}}" >{{$v2}}</option>
+                                            {{end}}
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="utype_id" name="utype_id" value="{{.usertypeId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            {{if eq .typeId 2}}
+                            <div class="input-group table_filtrate">
+                                审核状态:
+                                <div class="input-group input-group-sm" id="auditStatus_div">
+                                    <select id="auditStatus_id" class="selectpicker" multiple data-live-search="true">
+                                        <option value="0">全部</option>
+                                        <option value="1">等待人审</option>
+                                        <option value="2">人审拒绝</option>
+                                        <option value="3">人审通过</option>
+                                        <option value="4">机审通过</option>
+                                    </select>
+                                    <input type="hidden" id="auditStatus" name="auditStatus" value="{{.auditStatus}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                奖金类型:
+                                <div class="input-group input-group-sm" id="prizeTypes_id_div">
+                                    <select id="prizeTypes_id" class="selectpicker" multiple data-live-search="true">
+                                        <option value="0">全部</option>
+                                        <option value="1">bonus</option>
+                                        <option value="2">cash</option>
+                                        <option value="3">withdrawable</option>
+                                    </select>
+                                    <input type="hidden" id="prizeTypes" name="prizeTypes" value="{{.prizeTypes}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                审核人:
+                                <div class="input-group input-group-sm" id="auditUsers_id_div">
+                                    <select id="auditUsers_id" class="selectpicker" multiple data-live-search="true">
+                                        <option value="-">全部</option>
+                                        {{range $k,$v := .usernames}}
+                                        <option value="{{$v}}" >{{$v}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="auditUsers" name="auditUsers" value="{{.auditUsers}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            {{end}}
+                            <div class="input-group table_filtrate">
+                                {{if eq .typeId 1}} 日活日期 {{else if eq .typeId 2}} 申请日期 {{else}} 日期 {{end}}:
+                                <div class="input-group input-group-sm" style="width: 90px;">
+                                    <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off" style="border-right:0;padding-right:0;" placeholder="开始日期"/>
+                                </div>
+                                <div class="input-group input-group-sm" style="width: 120px;">
+                                    <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off" style="border-left:0;padding-left:0;" placeholder="结束日期"/>
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            {{if ne .typeId 0}}
+                            <div class="input-group table_filtrate">
+                                {{if eq .typeId 1}} 注册日期: {{else}} 审定日期: {{end}}
+                                <div class="input-group input-group-sm" style="width: 90px;">
+                                    <input type="text" id="start_date2" name="start_date2" value="{{.startDate2}}" class="form-control" autocomplete="off" style="border-right:0;padding-right:0;" placeholder="开始日期"/>
+                                </div>
+                                <div class="input-group input-group-sm" style="width: 120px;">
+                                    <input type="text" id="end_date2" name="end_date2" value="{{.endDate2}}" class="form-control" autocomplete="off" style="border-left:0;padding-left:0;" placeholder="结束日期"/>
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            {{end}}
+                            <div class="input-group input-group-sm">
+                                <button type="submit" class="btn">查询</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="space-4"></div>
+
+                {{if eq .typeId 0}}
+                <!-- 转盘汇总 -->
+                <div class="table-panel" table-wrap="330">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th stickyL>日期</th>
+                                <th>总日活人数</th>
+                                <th>新用户日活</th>
+                                <th>老用户日活</th>
+                                <th>总参与人数</th>
+                                <th>新用户参与人数</th>
+                                <th>老用户参与人数</th>
+                                <th>首次参与总人数</th>
+                                <th>首次参与新用户人数</th>
+                                <th>首次参与老用户人数</th>
+                                <th>中奖人数</th>
+                                <th>当日申请领奖人数</th>
+                                <th>当日申请领奖金额</th>
+                                <th>当日申请且通过的人数</th>
+                                <th>当日申请且通过的金额</th>
+                                <th>当日审核通过总人数</th>
+                                <th>当日审核通过总金额</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>当日发起邀请总人数</th>
+                                <th>发起邀请的新用户人数</th>
+                                <th>发起邀请的老用户人数</th>
+                                <th>当日邀请就成功的邀请者人数</th>
+                                <th>当日新用户邀请且成功的人数</th>
+                                <th>当日老用户邀请且成功的人数</th>
+                                <th>当日邀请截至目前成功的邀请者人数</th>
+                                <th>当日新用户邀请截至目前成功的邀请者人数</th>
+                                <th>当日老用户邀请截至目前成功的邀请者人数</th>
+                                <th>裂变总人数</th>
+                                <th>新用户裂变人数</th>
+                                <th>老用户裂变人数</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>日活参与率</th>
+                                <th>新用户参与率</th>
+                                <th>老用户参与率</th>
+                                <th>日活首次参与率</th>
+                                <th>新用户首次参与率</th>
+                                <th>老用户首次参与率</th>
+                                <th>参与中奖率</th>
+                                <th>中奖后申请率</th>
+                                <th>当日申请且当日通过率</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>参与者总邀请率</th>
+                                <th>参与者新用户邀请率</th>
+                                <th>参与者老用户邀请率</th>
+                                <th>当日邀请者当日总成功率</th>
+                                <th>当日新用户邀请且当日成功的成功率</th>
+                                <th>当日老用户邀请且当日成功的成功率</th>
+                                <th>当日邀请者目前总成功率</th>
+                                <th>当日新用户邀请截至目前成功的成功率</th>
+                                <th>当日老用户邀请截至目前成功的成功率</th>
+                                <th>总参与裂变率</th>
+                                <th>新用户参与裂变率</th>
+                                <th>老用户参与裂变率</th>
+                                <th>总邀请裂变率</th>
+                                <th>新用户邀请裂变率</th>
+                                <th>老用户邀请裂变率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--日期--> <td>{{$v.SDate}}</td> 
+                                <!--总日活人数--> <td>{{$v.LoginedUsers}}</td>
+                                <!--新用户日活--> <td>{{$v.NewLoginedUsers}}</td>
+                                <!--老用户日活--> <td>{{$v.OldLoginedUsers}}</td>
+                                <!--总参与人数--> <td>{{$v.TurnUsers}}</td>
+                                <!--新用户参与人数--> <td>{{$v.NewTurnUsers}}</td>
+                                <!--老用户参与人数--> <td>{{$v.OldTurnUsers}}</td>
+                                <!--首次参与总人数--> <td>{{$v.FirstTurnUsers}}</td>
+                                <!--首次参与新用户人数--> <td>{{$v.FirstNewTurnUsers}}</td>
+                                <!--首次参与老用户人数--> <td>{{$v.FirstOldTurnUsers}}</td>
+                                <!--中奖人数--> <td>{{$v.PrizeUsers}}</td>
+                                <!--当日申请领奖人数--> <td>{{$v.TackPrizeUsers}}</td>
+                                <!--当日申请领奖金额--> <td>{{$v.TackPrizes}}</td>
+                                <!--当日申请且通过的人数--> <td>{{$v.TackPassPrizeUsers}}</td>
+                                <!--当日申请且通过的金额--> <td>{{$v.TackPassPrizes}}</td>
+                                <!--当日审核通过总人数--> <td>{{$v.PassPrizeUsers}}</td>
+                                <!--当日审核通过总金额--> <td>{{$v.PassPrizes}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--当日发起邀请总人数--> <td>{{$v.LaunchInviters}}</td>
+                                <!--发起邀请的新用户人数--> <td>{{$v.LaunchNewInviters}}</td>
+                                <!--发起邀请的老用户人数--> <td>{{$v.LaunchOldInviters}}</td>
+                                <!--当日邀请就成功的邀请者人数--> <td>{{$v.InvitedInviters}}</td>
+                                <!--当日新用户邀请且成功的人数--> <td>{{$v.InvitedNewInviters}}</td>
+                                <!--当日老用户邀请且成功的人数--> <td>{{$v.InvitedOldInviters}}</td>
+                                <!--当日邀请截至目前成功的邀请者人数--> <td>{{$v.NowInvitedInviters}}</td>
+                                <!--当日新用户邀请截至目前成功的邀请者人数--> <td>{{$v.NowInvitedNewInviters}}</td>
+                                <!--当日老用户邀请截至目前成功的邀请者人数--> <td>{{$v.NowInvitedOldInviters}}</td>
+                                <!--裂变总人数--> <td>{{$v.ShareUsers}}</td>
+                                <!--新用户裂变人数--> <td>{{$v.NewInviterShareUsers}}</td>
+                                <!--老用户裂变人数--> <td>{{$v.OldInviterShareUsers}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--日活参与率--> <td>{{$v.LoginTurnRate}}</td>
+                                <!--新用户参与率--> <td>{{$v.NewUserTurnRate}}</td>
+                                <!--老用户参与率--> <td>{{$v.OldUserTurnRate}}</td>
+                                <!--日活首次参与率--> <td>{{$v.LoginFirstTurnRate}}</td>
+                                <!--新用户首次参与率--> <td>{{$v.NewUserFirstTurnRate}}</td>
+                                <!--老用户首次参与率--> <td>{{$v.OldUserFirstTurnRate}}</td>
+                                <!--参与中奖率--> <td>{{$v.PrizeTurnRate}}</td>
+                                <!--中奖后申请率--> <td>{{$v.TackPrizeRate}}</td>
+                                <!--当日申请且当日通过率--> <td>{{$v.TackPrizePassRate}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--参与者总邀请率--> <td>{{$v.TurnUserInviteRate}}</td>
+                                <!--参与者新用户邀请率--> <td>{{$v.TurnNewUserInviteRate}}</td>
+                                <!--参与者老用户邀请率--> <td>{{$v.TurnOldUserInviteRate}}</td>
+                                <!--当日邀请者当日总成功率--> <td>{{$v.InviterInvitedRate}}</td>
+                                <!--当日新用户邀请且当日成功的成功率--> <td>{{$v.NewInviterInvitedRate}}</td>
+                                <!--当日老用户邀请且当日成功的成功率--> <td>{{$v.OldInviterInvitedRate}}</td>
+                                <!--当日邀请者目前总成功率--> <td>{{$v.InviterNowInvitedRate}}</td>
+                                <!--当日新用户邀请截至目前成功的成功率--> <td>{{$v.NewInviterNowInvitedRate}}</td>
+                                <!--当日老用户邀请截至目前成功的成功率--> <td>{{$v.OldInviterNowInvitedRate}}</td>
+                                <!--总参与裂变率--> <td>{{$v.ShareUsersRate}}</td>
+                                <!--新用户参与裂变率--> <td>{{$v.NewInviterShareUsersRate}}</td>
+                                <!--老用户参与裂变率--> <td>{{$v.OldInviterShareUsersRate}}</td>
+                                <!--总邀请裂变率--> <td>{{$v.ShareInviterRate}}</td>
+                                <!--新用户邀请裂变率--> <td>{{$v.NewShareInviterRate}}</td>
+                                <!--老用户邀请裂变率--> <td>{{$v.OldShareInviterRate}}</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                {{else if eq .typeId 1}}
+                <!-- 转盘明细 -->
+                <div class="table-panel" table-wrap="330">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th stickyL>UID</th>
+                                <th>渠道类</th>
+                                <th>渠道</th>
+                                <th>账号类型</th>
+                                <th>注册时间</th>
+                                <th>最后登录时间</th>
+                                <th>存活天数</th>
+                                <th>流失天数</th>
+                                <th>VIP等级</th>
+                                <th>玩家类型</th>
+                                <th>玩家总充值</th>
+                                <th>玩家总提现</th>
+                                <th>总经历轮数</th>
+                                <th>总参与轮数</th>
+                                <th>总邀请来人数</th>
+                                <th>总邀请来付费人数</th>
+                                <th>总邀请来付费金额</th>
+                                <th>总邀请来提现金额</th>
+                                <th>总邀请来人的贡献</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>总申请领奖轮数</th>
+                                <th>申请已通过的轮数</th>
+                                <th>已领到总金额</th>
+                                <th>已领到总bonus</th>
+                                <th>已领到总cash</th>
+                                <th>已领到总withdrawable</th>
+                                <th>总奖金roi</th>
+                                <th>bonus roi</th>
+                                <th>cash roi</th>
+                                <th>withdrawable roi</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>参与轮均邀请来人数</th>
+                                <th>参与轮均邀请来付费人数</th>
+                                <th>申请轮均邀请来人数</th>
+                                <th>申请轮均邀请来付费人数</th>
+                                <th>参与率</th>
+                                <th>参与中奖率</th>
+                                <th>中奖通过率</th>
+                                <th>总邀请来付费率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--UID--> <td>{{$v.Userid}}</td>
+                                <!--渠道类--> <td>{{$v.ChannelClass}}</td>
+                                <!--渠道--> <td>{{$v.ChannelId}}</td>
+                                <!--账号类型--> <td>{{$v.RegistArea}}</td>
+                                <!--注册时间--> <td>{{$v.Ctime}}</td>
+                                <!--最后登录时间--> <td>{{$v.LoginTime}}</td>
+                                <!--存活天数--> <td>{{$v.LiveDays}}</td>
+                                <!--流失天数--> <td>{{$v.LoseDays}}</td>
+                                <!--VIP等级--> <td>{{$v.VipLv}}</td>
+                                <!--玩家类型--> <td>{{$v.FUserType}}</td>
+                                <!--玩家总充值--> <td>{{$v.Pays}}</td>
+                                <!--玩家总提现--> <td>{{$v.Withdraws}}</td>
+                                <!--总经历轮数--> <td>{{$v.Turns}}</td>
+                                <!--总参与轮数--> <td>{{$v.DrawTurns}}</td>
+                                <!--总邀请来人数--> <td>{{$v.InviteUsers}}</td>
+                                <!--总邀请来付费人数--> <td>{{$v.InviteUsersPayed}}</td>
+                                <!--总邀请来付费金额--> <td>{{$v.InviteUsersPays}}</td>
+                                <!--总邀请来提现金额--> <td>{{$v.InviteUsersWithdraws}}</td>
+                                <!--总邀请来人的贡献--> <td>{{$v.InviteUsersContribute}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--总申请领奖轮数--> <td>{{$v.TackPrizeTurns}}</td>
+                                <!--申请已通过的轮数--> <td>{{$v.TackPrizePassTurns}}</td>
+                                <!--已领到总金额--> <td>{{$v.TackPrizePassScore}}</td>
+                                <!--已领到总bonus--> <td>{{$v.TackPrizePassBonus}}</td>
+                                <!--已领到总cash--> <td>{{$v.TackPrizePassCash}}</td>
+                                <!--已领到总withdrawable--> <td>{{$v.TackPrizePassWithdrawable}}</td>
+                                <!--总奖金roi--> <td>{{$v.ScoreRoi}}</td>
+                                <!--bonus roi--> <td>{{$v.BonusRoi}}</td>
+                                <!--cash roi--> <td>{{$v.CashRoi}}</td>
+                                <!--withdrawable roi--> <td>{{$v.WithdrawableRoi}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--参与轮均邀请来人数--> <td>{{$v.DrawTurnInviteUsersAvg}}</td>
+                                <!--参与轮均邀请来付费人数--> <td>{{$v.DrawTurnInviteUsersPayedAvg}}</td>
+                                <!--申请轮均邀请来人数--> <td>{{$v.TackPrizeTurnInviteUsersAvg}}</td>
+                                <!--申请轮均邀请来付费人数--> <td>{{$v.TackPrizeTurnInviteUsersPayedAvg}}</td>
+                                <!--参与率--> <td>{{$v.TurnRate}}</td>
+                                <!--参与中奖率--> <td>{{$v.TackPrizeRate}}</td>
+                                <!--中奖通过率--> <td>{{$v.TackPrizePassRate}}</td>
+                                <!--总邀请来付费率--> <td>{{$v.InviteUsersPayedRate}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="row-page"> 
+                        {{if gt .count 20}}
+                            {{str2html .pageBar}}
+                        {{end}}
+                    </div>
+                </div>
+                {{else if eq .typeId 2}}
+                <!-- 转盘审核 -->
+                <div class="table-panel" table-wrap="330">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <select id="rowsSelector"
+                                        data-width="60px" style="width:60px !important;margin-right:10px;" title="选择操作">
+                                        <option value="0"><span style="color: #ccc;"></span></option>
+                                        <option value="1">全选</option>
+                                        <option value="2">清空</option>
+                                        <option class="rowsSelectorOptReverse" value="3">反选</option>
+                                    </select>
+                                </th>
+                                <th stickyL>UID</th>
+                                <th>渠道类</th>
+                                <th>渠道</th>
+                                <th>账号类型</th>
+                                <th>注册时间</th>
+                                <th>最后登录时间</th>
+                                <th>存活天数</th>
+                                <th>流失天数</th>
+                                <th>VIP等级</th>
+                                <th>玩家类型</th>
+                                <th>玩家总打码</th>
+                                <th>玩家总充值</th>
+                                <th>玩家总提现</th>
+                                <th>本轮邀请来人数</th>
+                                <th>本轮邀请来人id</th>
+                                <th>本轮邀请来付费人数</th>
+                                <th>本轮邀请来付费金额</th>
+                                <th>奖金金额</th>
+                                <th>奖金类型</th>
+                                <th>当前是总的第几轮</th>
+                                <th>当前是第几次申请</th>
+                                <th>审核状态</th>
+                                <th>备注</th>
+                                <th>申请时间</th>
+                                <th>审定时间</th>
+                                <th>审核人</th>
+                                <th stickyR>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr {{if eq $v.State 0}}class="highlight"{{end}}>
+                                <td>
+                                    {{if eq $v.Userid "汇总"}}{{else}}
+                                    <input type="checkbox" group="withdraws" name="withdraw" 
+                                        style="width:15px;height:15px;"
+                                        class="withdraw_checkbox" value="{{$v.Id}}" userid="{{$v.Userid}}" state={{$v.State}} />
+                                    {{end}}
+                                </td>
+                                <!--UID--> <td>{{$v.Userid}}</td>
+                                <!--渠道类--> <td>{{$v.ChannelClass}}</td>
+                                <!--渠道--> <td>{{$v.ChannelId}}</td>
+                                <!--账号类型--> <td>{{$v.RegistArea}}</td>
+                                <!--注册时间--> <td>{{$v.Ctime}}</td>
+                                <!--最后登录时间--> <td>{{$v.LoginTime}}</td>
+                                <!--存活天数--> <td>{{$v.LiveDays}}</td>
+                                <!--流失天数--> <td>{{$v.LoseDays}}</td>
+                                <!--VIP等级--> <td>{{$v.VipLv}}</td>
+                                <!--玩家类型--> <td>{{$v.UserType}}</td>
+                                <!--玩家总打码--> <td>{{$v.UserBets}}</td>
+                                <!--玩家总充值--> <td>{{$v.Pays}}</td>
+                                <!--玩家总提现--> <td>{{$v.Withdraws}}</td>
+                                <!--本轮邀请来人数--> <td>{{$v.TurnInvites}}</td>
+                                <!--本轮邀请来人id--> 
+                                <td>
+                                    {{range $k1,$userid := $v.TurnUserids}}
+                                    <a href="{{urlfor "Statistics2Controller.PlayerData" "userid" $userid}}" target="_blank">{{$userid}}</a>,
+                                    {{end}}
+                                </td>
+                                <!--本轮邀请来付费人数--> <td>{{$v.TurnInvitesPayed}}</td>
+                                <!--本轮邀请来付费金额--> <td>{{$v.TurnInvitesPays}}</td>
+                                <!--奖金金额--> <td>{{$v.Prize}}</td>
+                                <!--奖金类型--> <td>{{$v.PrizeType}}</td>
+                                <!--当前是总的第几轮--> <td>{{$v.TurnNo}}</td>
+                                <!--当前是第几次申请--> <td>{{$v.TackPrizeNo}}</td>
+                                <!--审核状态--> <td>{{$v.Status}}</td>
+                                <!--备注--> 
+                                <td>
+                                    {{range $index, $msg := $v.Remarks}}
+                                    <p>{{$msg}}</p>
+                                    {{end}}
+                                    {{if $.isOperation }}
+                                        {{if eq $v.Userid "汇总"}}{{else}}
+                                        <div><a class="orange2" onclick="TurnPrizeTag(this)" title="{{$v.Id}}">标记</a></div>
+                                        {{end}}
+                                    {{end}}
+                                </td>
+                                <!--申请时间--> <td>{{$v.SubmitTime}}</td>
+                                <!--审定时间--> <td>{{$v.AuditTime}}</td>
+                                <!--审核人--> <td>{{$v.AuditUser}}</td>
+                                <td style="min-width: 120px;">
+                                {{if $.isOperation }}
+                                    {{if eq $v.State 0}}
+                                        {{if eq $v.Userid "汇总"}}
+                                            <span class="green" onclick="RowsSelectorAll()" style="cursor:pointer;">全选</span>
+                                            |
+                                            <a class="green" onclick="TurnPrizeAudit(this, true, 1)">通过</a>
+                                            |
+                                            <a class="red" onclick="TurnPrizeAudit(this, true, 2)">拒绝</a>
+                                        {{else}}
+                                            <a class="green" onclick="TurnPrizeAudit(this, false, 1)" title="{{$v.Id}}" userid="{{$v.Userid}}">通过</a>
+                                            |
+                                            <a class="red" onclick="TurnPrizeAudit(this, false, 2)" title="{{$v.Id}}" userid="{{$v.Userid}}">拒绝</a>
+                                        {{end}}
+                                    {{end}}
+                                {{end}}
+                                </td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="row-page"> 
+                        {{if gt .count 20}}
+                            {{str2html .pageBar}}
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.highlight {
+    background-color: #f1f5a4 !important;
+}
+</style>
+<script>
+    $(function() {
+        $("#selectPackage").on("change",function () {
+            var selectVal = $("#selectPackage").val()
+            console.log(selectVal)
+            $("#package_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change",function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias："+selectVal)
+            $("#alias_id").val(selectVal)
+        });
+
+        // 渠道类
+        $("#selectClass").on("change", function () {
+            var selectVal = $("#selectClass").val()
+            console.log("selectClass" + selectVal)
+            $("#class_id").val(selectVal)
+        });
+        
+        // 账号类型
+        $("#selectTabId").on("change", function () {
+            var selectVal = $("#selectTabId").val()
+            $("#tab_id").val(selectVal)
+        });
+
+        var packVal =  $("#package_id").val()
+        if (packVal){
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+        // 渠道别名
+        var aliasVal =  $("#alias_id").val()
+        if (aliasVal){
+            var arr1= aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null){
+                console.log("arr1:"+arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function(index, value) {
+                    if (value == "0"){
+                        arr1[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr1[index] = "其他"; 
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+
+        // 渠道类
+        var classVal = $("#class_id").val()
+        if (classVal) {
+            var arr1 = classVal.split(",");
+            $('#selectClass').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr2:" + arr1)
+                $("#selectClass").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#class_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectClass').selectpicker({ width: 200 });
+        }
+        
+        // 用户类型
+        $("#sutype_id").on("change", function () {
+            var selectVal = $("#sutype_id").val()
+            console.log("sutype_id：" + selectVal)
+            $("#utype_id").val(selectVal)
+        });
+        var utype_id = $("#utype_id").val()
+        if (!utype_id) {
+            utype_id = "0";
+        }
+        $('#sutype_id').selectpicker({ width: 120 });
+        console.log('utype_id', utype_id)
+        var utypeids = utype_id.split(",");
+        var utypes = {0: "全部", 10: "新手", 1: "平民", 2: "普R",3: "小R",4: "中R",5: "大R",6: "超大R"};
+        var utypeNames = [];
+        for (let i = 0; i < utypeids.length; i++) {
+            var utypeid = utypeids[i];
+            $(`#sutype_id option[value=${utypeid}]`).attr("selected", true);
+
+            var name = utypes[utypeid];
+            utypeNames.push(name);
+        }
+        var str = utypeNames.join(", ");
+        $('#utype_id_div .filter-option-inner-inner').html(str)
+
+        // 审核状态
+        $("#auditStatus_id").on("change", function () {
+            var selectVal = $("#auditStatus_id").val()
+            console.log("auditStatus_id：" + selectVal)
+            $("#auditStatus").val(selectVal)
+        });
+        var auditStatus = $("#auditStatus").val()
+        if (!auditStatus) {
+            auditStatus = "0";
+        }
+        $('#auditStatus_id').selectpicker({ width: 120 });
+        console.log('auditStatus_id', auditStatus)
+        var auditStatuss = auditStatus.split(",");
+        var auditStatusM = {0: "全部", 1: "等待人审", 2: "人审拒绝",3: "等待通过",4: "机审通过"};
+        var auditStatusNames = [];
+        for (let i = 0; i < auditStatuss.length; i++) {
+            var status = auditStatuss[i];
+            $(`#auditStatus_id option[value=${status}]`).attr("selected", true);
+
+            var name = auditStatusM[status];
+            auditStatusNames.push(name);
+        }
+        var str = auditStatusNames.join(", ");
+        $('#auditStatus_div .filter-option-inner-inner').html(str)
+
+        // 奖金类型
+        $("#prizeTypes_id").on("change", function () {
+            var selectVal = $("#prizeTypes_id").val()
+            console.log("prizeTypes_id: " + selectVal)
+            $("#prizeTypes").val(selectVal)
+        });
+        var prizeTypes = $("#prizeTypes").val()
+        if (!prizeTypes) {
+            prizeTypes = "0";
+        }
+        $('#prizeTypes_id').selectpicker({ width: 120 });
+        console.log('prizeTypes', prizeTypes)
+        var prizeTypess = prizeTypes.split(",");
+        var prizeTypesM = {0: "全部", 1: "bonus", 2: "cash",3: "withdrawable"};
+        var prizeTypesNames = [];
+        for (let i = 0; i < prizeTypess.length; i++) {
+            var prizeType = prizeTypess[i];
+            $(`#prizeTypes_id option[value=${prizeType}]`).attr("selected", true);
+
+            var name = prizeTypesM[prizeType];
+            prizeTypesNames.push(name);
+        }
+        var str = prizeTypesNames.join(", ");
+        $('#prizeTypes_id_div .filter-option-inner-inner').html(str)
+
+        // 审核人
+        $("#auditUsers_id").on("change", function () {
+            var selectVal = $("#auditUsers_id").val()
+            console.log("auditUsers_id" + selectVal)
+            $("#auditUsers").val(selectVal)
+        });
+        var auditUsers = $("#auditUsers").val()
+        if (!auditUsers) {
+            auditUsers = "0";
+        }
+        $('#auditUsers_id').selectpicker({ width: 120 });
+        console.log('auditUsers', auditUsers)
+        var auditUserss = auditUsers.split(",");
+        var auditUserNames = [];
+        for (let i = 0; i < auditUserss.length; i++) {
+            var username = auditUserss[i];
+            $(`#auditUsers_id option[value=${username}]`).attr("selected", true);
+            if (username === "-") {
+                auditUserNames.push("全部");
+            } else {
+                auditUserNames.push(username);
+            }
+        }
+        var str = auditUserNames.join(", ");
+        $('#auditUsers_id_div .filter-option-inner-inner').html(str)
+        
+    })
+</script>
+<script type="text/javascript">
+    $(function() {
+        $("#rowsSelector").on("change", function(e) {
+			// console.log('change', e.target.value)
+			var opt = e.target.value;
+			if (opt == '1') {
+				// console.log("全选")
+				$(".withdraw_checkbox").prop("checked", true)
+
+			} else if (opt == '2') {
+				// console.log("清空")
+				$(".withdraw_checkbox").prop("checked", false)
+
+			} else if (opt != '0') {
+				// console.log("反选");
+				$(".rowsSelectorOptReverse").remove();
+				$("#rowsSelector").append($(`<option class="rowsSelectorOptReverse" value="${Date.now()}">反选</option>`))
+				
+				$(".withdraw_checkbox").each(function(i, ele) {
+					if ($(ele).prop("checked")) {
+						$(ele).prop("checked", false);
+					} else {
+						$(ele).prop("checked", true);
+					}
+				})
+			}
+		})
+    });
+
+    // 审核全选
+    function RowsSelectorAll() {
+        $(`.withdraw_checkbox[state="0"]`).prop("checked", true)
+    }
+   
+	// 审核
+	function TurnPrizeAudit(element, batch, state) {
+        var stateName = state === 1 ? "通过" : "拒绝";
+		var orderId = "";
+        var userid = "";
+		if (batch) { // 批量
+			var orders = getCheckedOrders();
+			if (!orders.orderids) {
+				alert(`请选择要${stateName}的订单`);
+				return
+			}
+			orderId = orders.orderids;
+            userid = orders.userids; 
+		} else {
+			orderId = element.getAttribute('title');
+            userid = element.getAttribute('userid');
+		}
+		
+		if (confirm("是否审核"+ stateName + userid + "的提现订单？")) {
+			$.post(`/admin/activity/turnaudit?id=${orderId}&state=${state}`, function(data) {
+				// 将查询结果填充到模态框中
+				if (data.status == 0) {
+					// 操作成功，刷新页面
+					location.reload();
+				} else {
+					alert(data.msg)
+					location.reload();
+				}
+			});
+		}
+	}
+
+    function TurnPrizeTag(element) {
+		var prizeId = element.getAttribute('title');
+		var tag = prompt('请输入标记信息', '');
+		if (tag) {
+			element.classList.toggle("highlight");
+            console.log('turnPrizeTag', prizeId, tag)
+
+			$.post("/admin/activity/turntag?id=" + prizeId + "&tag=" + tag, function(data){
+				console.log(data);
+				if (data.status === 0) {
+					$("#main-form").submit();
+				} else {
+					alert(data.msg);
+                }
+			});
+		}
+	}
+
+	function getCheckedOrders() {
+		var orderids = [];
+		var userids = [];
+		$(".withdraw_checkbox").each((i, ele) => {
+			if (ele.checked) {
+				// console.log(ele.checked, ele.value, ele.getAttribute('userid'))
+				orderids.push(ele.value);
+				var userid = ele.getAttribute('userid');
+				if (userids.indexOf(userid) < 0) {
+					userids.push(userid);
+				}
+			}
+		})
+		return {orderids: orderids.join(","), userids: userids.join(",")};
+	}
+</script>
+  
+<style>
+    .profit{
+        color: 	#EEAD0E;
+    }
+</style>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.typeId}}) });
+</script>

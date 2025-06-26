@@ -1,0 +1,275 @@
+<div class="row">
+	<div class="col-xs-12">
+	</div>
+</div>
+
+<div class="space-4"></div>
+
+<div class="row">
+	<div class="col-xs-12">
+
+		{{if .flash.error}}
+		<div class="alert alert-danger alert-dismissible fade in" role="alert">
+			{{.flash.error}}
+		</div>
+		{{end}}
+		{{if .flash.success}}
+		<div class="alert alert-warning alert-dismissible fade in" role="alert">
+			{{.flash.success}}
+		</div>
+		<script>$(".alert").fadeOut(2000);</script>
+		{{end}}
+
+		<form class="form-inline" method="post" action="{{urlfor "PlayerController.PlayList"}}">
+			<input type="hidden" name="status" value="{{.status}}" />
+			<div class="input-group table_filtrate">
+				查询:
+				<div class="input-group input-group-sm">
+					<input type="text" id="id" name="id" value="{{.id}}" class="form-control"
+						placeholder="" autocomplete="off" />
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-users"></i>
+					</span>
+				</div>
+			</div>
+            <div class="input-group table_filtrate">
+				<div class="input-group input-group-sm">
+					<select name="type_id" id="type_id">
+						{{range $k,$v := .typeList}}
+						<option value="{{$k}}" {{if eq $.typeId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+            <div class="input-group table_filtrate">
+                游戏:
+				<div class="input-group input-group-sm">
+					<select name="record_id" id="record_id" onchange="getSubcategories()">
+						{{range $k,$v := .recordList}}
+						<option value="{{$k}}" {{if eq $.recordId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+                房间:
+				<div class="input-group input-group-sm">
+					<!-- <select name="room_id" id="room_id">
+						<option value="0">全部</option>
+					</select> -->
+					<select name="room_id" id="room_id">
+						{{range $k,$v := .roomList}}
+						<option value="{{$v.Id}}" {{if eq $.roomId $v.Id}}selected{{end}}>{{$v.Id}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+                用户类型:
+				<div class="input-group input-group-sm">
+					<select name="utype_id" id="utype_id">
+						{{range $k,$v := .usertype}}
+						<option value="{{$k}}" {{if eq $.usertypeId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				时间:
+				<div class="input-group input-group-sm">
+					<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off" />
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+				至
+				<div class="input-group input-group-sm">
+					<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group input-group-sm">
+				<button type="submit" class="btn">查询</button>
+			</div>
+</form>
+<div class="space-4"></div>
+
+
+<div class="table-panel" table-wrap="280">
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+			<tr>
+				<th>所在游戏</th>
+				<th>房间ID</th>
+				<th>玩家ID</th>
+				<th>交易前携带</th>
+				<th>下注</th>
+				<th>中奖</th>
+				<th>结算(-tax)</th>
+				<th>交易后携带</th>
+				<th>控制模型</th>
+				<th>开始时间</th>
+				<th>结束时间</th>
+				<th stickyR>操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td colspan="20">
+					<span style="margin-right: 10px;">条件对局:{{.info.Number}}</span>
+					<span style="margin-right: 10px;">玩家胜局:{{.info.WinNumber}}</span>
+					<span style="margin-right: 10px;">玩家负局:{{.info.LoseNumber}}</span>
+					<span style="margin-right: 10px;">玩家平局:{{.info.TieNumber}}</span>
+					<span style="margin-right: 10px;">玩家综合收益:{{ printf "%.2f" .info.Revenue}}</span>
+					<span style="margin-right: 10px;">胜局结算均值:{{ printf "%.2f" .info.WinAvg}}</span>
+					<span style="margin-right: 10px;">胜局结算中位数:{{ printf "%.2f" .info.WinMedian}}</span>
+					<span style="margin-right: 10px;">胜局结算众数:{{.info.WinMode}}</span>
+					<span style="margin-right: 10px;">败局结算均值:{{ printf "%.2f" .info.LoseAvg}}</span>
+					<span style="margin-right: 10px;">败局结算中位数:{{ printf "%.2f" .info.LoseMedian}}</span>
+					<span>败局结算众数:{{ .info.LoseMode}}</span>
+				</td>
+			</tr>
+			{{range $k, $v := .list}}
+			<tr {{if $v.IsScore }}
+			class="win-back" 
+		{{else}}
+			class="lose-back" 
+		{{end}}>
+				<td>{{$v.GtypeName}}</td>
+				<td>{{$v.RoomId}}</td>
+				<td>
+					{{if eq $v.FPlayerIds ""}}
+					--
+					{{else}}
+						<a href="{{urlfor "Statistics2Controller.PlayerData" "userid" $v.FPlayerIds}}" target="_blank">{{$v.FPlayerIds}}</a>
+					{{end}}
+				</td>
+				<td>{{$v.FBeforeScore}}</td>
+				<td>{{$v.FBet}}</td>
+				<td>{{$v.FWin}}</td>
+				<td>
+					{{$v.FScore}}
+					{{if ne $v.RMGameOverReason 0}}
+					<br/>
+					{{if eq $v.RMGameOverReason 1}}
+						<span>天胡</span>
+					{{else if eq $v.RMGameOverReason 2}}
+						<span>摸胡</span>
+					{{else if eq $v.RMGameOverReason 3}}
+						<span>吃胡</span>
+					{{else if eq $v.RMGameOverReason 4}}
+						<span>投降</span>
+					{{end}}
+					{{end}}
+				</td>
+				<td>{{$v.FAfterScore}}</td>
+				{{if eq $v.Gtype 2}}
+					<td>{{$v.FControl}}</td>
+				{{else}}
+				<td>{{$v.FControl}}</td>
+				{{end}}
+				<td>{{date $v.STime "Y-m-d H:i:s"}}</td>
+				<td>
+					{{ if $v.ETime.IsZero }}
+					- <!-- 默认值为空时展示默认格式的时间 -->
+					{{ else }}
+					{{ date $v.ETime "Y-m-d H:i:s" }} <!-- 不为空时展示时间字段的值 -->
+					{{ end }}
+				</td>
+				{{if $.isOperation }}
+					<td>
+						{{if ne  $v.Players ""}}
+						{{ if or (eq $v.Gtype 1) (eq $v.Gtype 13) }}
+						<!-- 打开TP对局详情 -->
+						<a href="{{urlfor "PlayerController.TpDetails" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{else if eq $v.Gtype 2}}
+					<!-- 龙虎斗 对局详情 -->
+					<a href="{{urlfor "PlayerController.DtDetails" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{ else if eq $v.Gtype 3}}
+					<!-- 7UPDOWN 对局详情 -->
+					<a href="{{urlfor "PlayerController.UpDetails" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{ else if or (eq $v.Gtype 4) (eq $v.Gtype 12)}}
+					<!-- RUMMY 对局详情 -->
+					<a href="{{urlfor "PlayerController.RmDetails" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{else if eq $v.Gtype 5}}
+					<!-- AK47对局详情 -->
+					<a href="{{urlfor "PlayerController.Ak47Details" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{else if eq $v.Gtype 6}}
+					<!-- Joker对局详情 -->
+					<a href="{{urlfor "PlayerController.JokerDetails" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{ else if or (eq $v.Gtype 7) (eq $v.Gtype 10)}}
+					<!-- CRASH 对局详情 -->
+					<a href="{{urlfor "PlayerController.CrashDetails" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{ else if eq $v.Gtype 8}}
+					<!-- ANDARBAHAR 对局详情 -->
+					<a href="{{urlfor "PlayerController.ABDetails" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{ else if eq $v.Gtype 9}}
+					<!-- 彩票 对局详情 -->
+					<a href="{{urlfor "PlayerController.CPDetails" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{ else if eq $v.Gtype 11}}
+					<!-- 红黑大战 对局详情 -->
+					<a href="{{urlfor "PlayerController.RBDetails" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{ else if eq $v.Gtype 14}}
+					<!-- MINES 对局详情 -->
+					<a href="{{urlfor "PlayerController.MINESDetails" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{ else }}
+					<!-- 外接对局详情 -->
+					<a href="{{urlfor "PlayerController.ExternalDetails" "id" $v.WaterId "userid" $.id "type_id" $.typeId "record_id" $.recordId "room_id" $.roomId "start_date" $.startDate "end_date" $.endDate}}">详情</a>
+					{{ end }}
+					{{end}}
+					</td>
+				{{ end }}
+			</tr>
+			{{end}}
+			{{if eq .count 0}}
+			<tr>
+				<td colspan="20">暂无记录...</td>
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+</div>
+<div class="row">
+	<div class="row-page"> 
+		{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+</div>
+</div>
+<script>
+	function getSubcategories() {
+            var categoryID = document.getElementById("record_id").value;
+            $.ajax({
+                url: "/admin/player/getgameroom",
+                type: "POST",
+                data: { gtype: categoryID },
+                success: function(response) {
+                    var options = "";
+					console.log("response:"+JSON.stringify(response))
+                    response.forEach(function(subcategory) {
+                        options += "<option value='" + subcategory.id + "'>" + subcategory.id + "</option>";
+                    });
+                    $("#room_id").html(options);
+                },
+                error: function() {
+                    console.log("Error fetching subcategories.");
+                }
+            });
+        }
+</script>
+<style>
+	.win-back{
+		background-color: #FBDAE3 !important;
+	}
+	.lose-back{
+		background-color: #CBF0ED !important;
+	}
+</style>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

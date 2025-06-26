@@ -1,0 +1,602 @@
+<div id="app" >
+    
+    <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+        <el-tab-pane label="用户信息" name="sessions">
+            <div class="args-wrap">
+                <el-form ref="args" :model="sessionsArgs" label-width="auto" :inline="true">
+                    <el-form-item label="账号查询:" style="margin-right:0">
+                        <el-input size="small" v-model="sessionsArgs.userid" placeholder="玩家ID" style="width:160px"></el-input>
+                    </el-form-item>
+                    <el-form-item label="分配客服:" style="margin-right:0;">
+                        <el-select v-model="sessionsArgs.customer" style="width:160px;">
+                            <el-option label="全部" :value="''"></el-option>
+                            <el-option v-for="item in sessionsCustomers"
+                                :key="item.id"
+                                :label="item.customerName"
+                                :value="item.id">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="沟通状态:" style="margin-right: 28px;">
+                        <el-select v-model="sessionsArgs.status" style="width:120px;">
+                            <el-option label="全部" :value="0"></el-option>
+                            <el-option label="未查看" :value="1"></el-option>
+                            <el-option label="已查看" :value="2"></el-option>
+                            <el-option label="已结束" :value="3"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="日期:">
+                        <el-date-picker
+                            v-model="sessionsArgs.timeRange"
+                            value-format="yyyy-MM-dd"
+                            size="small"
+                            style="width:220px"
+                            type="daterange"
+                            range-separator=""
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期">
+                        </el-date-picker>
+                    </el-form-item>
+                    <el-form-item>
+                      <el-button size="small" type="primary" :loading="loading.sessions" @click="onSessionsArgsSubmit">查询</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+            <el-table :data="sessions" row-key="id" size="small" border  class="go-table"
+                v-loading="loading.sessions">
+                <el-table-column v-for="c in sessionColumns" v-if="!c.hidden" :key="c.prop" :prop="c.prop" :label="c.label"
+                    :fixed="c.fixed" :sortable="c.sortable" :min-width="c.minWidth" :sort-method="c.sortMethod" :show-overflow-tooltip="c.showOverflowTooltip">
+                    <template slot-scope="scope">
+                        <template v-if="c.prop === 'status'">
+                            <span style="color: red" v-if="scope.row.status === 1">未查看</span>
+                            <span style="color: orange" v-else-if="scope.row.status === 2">已查看</span>
+                            <span style="color: green" v-else-if="scope.row.status === 3">已结束</span>
+                            <span style="color: green" v-else>--</span>
+                        </template>
+                        <template v-else-if="c.prop === 'latestMsg'">
+                            <el-tooltip class="item" effect="dark" :content="scope.row.latestMsg.content" placement="top-start">
+                                <div v-if="scope.row.latestMsg" style="width: 160px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
+                                    <span v-if="scope.row.latestMsg.reply" style="font-style: italic;">[#{scope.row.latestMsg.senderName}]: </span>
+                                    <span v-if="scope.row.latestMsg.ctype == 0">#{scope.row.latestMsg.content}</span>
+                                    <span v-else-if="scope.row.latestMsg.ctype == 1" style="font-style: italic;">[图片]:#{scope.row.latestMsg.filename}</span>
+                                    <span v-else-if="scope.row.latestMsg.ctype == 2" style="font-style: italic;">[视频]:#{scope.row.latestMsg.filename}</span>
+                                    <span v-else-if="scope.row.latestMsg.ctype == 3" style="font-style: italic;">[PDF]:#{scope.row.latestMsg.filename}</span>
+                                    <span v-else style="font-style: italic;">[文件]:#{scope.row.latestMsg.filename}</span>
+                                </div>
+                            </el-tooltip>
+                        </template>
+                        <template v-else-if="c.prop === 'latestMsgTime'">
+                            <div v-if="scope.row.latestMsg">#{scope.row.latestMsg.ctime}</div>
+                        </template>
+                        <template v-else-if="c.prop === 'customer'">
+                            <el-select :value="scope.row.customer" 
+                                @change="handleSessionCustomerChange($event, scope.row.userid, scope.row.sessionId2)"
+                                :disabled="scope.row.status == 3" 
+                                :placeholder="scope.row.customerName || '请选择'">
+                                <el-option
+                                    v-for="item in sessionsCustomers"
+                                    :key="item.id"
+                                    :label="item.customerName"
+                                    :value="item.id">
+                                </el-option>
+                            </el-select>
+                        </template>
+                        <template v-else>#{scope.row[c.prop]}</template>
+                      </template>
+                </el-table-column>
+            </el-table>
+            <div class="paging-wrap">
+                <el-pagination
+                background
+                layout="total, sizes, prev, pager, next, jumper"
+                :current-page="sessionsArgs.page"
+                :page-sizes="sessionsArgs.pageSizes"
+                :page-size="sessionsArgs.pageSize"
+                :total="sessionsTotal"
+                :hide-on-single-page="true"
+                @size-change="handleSessionsSizeChange"
+                @current-change="handleSessionsCurrentChange">
+                </el-pagination>
+            </div>
+        </el-tab-pane>
+
+        <el-tab-pane label="个人状态" name="customers">
+            <div class="args-wrap" style="display: flex;">
+                <el-form ref="args" label-width="auto" :inline="true">
+                    <el-form-item>
+                        <el-button size="small" type="primary" :loading="loading.customers" @click="fetchCustomers">查询</el-button>
+                        <el-button size="small" style="margin-left:0" @click="customerDialogVisible = true">新增</el-button>
+                        <el-button size="small" style="margin-left:10px" :loading="loading.customers" :disabled="selectCustomers.length === 0" @click="handleCustomerOpenChange(0)">离线</el-button>
+                        <el-button size="small" style="margin-left:0" :loading="loading.customers" :disabled="selectCustomers.length === 0" @click="handleCustomerOpenChange(1)">在线</el-button>
+                    </el-form-item>
+                </el-form>
+
+                <el-form ref="args2" label-width="auto" :inline="true" style="margin-left: 20px;">
+                    <el-form-item label="分单逻辑" :required="true">
+                        <el-select size="small" v-model="customerSetting.seatDispatch" placeholder="" style="width:190px">
+                        <el-option label="自动" :value="0"></el-option>
+                        <el-option label="当前未完成对话数最少" :value="1"></el-option>
+                        <el-option label="当日累积总对话数" :value="2"></el-option>
+                        <el-option label="手动" :value="3"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button size="small" :loading="loading.customerSeatDispatch" 
+                            @click="handleCustomerDispatchEdit"
+                            :disabled="customerSetting.prevSeatDispatch == customerSetting.seatDispatch"
+                        >保存</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+            
+            <el-table :data="customers" row-key="id" size="small" border  class="go-table"
+                v-loading="loading.customers"
+                @selection-change="handleCustomersSelectionChange"
+            >
+                <el-table-column
+                    type="selection"
+                    width="55">
+                </el-table-column>
+                <el-table-column v-for="c in customerColumns" v-if="!c.hidden" :key="c.prop" :prop="c.prop" :label="c.label"
+                    :fixed="c.fixed" :sortable="c.sortable" :min-width="c.minWidth" :sort-method="c.sortMethod" :show-overflow-tooltip="c.showOverflowTooltip">
+                    <template slot-scope="scope">
+                        <template v-if="c.prop === 'operate'">
+                            <el-switch :value="scope.row.open"
+                                @change="handleCustomerSwitchChange($event, scope.row.id, scope.row.customerName)"
+                                :inactive-text="scope.row.open ? '在线' : '离线'" active-color="#13ce66" inactive-color="#ff4949">
+                            </el-switch>
+                        </template>
+                        <template v-else>#{scope.row[c.prop]}</template>
+                      </template>
+                </el-table-column>
+            </el-table>
+        </el-tab-pane>
+
+        <el-tab-pane label="客服表现" name="customerStats">
+            <div class="args-wrap" style="display: flex;">
+                <el-form ref="args" :model="customerStatsArgs" label-width="auto" :inline="true">
+                    <el-form-item label="账号查询:" style="margin-right:0">
+                        <el-input size="small" v-model="customerStatsArgs.userid" placeholder="玩家ID" style="width:160px"></el-input>
+                    </el-form-item>
+                    <el-form-item label="分配客服:" style="margin-right:0;">
+                        <el-select v-model="customerStatsArgs.customer" style="width:160px;">
+                            <el-option label="全部" :value="''"></el-option>
+                            <el-option v-for="item in sessionsCustomers"
+                                :key="item.id"
+                                :label="item.customerName"
+                                :value="item.id">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="日期:">
+                        <el-date-picker
+                            v-model="customerStatsArgs.timeRange"
+                            value-format="yyyy-MM-dd"
+                            size="small"
+                            style="width:220px"
+                            type="daterange"
+                            range-separator=""
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期">
+                        </el-date-picker>
+                    </el-form-item>
+                    <el-form-item>
+                      <el-button size="small" type="primary" :loading="loading.sessions" @click="fetchCustomerExpStats">查询</el-button>
+                      <el-button size="small" :loading="loading.sessions" @click="handleDispatchStats">查看对话分配占比</el-button>
+                      <el-button size="small" :loading="loading.sessions" @click="handleReplyRateStats">查看消息应答情况</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+            <el-table :data="customerStats" row-key="id" size="small" border  class="go-table"
+                v-loading="loading.customerStats"
+            >
+                <el-table-column v-for="c in customerStatsColumns" v-if="!c.hidden" :key="c.prop" :prop="c.prop" :label="c.label"
+                    :fixed="c.fixed" :sortable="c.sortable" :min-width="c.minWidth" :sort-method="c.sortMethod" :show-overflow-tooltip="c.showOverflowTooltip">
+                    <template slot-scope="scope">
+                        <template v-if="c.prop === 'operate'">
+                            <el-switch :value="scope.row.open"
+                                @change="handleCustomerSwitchChange($event, scope.row.id, scope.row.customerName)"
+                                :inactive-text="scope.row.open ? '在线' : '离线'" active-color="#13ce66" inactive-color="#ff4949">
+                            </el-switch>
+                        </template>
+                        <template v-else>#{scope.row[c.prop]}</template>
+                      </template>
+                </el-table-column>
+            </el-table>
+        </el-tab-pane>
+    </el-tabs>
+
+    <el-dialog title="新增客服" :visible.sync="customerDialogVisible" class="channel-edit">
+        <el-form label-width="auto">
+          <el-form-item label="选择客服账号" :required="true">
+            <el-select size="small" v-model="customerAddId" placeholder="" style="width:180px">
+              <el-option v-for="u in uncustomerUsers" :key="u.id" :label="u.userName" :value="u.id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer" style="text-align: center;">
+          <el-button size="small" @click="customerDialogVisible = false">取 消</el-button>
+          <el-button size="small" type="primary" :loading="loading.customerAdd" @click="handleAddCustomers">新增</el-button>
+        </div>
+    </el-dialog>
+
+    <el-dialog title="对话分配占比" :visible.sync="dispatchStatsPieDialogVisible">
+        <div id="dispatchStatsPie" style="min-width:500px; height:380px;"></div>
+        <div slot="footer" class="dialog-footer" style="text-align: center;">
+            <el-button size="small" @click="dispatchStatsPieDialogVisible = false">取 消</el-button>
+        </div>
+    </el-dialog>
+
+    <el-dialog title="消息应答情况" :visible.sync="replyRateStatsDialogVisible">
+        <div id="replyStatsBar" style="min-width:700px; height:550px;"></div>
+        <div slot="footer" class="dialog-footer" style="text-align: center;">
+            <el-button size="small" @click="replyRateStatsDialogVisible = false">取 消</el-button>
+        </div>
+    </el-dialog>
+</div>
+
+<script>
+	new Vue({
+		delimiters: ['#{', '}'],
+		el: '#app',
+		data() {
+			return {
+                activeTab: "sessions",
+                loading: {
+                    customers: false, // 个人信息页
+                    customerAdd: false,
+                    customerSeatDispatch: false,
+                    sessions: false,
+                    customerStats: false,
+                },
+                customers: [],
+                customerSetting: {
+                    seatDispatch: -1,
+                    prevSeatDispatch: -1,
+                },
+                uncustomerUsers: [],
+                customerAddId: '',
+                customerDialogVisible: false,
+                customerColumns: [
+                    // { prop: "id", label: "客服ID", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "customerName", label: "客服名称", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "operate", label: "坐席状态", fixed: false, sortable: false, minWidth: '80px' },       
+                ],
+                selectCustomers:[],
+
+                // 用户信息
+                sessionsArgs: {
+                    page: 1,
+                    pageSize: 20,
+                    pageSizes: [20, 40, 50, 100, 200],
+                    timeRange: null,
+                    userid: '',
+                    customer: '',
+                    status: 0,
+                },
+                sessions: [],
+                sessionsCustomers: [],
+                sessionsTotal: 0,
+                sessionColumns: [
+                    { prop: "ctime", label: "日期", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "userid", label: "用户id", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "username", label: "昵称", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "vipLv", label: "vip等级", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "status", label: "沟通状态", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "latestMsg", label: "最近消息", fixed: false, sortable: false, minWidth: '180px' },
+                    { prop: "latestMsgTime", label: "最后消息时间", fixed: false, sortable: false, minWidth: '158px' },
+                    { prop: "customer", label: "分配客服", fixed: false, sortable: false, minWidth: '138px' },
+                ],
+
+                // 客服表现
+                customerStats: [],
+                customerStatsArgs: {
+                    timeRange: null,
+                    userid: '',
+                    customer: '',
+                },
+                customerStatsColumns: [
+                    { prop: "sdate", label: "日期", fixed: false, sortable: false, minWidth: '198px' },
+                    { prop: "customerName", label: "客服姓名", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "seatTime", label: "在班时长", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "sessions", label: "分配对话数", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "endSessions", label: "已完成对话", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "replyRate", label: "应答率", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "endRate", label: "完成率", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "sessionsTimeAvg", label: "单次对话平均时长（s）", fixed: false, sortable: false, minWidth: '158px' },
+                    { prop: "replyTimeAvg", label: "首次回复平均时效（s）", fixed: false, sortable: false, minWidth: '158px' },
+                    { prop: "scoreAvg", label: "好评度（1-100%）", fixed: false, sortable: false, minWidth: '138px' },
+                ],
+                dispatchStatsPieDialogVisible: false,
+                replyRateStatsDialogVisible: false,
+                dispatchStats: [],
+                replyRateStats: {
+                    customers: [],
+                    endRateDatas: [],
+                    replyRateDatas: [],
+                },
+			}
+		},
+		created() {
+            this.fetchData();
+		},
+		methods: {
+            handleTabClick(tab) {
+                console.log('tab click:', tab.name)
+                this.fetchData();
+                // if (tab.name === 'customers') {
+                //     this.fetchCustomers();
+                // }
+                // if (tab.name === 'messages') {
+                //     // todo 页数初始化
+                //     this.fetchUserSessions();
+                // }
+            },
+            fetchData() {
+                if (this.activeTab === 'customers') {
+                    this.fetchCustomers();
+                } else if (this.activeTab === 'sessions') {
+                    // todo 页数初始化
+                    this.fetchUserSessions();
+                } else if (this.activeTab === 'customerStats') {
+                    this.fetchCustomerExpStats();
+                }
+            },
+            getCustomerExpStatsTitle() {
+                var title = '';
+                if (this.customerStatsArgs.userid) {
+                    title += '用户ID: ' + this.customerStatsArgs.userid;
+                }
+                if (this.customerStatsArgs.timeRange) {
+                    if (title) {
+                        title += " "
+                    }
+                    title += this.customerStatsArgs.timeRange[0] + "~" + this.customerStatsArgs.timeRange[1];
+                }
+                return title;
+            },
+            handleDispatchStats() {
+                var title = this.getCustomerExpStatsTitle();
+                this.dispatchStatsPieDialogVisible = true;
+                var option = {
+                    title: {
+                        text: title,
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b} : {c} ({d}%)'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left'
+                    },
+                    series: [
+                        {
+                            name: '对话分配占比',
+                            type: 'pie',
+                            radius: '50%',
+                            data: this.dispatchStats,
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            }
+                        }
+                    ]
+                };
+                setTimeout(() => {
+                    var chart = echarts.init(document.getElementById('dispatchStatsPie'));
+                    chart.setOption(option);
+                }, 300);
+            },
+            handleReplyRateStats() {
+                var title = this.getCustomerExpStatsTitle();
+                this.replyRateStatsDialogVisible = true;
+                var option = {
+                    title: {
+                        text: title,
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        },
+                    },
+                    legend: {},
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'value',
+                        boundaryGap: [0, 0.01]
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: this.replyRateStats.customers,
+                    },
+                    series: [
+                        {
+                            name: '应答率',
+                            type: 'bar',
+                            data: this.replyRateStats.replyRateDatas,
+                            color: '#eb6b1d',
+                        },
+                        {
+                            name: '完成率',
+                            type: 'bar',
+                            data: this.replyRateStats.endRateDatas,
+                            color: '#ffb385',
+                        },
+                    ]
+                };
+                setTimeout(() => {
+                    var chart = echarts.init(document.getElementById('replyStatsBar'));
+                    chart.setOption(option);
+                }, 300);
+            },
+            // 客服表现
+            fetchCustomerExpStats() {
+                if (this.customerStatsArgs.timeRange) {
+                    this.customerStatsArgs.stime = this.customerStatsArgs.timeRange[0];
+                    this.customerStatsArgs.etime = this.customerStatsArgs.timeRange[1];
+                }
+                this.loading.customerStats = true;
+				fetchPOST(`/admin/message/customermanager?action=CustomerExpStats`, this.customerStatsArgs)
+				.then(res => {
+                    this.customerStats = res.data.stats || [];
+                    this.sessionsCustomers = res.data.customers || [];
+                    this.customerStatsArgs.timeRange = [res.data.stime, res.data.etime];
+                    this.dispatchStats = res.data.dispatchStats || [];
+                    this.replyRateStats = res.data.rateStats && res.data.rateStats.customers ? res.data.rateStats : {
+                        customers: [],
+                        endRateDatas: [],
+                        replyRateDatas: [],
+                    };
+					console.log('expStats', res);
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.loading.customerStats = false;
+				});
+            },
+            fetchUserSessions() {
+                if (this.sessionsArgs.timeRange) {
+                    this.sessionsArgs.stime = this.sessionsArgs.timeRange[0];
+                    this.sessionsArgs.etime = this.sessionsArgs.timeRange[1];
+                }
+				this.loading.sessions = true;
+				fetchPOST(`/admin/message/customermanager?action=UserSessions&page=${this.sessionsArgs.page}&pageSize=${this.sessionsArgs.pageSize}`, this.sessionsArgs)
+				.then(res => {
+                    this.sessions = res.data.sessions;
+                    this.sessionsTotal = res.data.total;
+                    this.sessionsCustomers = res.data.customers;
+                    this.sessionsArgs.timeRange = [res.data.stime, res.data.etime];
+					console.log('sessions', res);
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.loading.sessions = false;
+				});
+            },
+            handleSessionsSizeChange(pageSize) {
+                this.sessionsArgs.pageSize = pageSize;
+                this.fetchUserSessions();
+            },
+            handleSessionsCurrentChange(page) {
+                this.sessionsArgs.page = page;
+                this.fetchUserSessions();
+            },
+            // 修改会话客服
+            handleSessionCustomerChange(customerId, userid, sessionId2) {
+                var customer = this.sessionsCustomers.find(item => item.id == customerId);
+                console.log(customerId, userid, sessionId2, customer);
+                this.$confirm(`确认要修改${userid}对话客服为${customer.customerName}吗`, '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    fetchGET(`/admin/message/customermanager?action=SetSessionsCustomer&userid=${userid}&sessionId=${sessionId2}&customer=${customerId}&customerName=${customer.customerName}`)
+                    .then(res => {
+                        this.fetchUserSessions();
+                    }).catch(err => {
+                        this.$message({type: 'error', message: `${err.msg}`});
+                    }).finally(() => {});
+                }).catch(() => { });
+            },
+            onSessionsArgsSubmit() {
+                this.fetchUserSessions();
+            },
+			fetchCustomers() {
+				this.loading.customers = true;
+				fetchGET(`/admin/message/customermanager?action=ListCustomerSeat`)
+				.then(res => {
+                    this.customers = res.data.customers || [];
+                    this.customerSetting = res.data.setting;
+                    this.customerSetting.prevSeatDispatch = res.data.setting.seatDispatch;
+                    this.uncustomerUsers = res.data.uncustomerUsers || [];
+					console.log('sessions', res);
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.loading.customers = false;
+				});
+			},
+            handleAddCustomers() {
+                this.loading.customerAdd = true;
+				fetchGET(`/admin/message/customermanager?action=AddCustomerSeat&customer=${this.customerAddId}`)
+				.then(res => {
+                    this.customerAddId = '';
+                    this.customerDialogVisible = false;
+					this.$message({type: 'success', message: `新增客服成功`});
+                    this.fetchCustomers();
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.loading.customerAdd = false;
+				});
+            },
+            handleCustomerSwitchChange(checked, customer, customerName) {
+                var msg = `${checked ? '在线' : '离线'}[${customerName}]`;
+                this.$confirm(`确认要${msg}吗`, '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    fetchGET(`/admin/message/customermanager?action=OpenCustomerSeat&customers=${customer}&open=${checked ? 1 : 0}`)
+                        .then(res => {
+                            this.fetchCustomers();
+                        }).catch(err => {
+                            this.$message({ type: 'error', message: `${err.msg}` });
+                        }).finally(() => {});
+                }).catch(() => { });
+            },
+            // 多选在线离线
+            handleCustomersSelectionChange(rows) {
+                this.selectCustomers = rows.map(row => row.id);
+            },
+            handleCustomerOpenChange(open) {
+                var customers = this.selectCustomers.join(',');
+                console.log('customers', customers)
+                var msg = `${open ? '在线' : '离线'}`;
+                this.$confirm(`确认要批量设置${msg}吗`, '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    fetchGET(`/admin/message/customermanager?action=OpenCustomerSeat&customers=${customers}&open=${open}`)
+                        .then(res => {
+                            this.fetchCustomers();
+                        }).catch(err => {
+                            this.$message({ type: 'error', message: `${err.msg}` });
+                        }).finally(() => {});
+                }).catch(() => { });
+            },
+            // 
+            // 分单逻辑配置修改
+            handleCustomerDispatchEdit() {
+                fetchGET(`/admin/message/customermanager?action=SeatDispatchEdit&dispatch=${this.customerSetting.seatDispatch}`)
+                    .then(res => {
+                        this.fetchCustomers();
+                    }).catch(err => {
+                        this.$message({ type: 'error', message: `${err.msg}` });
+                    }).finally(() => {});
+            },
+		}
+	});
+</script>
+
+<style>
+    #app .el-switch__label.is-active {
+      color: #303133;
+    }
+    
+    #app .el-switch.switch-loading .el-switch__core::before {
+      content: ".....";
+    }
+</style>

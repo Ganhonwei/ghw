@@ -1,0 +1,31 @@
+groups:
+- name: game-alert-rule
+  rules:
+  - alert: 节点宕机
+    expr: sum by (job) (up) == 0
+    for: 10s
+    labels:
+      severity: critical
+    annotations:
+      description: "节点{{ $labels.job }} {{ $labels.instance }}宕机"
+  - alert: CPU使用率过高
+    expr: round(sum by (job) (rate(node_cpu_seconds_total{mode="system"}[5m])) * 100, 0.01) > 80
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "实例{{ $labels.job }} {{ $labels.instance }}CPU使用率 {{ $value }}%"
+  - alert: 内存使用率过高
+    expr: round((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes)/node_memory_MemTotal_bytes * 100, 0.01) > 80
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "实例{{ $labels.job }} {{ $labels.instance }}内存使用率 {{ $value }}%"
+  - alert: 硬盘使用率过高
+    expr: round((node_filesystem_size_bytes {mountpoint ="/"} - node_filesystem_free_bytes {mountpoint ="/"}) / node_filesystem_size_bytes {mountpoint ="/"} * 100, 0.01) > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "实例{{ $labels.job }} {{ $labels.instance }}硬盘使用率 {{ $value }}%"

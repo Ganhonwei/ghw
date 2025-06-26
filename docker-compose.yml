@@ -1,0 +1,88 @@
+version: "3.1"
+
+networks:
+  game:
+     external: false
+
+services:
+  mongodb:
+    image: mongo:3.6
+    container_name: game-mongo
+    restart: always
+    # command: mongod --auth
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongodb:/data/db
+    networks:
+      - game
+    
+  mongodb_admin:
+    image: mongo:3.6
+    container_name: game-mongodb
+    restart: always
+    ports:
+      - "27019:27017"
+    volumes:
+      - ./mongodb_admin:/data/db
+    networks:
+      - game
+
+  redis:
+    image: redis:4
+    container_name: "redis4"
+    restart: always
+    ports:
+      - 6379:6379
+    volumes: 
+      - ./redis:/data
+    networks:
+      - game
+
+  nsqlookupd:
+    image: nsqio/nsq
+    command: /nsqlookupd
+    ports:
+      - "4160:4160"
+      - "4161:4161"
+  nsqd:
+    image: nsqio/nsq
+    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
+    depends_on:
+      - nsqlookupd
+    ports:
+      - "4150:4150"
+      - "4151:4151"
+  nsqadmin:
+    image: nsqio/nsq
+    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+    depends_on:
+      - nsqlookupd  
+    ports:
+      - "4171:4171"
+  nats:
+    container_name: nats
+    image: nats:2.9-alpine
+    command: -js -p 4222 -m 4221 # --auth 123456
+    ports:
+      - "4221"
+      - "4222:4222"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./nats-storage:/tmp/nats/jetstream
+    networks:
+      - game
+  # mysql:
+  #   image: mysql:5.7.35
+  #   container_name: "mysql"
+  #   environment:
+  #     MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+  #   restart: always
+  #   ports:
+  #     - 3306:3306
+  #   volumes:
+  #     - ./mysql:/var/lib/mysql
+  #     - ./bin/conf/my.cnf:/etc/mysql/my.cnf
+  #   networks:
+  #     - game

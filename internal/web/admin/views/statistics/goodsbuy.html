@@ -1,0 +1,110 @@
+<div class="row">
+	<div class="col-xs-12">
+		<form class="form-inline" method="post" action="{{urlfor "StatisticsController.GoodsBuy"}}">
+			
+            <div class="input-group table_filtrate">
+				时间:
+				<div class="input-group input-group-sm">
+					<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+				至
+				<div class="input-group input-group-sm">
+					<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+			</div>
+            <div class="input-group table_filtrate">
+                玩家类型:
+                <div class="input-group input-group-sm">
+                    <select name="player_id">
+                        {{range $k,$v := .playerList}}
+                        <option value="{{$k}}" {{if eq $.playerid $k}}selected{{end}}>{{$v}}</option>
+                        {{end}}
+                    </select>
+                </div>
+            </div>
+			<div class="input-group input-group-sm">
+				<button type="submit" class="btn">查询</button>
+			</div>
+        </form>
+<div class="space-4"></div>
+
+<div class="table-panel" table-wrap="280">
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+        <tr>
+            <th>时间</th>
+            <th>商品类型</th>
+            <th>商品名称</th>
+            <th>金额</th>
+            <th>总拉单</th>
+            <th>成功单</th>
+            <th>成功率</th>
+            <th>拉起人数</th>
+            <th>成功购买人数</th>
+            <th>占比率</th>
+        </tr>
+        </thead>
+    <tbody>
+        {{range $k, $v := .list}}
+            <tr>
+                <td>{{date $v.SDate "Y-m-d"}}</td>
+                <td>
+					{{if eq $v.ShopType 1}}
+					<span class="bigger-110">商城直充</span>
+					{{else if eq $v.ShopType 2}}
+					<span class="bigger-110 ">入门礼包</span>
+					{{else if eq $v.ShopType 3}}
+					<span class="bigger-110 ">金银铜卡</span>
+					{{else if eq $v.ShopType 4}}
+					<span class="bigger-110 ">首充</span>
+					{{else if eq $v.ShopType 5}}
+					<span class="bigger-110 ">局内充值</span>
+                    {{else if eq $v.ShopType 6}}
+					<span class="bigger-110 ">限时礼包</span>
+                    {{else if eq $v.ShopType 7}}
+					<span class="bigger-110 ">破产礼包</span>
+					{{else if eq $v.ShopType 8}}
+					<span class="bigger-110 ">签到充值</span>
+					{{else if eq $v.ShopType 9}}
+					<span class="bigger-110 ">自定义充值</span>
+					{{else}}
+					<span class="bigger-110 ">--</span>
+					{{end}}
+				</td>
+                <td>{{$v.ShopName}}</td>
+                <td>{{ printf "%.2f" $v.FAmount}}</td>
+                <td>{{$v.TotalPullOrder}}</td>
+                <td>{{$v.SuccessfulOrder}}</td>
+                <td>{{ printf "%.2f" $v.SuccessfulOrderRatio}}%</td>
+                <td>{{$v.PullNumber}}</td>
+                <td>{{$v.BuyNumber}}</td>
+				<td>{{ printf "%.2f" $v.ZBRatio}}%</td>
+            </tr>
+            {{end}}
+            {{if eq .count 0}}
+            <tr>
+                <td colspan="20">暂无记录...</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+<div class="row">
+	<div class="row-page"> 
+		{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+</div>
+</div>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

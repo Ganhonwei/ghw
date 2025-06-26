@@ -1,0 +1,242 @@
+<div class="row">
+	<div class="col-xs-12">
+		{{if .isOperation }}
+		<a href="{{urlfor "GameController.SystemEdit" "stype" .stype}}" class="btn btn-sm btn-default"><i
+				class="fa fa-plus"></i> 编辑</a>
+		{{end}}
+	</div>
+</div>
+
+<div class="space-4"></div>
+
+<div class="row">
+	<div class="col-xs-12">
+		<ul class="nav nav-tabs" id="list-tab">
+			<li {{if eq .stype 0}}class="active" {{end}} {{if eq $.isPersonnel true }} style="display: none !important;" {{end}}>
+				<a href="{{urlfor "GameController.SystemList" "stype" 0}}">游戏图标</a>
+			</li>
+			<li {{if eq .stype 1}}class="active" {{end}} {{if eq $.isPersonnel true }} style="display: none !important;" {{end}}>
+				<a href="{{urlfor "GameController.SystemList" "stype" 1}}">活动图标</a>
+			</li>
+			<!-- <li {{if eq .stype 3}}class="active" {{end}}>
+				<a href="{{urlfor "GameController.SystemList" "stype" 3}}">支付设置</a>
+			</li> -->
+			<li {{if eq .stype 4}}class="active" {{end}} {{if eq $.isPersonnel true }} style="display: none !important;" {{end}}>
+				<a href="{{urlfor "GameController.SystemList" "stype" 4}}">控制设置</a>
+			</li>
+			<li {{if eq .stype 5}}class="active" {{end}} {{if eq $.isPersonnel true }} style="display: none !important;" {{end}}>
+				<a href="{{urlfor "GameController.SystemList" "stype" 5}}">邮件提醒</a>
+			</li>
+		</ul>
+		{{if eq .stype 5}}
+		<div class="tabbable">
+			<div class="tab-content">
+				<form class="form-inline ajax-form" method="post" action="{{urlfor "GameController.EmailSettings"}}">
+					<input type="hidden" name="id" value="{{.sysInfo.Id}}"/>
+					<div id="alert-warning" class="alert alert-warning alert-dismissible hide" role="alert"></div>
+					<div class="form-group">
+						<label for="name" class="control-label">邮箱地址：</label>
+						<!-- <input type="text" class="form-control" id="factor" name="factor" oninput = "value=value.replace(/[^\d]/g,'')" autocomplete="off" /> -->
+						<textarea name="email" id="email" class="form-control" rows="4" style="width: 300px;" autocomplete="off" >{{.sysInfo.Value}}</textarea>	
+						<div style="display: inline-block;margin-left: 10px;">设置预警提醒邮箱,可使用;隔开设置多个邮箱地址。<br>例如：xxx@163.com;xxx2@163.com</div>
+					</div>
+					<div class="clearfix form-actions">
+						<div class="">
+							<button type="submit" class="btn btn-info"><i class="ace-icon fa fa-check bigger-110"></i>设置</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+		{{else}}
+		<div class="tabbable" >
+			<div class="tab-content">
+				<div table-wrap="280">
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							{{if eq .stype 1}}
+							<tr>
+								<th>活动icon</th>
+								<th>开关</th>
+								<th>是否付费</th>
+								<th>权重</th>
+								<th>修改时间</th>
+							</tr>
+							{{else if eq .stype 2}}
+							<tr>
+								<th>名称</th>
+								<th>上限值</th>
+								<th>修改时间</th>
+							</tr>
+							{{else if eq .stype 3}}
+							<tr>
+								<th>支付渠道</th>
+								<th>充值开关</th>
+								<th>提现开关</th>
+								<th>类型</th>
+								<th>代收税率</th>
+								<th>代付税率</th>
+								<th>代付固定手续费</th>
+								<th>实时余额</th>
+								<th>修改时间</th>
+							</tr>
+							{{else if eq .stype 4}}
+							<tr>
+								<th>名称</th>
+								<th>开关状态</th>
+								<th>修改时间</th>
+							</tr>
+							{{else}}
+							<tr>
+								<th>游戏名称</th>
+								<th>展示页</th>
+								<th>游戏开关</th>
+								<th>权重</th>
+								<th>修改时间</th>
+							</tr>
+							{{end}}
+							
+						</thead>
+						<tbody>
+							{{if eq .stype 2}}
+							{{range $k, $v := .list}}
+							<tr>
+								<td>{{$v.Name}}</td>
+								<td>{{$v.Status}}</td>
+								<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+							</tr>
+							{{end}}
+							{{else if eq .stype 3}}
+							{{range $k, $v := .list}}
+							<tr>
+								<td>{{$v.Name}}</td>
+								<td>
+									{{if eq $v.Status 1}}
+									<span class="text-success bigger-110 green">开</span>
+									{{else}}
+									<span class="text-warning bigger-110 red">关</span>
+									{{end}}
+								</td>
+								<td>
+									{{if eq $v.Wstatus 1}}
+									<span class="text-success bigger-110 green">开</span>
+									{{else}}
+									<span class="text-warning bigger-110 red">关</span>
+									{{end}}
+								</td>
+								<td>
+									{{if eq $v.Ptype 1}}
+									<span class="bigger-110">原生</span>
+									{{else if eq $v.Ptype 2}}
+									<span class="bigger-110">唤醒</span>
+									{{else}}
+									<span class="bigger-110">未知</span>
+									{{end}}
+								</td>
+								<td>{{ printf "%.2f"  $v.PayRate}}%</td>
+								<td>{{ printf "%.2f"  $v.WithdrawRate}}%</td>
+								<td>{{ printf "%.2f"  $v.FWithdrawFee}}</td>
+								<td>{{ printf "%.2f"  $v.FBalance}}</td>
+								<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+							</tr>
+							{{end}}
+							{{else if eq .stype 4}}
+							{{range $k, $v := .list}}
+							<tr>
+								<td>{{$v.Name}}</td>
+								<td>
+									{{if eq $v.IsButton true}}
+									<button type="submit" class="btn btn-xs" onclick="confirmClose()">服务器关闭</button>
+									{{else}}
+									{{if eq $v.Status 1}}
+									<span class="text-success bigger-110 green">开</span>
+									{{else if eq $v.Status 2}}
+									<span class="text-success bigger-110 green">非特殊全部自动过审</span>
+									{{else}}
+									<span class="text-warning bigger-110 red">关</span>
+									{{end}}
+									{{end}}
+								</td>
+								<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+							</tr>
+							{{end}}
+							{{else}}
+							{{range $k, $v := .list}}
+							<tr>
+								<td>{{$v.Name}}</td>
+								{{if eq $.stype 0}}
+								<td>
+									{{range $t,$b := $v.Tab}}
+									{{if eq $b 1}}
+									<label for="scales" style="margin:0px 5px 0px 10px;">Hot</label>
+									{{else if eq $b 2}}
+									<label for="scales" style="margin:0px 5px 0px 10px;">Slots</label>
+									{{else if eq $b 3}}
+									<label for="scales" style="margin:0px 5px 0px 10px;">Live</label>
+									{{end}}
+									{{end}}
+								</td>
+								{{end}}
+								<td>
+									{{if eq $v.Status 1}}
+									<span class="text-success bigger-110 green">开</span>
+									{{else}}
+									<span class="text-warning bigger-110 red">关</span>
+									{{end}}
+								</td>
+								{{if eq $.stype 1}}
+								<td>
+									{{if eq $v.PayStatus 1}}
+									<span class="text-success bigger-110 grey">付费用户</span>
+									{{else if eq $v.PayStatus 2}}
+									<span class="text-success bigger-110 green">未付费用户</span>
+									{{else}}
+									<span class="text-warning bigger-110 orange">全部用户</span>
+									{{end}}
+								</td>
+								{{end}}
+								<td>{{$v.SortId}}</td>
+								<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+							</tr>
+							{{end}}
+							{{end}}
+
+
+							{{if eq .count 0}}
+							<tr>
+								<td colspan="20">暂无记录...</td>
+							</tr>
+							{{end}}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		{{end}}
+	</div>
+</div>
+
+<script>
+	function confirmClose() {
+		if (confirm("是否要关闭服务器？")) {
+			$.post("/admin/game/closegameservice", function(data){
+				// 将查询结果填充到模态框中
+				// alert(data)
+				if (data.status == 0){
+					alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+				}
+				console.log(data)
+			});
+		} else {
+			return false;
+		}
+	}
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.stype}}) });
+</script>

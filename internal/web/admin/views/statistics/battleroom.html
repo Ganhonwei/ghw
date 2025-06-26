@@ -1,0 +1,97 @@
+<div class="row">
+	<div class="col-xs-12">
+		<form class="form-inline" method="post" action="{{urlfor "StatisticsController.BattleRoom"}}">
+			<div class="input-group table_filtrate">
+				时间:
+				<div class="input-group input-group-sm">
+					<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+				至
+				<div class="input-group input-group-sm">
+					<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+			</div>
+           
+
+			<div class="input-group input-group-sm">
+				<button type="submit" class="btn">查询</button>
+                <!-- <button type="submit" class="btn">导出</button> -->
+			</div>
+</form>
+<div class="space-4"></div>
+
+<div class="table-panel">
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+		<tr>
+			<th>时间</th>
+            <th>点击次数</th>
+			<th>点击人数</th>
+            <th>创建次数</th>
+            <th>创建人数</th>
+            <th>成功创建次数</th>
+            <th>成功创建人数</th>
+            <th>TP创建次数</th>
+            <th>TP创建人数</th>
+            <th>RM创建次数</th>
+            <th>RM创建人数</th>
+            <th>AB创建次数</th>
+            <th>AB创建人数</th>
+            <th>加入次数</th>
+            <th>加入人数</th>
+            <th>成功加入次数</th>
+            <th>成功加入人数</th>
+            <th>TP加入次数</th>
+            <th>TP加入人数</th>
+            <th>RM加入次数</th>
+            <th>RM加入人数</th>
+            <th>AB加入次数</th>
+            <th>AB加入人数</th>
+		</tr>
+		</thead>
+	<tbody>
+		{{range $k, $v := .list}}
+			<tr>
+				<td>{{ date $v.SDate "Y-m-d" }}</td>
+				<td>{{ $v.ClicksCount }}</td>
+				<td>{{ $v.TotalNumber }}</td>
+                <td>{{ $v.CreateRoomCount }}</td>
+                <td>{{ $v.CreateRoomNumber }}</td>
+                <td>{{ $v.SuccessEnterCount }}</td>
+                <td>{{ $v.SuccessEnterNumber }}</td>
+                <td>{{ $v.TPEnterCount }}</td>
+                <td>{{ $v.TPEnterNumber }}</td>
+                <td>{{ $v.RMEnterCount }}</td>
+                <td>{{ $v.RMEnterNumber }}</td>
+                <td>{{ $v.ABEnterCount }}</td>
+                <td>{{ $v.ABEnterNumber }}</td>
+                <td>{{ $v.JoinRoomCount }}</td>
+                <td>{{ $v.JoinRoomNumber }}</td>
+                <td>{{ $v.SuccessJoinCount }}</td>
+                <td>{{ $v.SuccessJoinNumber }}</td>
+                <td>{{ $v.TPJoinCount }}</td>
+                <td>{{ $v.TPJoinNumber }}</td>
+                <td>{{ $v.RMJoinCount }}</td>
+                <td>{{ $v.RMJoinNumber }}</td>
+                <td>{{ $v.ABJoinCount }}</td>
+                <td>{{ $v.ABJoinNumber }}</td>
+			</tr>
+		{{end}}
+		</tbody>
+	</table>
+</div>
+<div class="row">
+	<div class="row-page"> 
+		{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+</div>
+</div>

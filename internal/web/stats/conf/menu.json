@@ -1,0 +1,58 @@
+[
+	{
+		"name": "统计管理",
+		"icon": "fa-line-chart",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "数据汇总",
+				"route": "statistics.datalist",
+				"action": "StatisticsController.DataList"
+			},
+			{
+				"name": "用户留存",
+				"route": "statistics.retained",
+				"action": "StatisticsController.Retained"
+			},
+			{
+				"name": "新用户埋点统计",
+				"route": "statistics.pointlist",
+				"action": "StatisticsController.PointList"
+			},
+			{
+				"name": "分享数据",
+				"route": "statistics.share",
+				"action": "StatisticsController.Share"
+			}
+		]
+	},
+	{
+		"name": "游戏管理",
+		"icon": "fa-gamepad",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "博主账号",
+				"route": "channel.bloggeraccount",
+				"action": "ChannelController.BloggerAccount"
+			}
+		]
+	},
+	{
+		"name": "系统管理",
+		"icon": "fa-cog",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "角色管理",
+				"route": "role.list",
+				"action": "RoleController.List"
+			},
+			{
+				"name": "用户管理",
+				"route": "user.list",
+				"action": "UserController.List"
+			}
+		]
+	}
+]

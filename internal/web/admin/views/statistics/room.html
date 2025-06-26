@@ -1,0 +1,512 @@
+							
+<div class="row">
+	<div class="col-xs-12">
+	
+	<div class="tabbable">
+		<ul class="nav nav-tabs" id="list-tab">
+			<li {{if eq .tabid 0}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.Room" "tabid" 0}}">折线图</a>
+			</li>
+			<li {{if eq .tabid 1}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.Room" "tabid" 1}}">表格图</a>
+			</li>
+		</ul>
+	
+		<div class="tab-content">
+		
+		<div class="row">
+			<div class="col-xs-12">
+				<form class="form-inline" method="post" action="{{urlfor "StatisticsController.Room" "tabid" .tabid}}">
+                    <input type="hidden" name="status" value="{{.status}}" />
+                    <div class="input-group table_filtrate">
+                        时间:
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="start_date" style="width: 100px;" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+                            <span class="input-group-addon">
+                                <i class="ace-icon fa fa-calendar"></i>
+                            </span>
+                        </div>
+                        至
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="end_date" style="width: 100px;" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+                            <span class="input-group-addon">
+                                <i class="ace-icon fa fa-calendar"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="input-group table_filtrate">
+                        玩家类型:
+                        <div class="input-group input-group-sm">
+                            <select name="player_id">
+                                {{range $k,$v := .playerList}}
+                                <option value="{{$k}}" {{if eq $.playerid $k}}selected{{end}}>{{$v}}</option>
+                                {{end}}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group table_filtrate">
+                        局数:
+                        <div class="input-group input-group-sm">
+                            <select name="numbergame_id">
+                                {{range $k,$v := .numberGameList}}
+                                <option value="{{$k}}" {{if eq $.numberid $k}}selected{{end}}>{{$v}}</option>
+                                {{end}}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group table_filtrate">
+                        渠道:
+                        <div class="input-group" id="package_div">
+                            <select id="selectPackage" class="selectpicker" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择渠道">
+                                {{range $k,$v := .packageList}}
+                                <option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                                {{end}}
+                            </select>
+                            <input type="hidden" id="package_id" name="package_id" value="{{.packageId}}" class="form-control" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="input-group table_filtrate">
+                        渠道别名:
+                        <div class="input-group input-group-sm" id="alias_div">
+                            <select id="selectAlias" class="selectpicker" multiple data-live-search="true" data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                {{range $k,$v := .packageAliasList}}
+                                <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                                {{end}}
+                            </select>
+                            <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}" class="form-control" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="input-group table_filtrate">
+                        查询:
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="alias_name" name="alias_name" value="{{.aliasName}}" class="form-control"
+                                placeholder="请输入渠道别名" autocomplete="off" />
+                            <span class="input-group-addon">
+                                <i class="ace-icon fa fa-users"></i>
+                            </span>
+                        </div>
+                    </div>
+                    {{if eq .tabid 0}}
+                    <div class="input-group table_filtrate">
+                        图表类型:
+                        <div class="input-group input-group-sm">
+                            <select name="chat_id">
+                                {{range $k,$v := .chatType}}
+                                <option value="{{$k}}" {{if eq $.chatid $k}}selected{{end}}>{{$v}}</option>
+                                {{end}}
+                            </select>
+                        </div>
+                    </div>
+                    {{end}}
+                    <div class="input-group input-group-sm">
+                        <button type="submit" class="btn">查询</button>
+                        <!-- <button type="submit" class="btn">导出</button> -->
+                    </div>
+        </form>
+			</div>
+		</div>
+		<div class="space-4"></div>
+        {{if eq .tabid 0}}
+         <!-- 折线图 -->
+         <div class="row" style="width: 1000px;">
+            <div class="col-xs-12 center">
+          
+              <!-- <canvas id="online" width="100" height="120"></canvas> -->
+              <canvas id="info"></canvas>
+              <script src="../../assets/js/Chart.js"></script>
+              
+              <script>
+                var ctx = document.getElementById('info').getContext('2d');
+                var timelabel = {{.TimedLabel}}; // 日期
+                var Game1 = {{.TP}}; // TP
+                var Game2 = {{.Rummy}}; // Rummy
+                var Game3 = {{.LHD}}; // LHD
+                var Game4 = {{.UP}}; // 7Updown
+                var Game5 = {{.AK47}}; // Ak47
+                var Game6 = {{.Joker}}; //Joker
+                var Game7 = {{.Crash}}; // Crash
+                var Game8 = {{.AB}}; // AB
+                var Game9 = {{.CP}}; // 彩票
+                var Game10 = {{.FJ}}; // 飞机
+                var Game11 = {{.Slots}}; // Slots
+                var Game12 = {{.ZRSX}}; // 真人视讯
+                var Game13 = {{.RMTWO}}; // Rummy双人
+                var Game14 = {{.RB}}; // 红黑大战
+                var Game15 = {{.TPTWO}}; // TP2
+                var chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels:timelabel,
+                        datasets: [{
+                            label: 'TP',
+                            data: Game1,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(0, 123, 255, 1)',
+                            borderWidth: 1,
+                            hidden: true,
+                        }
+                        ,{
+                            label: 'RUMMY',
+                            data: Game2,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1,
+                            hidden: true,
+                        }
+                        ,{
+                            label: 'LHD',
+                            data: Game3,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(252, 186, 3, 1)',
+                            borderWidth: 1,
+                            hidden: true,
+                        },{
+                            label: '7UPDOWN',
+                            data: Game4,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgb(20, 252, 3,1)',
+                            borderWidth: 1,
+                            hidden: true,
+                        },{
+                            label: 'AK47',
+                            data: Game5,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgb(115, 3, 252,1)',
+                            borderWidth: 1,
+                            hidden: true,
+                        },{
+                            label: 'JOKER',
+                            data: Game6,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(252, 3, 144, 1)',
+                            borderWidth: 1,
+                            hidden: true,
+                        }
+                        ,{
+                            label: 'CRASH',
+                            data: Game7,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(118, 38, 21 )',
+                            borderWidth: 1,
+                            hidden: true,
+                        }
+                        ,{
+                            label: 'ANDARBAHAR',
+                            data: Game8,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(195, 235, 52 )',
+                            borderWidth: 1,
+                            hidden: true,
+                        }
+                        ,{
+                            label: '彩票',
+                            data: Game9,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(52, 235, 192 )',
+                            borderWidth: 1,
+                            hidden: true,
+                        }
+                        ,{
+                            label: '飞机',
+                            data: Game10,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	131,139,131 )',
+                            borderWidth: 1,
+                            hidden: true,
+                        },{
+                            label: '红黑大战',
+                            data: Game14,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(139, 0, 139)',
+                            borderWidth: 1,
+                            hidden: true,
+                        },
+                        {
+                            label: 'Rummy双人',
+                            data: Game13,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(47,79,79 )',
+                            borderWidth: 1,
+                            hidden: true,
+                        },
+                        {
+                            label: 'TP2',
+                            data: Game15,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	0,0,205 )',
+                            borderWidth: 1,
+                            hidden: true,
+                        },
+                        {
+                            label: 'Slots',
+                            data: Game11,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	255,69,0 )',
+                            borderWidth: 1,
+                            hidden: true,
+                        },
+                        {
+                            label: '真人视讯',
+                            data: Game12,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(83,134,139 )',
+                            borderWidth: 1,
+                            hidden: true,
+                        }
+                      ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            </script>
+            </div>
+          </div>
+        {{else if eq .tabid 1}}
+        <!-- 表格图 -->
+        <div class="table-panel"  table-wrap="300">
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th stickyL>时间</th>
+                        <th>渠道</th>
+                        <th>渠道别名</th>
+                        <th>玩家总数</th>
+                        <th>TP局数</th>
+                        <th>TP真人局</th>
+                        <th>TP对战局</th>
+                        <th>TP玩家数量</th>
+                        <th>TP人均局数</th>
+                        <th>TP单局时长</th>
+                        <th>Rummy局数</th>
+                        <th>Rummy真人局</th>
+                        <th>Rummy对战局</th>
+                        <th>Rummy玩家数量</th>
+                        <th>Rummy人均局数</th>
+                        <th>Rummy单局时长</th>
+                        <th>LHD局数</th>
+                        <th>LHD玩家数量</th>
+                        <th>LHD人均局数</th>
+                        <th>LHD单局时长</th>
+                        <th>7Updown局数</th>
+                        <th>7Updown玩家数量</th>
+                        <th>7Updown人均局数</th>
+                        <th>7Updown单局时长</th>
+                        <th>AK47局数</th>
+                        <th>AK47真人局</th>
+                        <th>AK47玩家数量</th>
+                        <th>AK47人均局数</th>
+                        <th>AK47单局时长</th>
+                        <th>Joker局数</th>
+                        <th>Joker真人局</th>
+                        <th>Joker玩家数量</th>
+                        <th>Joker人均局数</th>
+                        <th>Joker单局时长</th>
+                        <th>Crash局数</th>
+                        <th>Crash玩家数量</th>
+                        <th>Crash人均局数</th>
+                        <th>Crash单局时长</th>
+                        <th>ANDARBAHAR局数</th>
+                        <th>ANDARBAHAR对战局</th>
+                        <th>ANDARBAHAR玩家数量</th>
+                        <th>ANDARBAHAR人均局数</th>
+                        <th>ANDARBAHAR单局时长</th>
+                        <th>彩票局数</th>
+                        <th>彩票玩家数量</th>
+                        <th>彩票人均局数</th>
+                        <th>彩票单局时长</th>
+                        <th>飞机局数</th>
+                        <th>飞机玩家数量</th>
+                        <th>飞机人均局数</th>
+                        <th>飞机单局时长</th>
+                        <th>红黑大战局数</th>
+                        <th>红黑大战玩家数量</th>
+                        <th>红黑大战人均局数</th>
+                        <th>红黑大战单局时长</th>
+                        <th>Rummy双人局数</th>
+                        <th>Rummy双人玩家数量</th>
+                        <th>Rummy双人人均局数</th>
+                        <th>Rummy双人单局时长</th>
+                        <th>TP2局数</th>
+                        <th>TP2玩家数量</th>
+                        <th>TP2人均局数</th>
+                        <th>TP2单局时长</th>
+                        <th>Slots局数</th>
+                        <th>Slots玩家数量</th>
+                        <th>Slots人均局数</th>
+                        <th>真人视讯局数</th>
+                        <th>真人视讯玩家数量</th>
+                        <th>真人视讯人均局数</th>
+                    </tr>
+                </thead>
+            <tbody>
+                {{range $k, $v := .list}}
+                <tr>
+                    <td>{{date $v.SDate "Y-m-d"}}</td>
+                    <td>
+                        {{if eq $v.Channel ""}}
+                        <span>全部</span>
+                        {{else}}    
+                        {{ $v.Channel}}
+                        {{end}}
+                    </td>
+                    <td>{{ $v.Channel1 }}</td>
+                    <td>{{ $v.PlayerTotal }}</td>
+                    <td>{{ $v.TPGameNumber }}</td>
+                    <td>{{ $v.TPGameRealNumber }}</td>
+                    <td>{{ $v.TPBattleGame }}</td>
+                    <td>{{ $v.TPNumber }}</td>
+                    <td>{{ printf "%.2f" $v.TPPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.TPTime }}s</td>
+                    <td>{{ $v.RummyGameNumber }}</td>
+                    <td>{{ $v.RMGameRealNumber }}</td>
+                    <td>{{ $v.RMBattleGame }}</td>
+                    <td>{{ $v.RummyNumber }}</td>
+                    <td>{{ printf "%.2f" $v.RummyPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.RummyTime }}s</td>
+                    <td>{{ $v.LHDGameNumber }}</td>
+                    <td>{{ $v.LHDNumber }}</td>
+                    <td>{{ printf "%.2f" $v.LHDPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.LHDTime }}s</td>
+                    <td>{{ $v.UPGameNumber }}</td>
+                    <td>{{ $v.UPNumber }}</td>
+                    <td>{{ printf "%.2f" $v.UPPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.UPTime }}s</td>
+                    <td>{{ $v.AKGameNumber }}</td>
+                    <td>{{ $v.AKGameRealNumber }}</td>
+                    <td>{{ $v.AKNumber }}</td>
+                    <td>{{ printf "%.2f" $v.AKPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.AKTime }}s</td>
+                    <td>{{ $v.JokerGameNumber }}</td>
+                    <td>{{ $v.JokerGameRealNumber }}</td>
+                    <td>{{ $v.JokerNumber }}</td>
+                    <td>{{ printf "%.2f" $v.JokerPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.JokerTime }}s</td>
+                    <td>{{ $v.CrashGameNumber }}</td>
+                    <td>{{ $v.CrashNumber }}</td>
+                    <td>{{ printf "%.2f" $v.CrashPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.CrashTime }}s</td>
+                    <td>{{ $v.ABGameNumber }}</td>
+                    <td>{{ $v.ABBattleGame }}</td>
+                    <td>{{ $v.ABNumber }}</td>
+                    <td>{{ printf "%.2f" $v.ABPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.ABTime }}s</td>
+                    <td>{{ $v.CPGameNumber }}</td>
+                    <td>{{ $v.CPNumber }}</td>
+                    <td>{{ printf "%.2f" $v.CPPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.CPTime }}s</td>
+                    <td>{{ $v.FJGameNumber }}</td>
+                    <td>{{ $v.FJNumber }}</td>
+                    <td>{{ printf "%.2f" $v.FJPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.FJTime }}s</td>
+                    <td>{{ $v.RBGameNumber }}</td>
+                    <td>{{ $v.RBNumber }}</td>
+                    <td>{{ printf "%.2f" $v.RBPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.RBTime }}s</td>
+                    <td>{{ $v.RMTwoGameNumber }}</td>
+                    <td>{{ $v.RMTwoNumber }}</td>
+                    <td>{{ printf "%.2f" $v.RMTwoPerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.RMTwoTime }}s</td>
+                    <td>{{ $v.TP2GameNumber }}</td>
+                    <td>{{ $v.TP2Number }}</td>
+                    <td>{{ printf "%.2f" $v.TP2PerCapita }}</td>
+                    <td>{{ printf "%.2f" $v.TP2Time }}s</td>
+                    <td>{{ $v.SlotsGameNumber }}</td>
+                    <td>{{ $v.SlotsNumber }}</td>
+                    <td>{{ printf "%.2f" $v.SlotsPerCapita }}</td>
+                    <td>{{ $v.ZRSXGameNumber }}</td>
+                    <td>{{ $v.ZRSXNumber }}</td>
+                    <td>{{ printf "%.2f" $v.ZRSXPerCapita }}</td>
+                </tr>
+                {{end}}
+                {{if eq .count 0}}
+                    <tr>
+                        <td colspan="20">暂无记录...</td>
+                    </tr>
+                {{end}}
+                </tbody>
+            </table>
+        </div>
+        <div class="row">
+            <div class="row-page"> 
+                {{if gt .count 20}}
+                {{str2html .pageBar}}
+            {{end}}
+            </div>
+        </div>
+        {{end}}
+
+		</div>
+	</div>
+	</div>
+</div>
+
+<script>
+    $(function () {
+        $("#selectPackage").on("change",function () {
+        var selectVal = $("#selectPackage").val()
+        console.log(selectVal)
+        $("#package_id").val(selectVal)
+    });
+    // 渠道别名
+    $("#selectAlias").on("change",function () {
+        var selectVal = $("#selectAlias").val()
+        console.log("selectAlias："+selectVal)
+        $("#alias_id").val(selectVal)
+    });
+        var packVal =  $("#package_id").val()
+        if (packVal != ""){
+            
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+        // 渠道别名
+        var aliasVal =  $("#alias_id").val()
+        if (aliasVal != ""){
+            var arr1= aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null){
+                console.log("arr1:"+arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function(index, value) {
+                    if (value == "0"){
+                        arr1[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr1[index] = "其他"; 
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+    });
+    
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.tabid}}) });
+</script>

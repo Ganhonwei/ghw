@@ -1,0 +1,117 @@
+<div class="row">
+    <div class="col-xs-12">
+        <form class="form-horizontal ajax-form" method="post" action="{{urlfor "PlayerController.DtDetails"}}">
+            <div class="form-group" style="border-bottom:1px solid #DCDFE6">
+                <div class="col-sm-12" style="padding-bottom:10px;">
+                    <label for="number" class="col-sm-2 lable-top">局号：{{.info.WaterId}}</label>
+                    <label for="number" class="col-sm-2 lable-top">桌子ID：{{.info.DeskId}}</label>
+                    <!-- <label for="number" class="col-sm-2 lable-top">牌型ID:{{.info.DeskId}}</label> -->
+                    <label for="number" class="col-sm-2 lable-top">玩家最终系数：{{.info.FPlayerFactor}}</label>
+                    <label for="number" class="col-sm-2 lable-top">策略类型：
+                        {{if eq .info.LHDetail.StrategyId 1}}
+                        <span>新想事成&nbsp;</span>
+                        {{else if eq .info.LHDetail.StrategyId 2}}
+                        <span>求死不能&nbsp;</span>
+                        {{else if eq .info.LHDetail.StrategyId 3}}
+                        <span>龙狂有祸&nbsp;</span>
+                        {{else}}
+                        <span>--</span>
+                        {{end}}
+                    </label>
+                    <label for="number" class="col-sm-12 lable-top">
+                        <div style="float: left;">
+                            参与玩家ID：
+                        </div>
+                        <div class="players-panel">{{.info.Players}}</div>
+                    </label>
+                    <div class="page-close">
+                        <a href="{{urlfor "PlayerController.PlayList" "id" .userid "type_id" .typeId "start_date" .startDate "end_date" .endDate "record_id" .recordId "room_id" .roomId}}" class="btn btn-default"><i
+                            class="fa fa-close"></i></a>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+</form>
+<table class="table table-striped table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>开奖结果</th>
+            <th>龙</th>
+            <th>虎</th>
+            <th>总下注</th>
+            <th>玩家赢分</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                {{if eq .info.LHDetail.Winner 1}}
+				<span class="text-success bigger-110">龙赢</span>
+				{{else if eq .info.LHDetail.Winner 2}}
+				<span class="text-warning bigger-110">虎赢</span>
+				{{else}}
+				<span class="text-success bigger-110">和</span>
+				{{end}}
+            </td>
+            <td>{{ .info.LHDetail.DragonValue }}</td>
+            <td>{{ .info.LHDetail.TigerValue }}</td>
+            <td>{{ printf "%.2f" .info.LHDetail.FBets }}</td>
+            <td>{{ printf "%.2f" .info.LHDetail.FPlayerWin }}</td>
+        </tr>
+    </tbody>
+</table>
+<div class="space-4">
+</div>
+
+<table class="table table-striped table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>下注用户ID</th>
+            <th>龙</th>
+            <th>虎</th>
+            <th>和</th>
+            <th>结果</th>
+            <th>结算</th>
+            <th>账变前分数</th>
+            <th>账变后分数</th>
+            <th>账变前彩金</th>
+            <th>账变后彩金</th>
+            <!-- <th>账变前奖励金</th>
+            <th>账变后奖励金</th> -->
+            <th>彩金库存</th>
+            <!-- <th>奖励金库存</th> -->
+            <th>彩金明税</th>
+            <!-- <th>奖励金明税</th> -->
+            <th>彩金暗税</th>
+            <!-- <th>奖励金暗税</th> -->
+        </tr>
+    </thead>
+    <tbody>
+        {{range $k, $v := .info.LHDetail.UserDetail}}
+        <tr>
+            <td>{{ $v.Userid }}</td>
+            <td>{{ printf "%.2f" $v.FDragon }}</td>
+            <td>{{ printf "%.2f" $v.FTiger }}</td>
+            <td>{{ printf "%.2f" $v.FTie }}</td>
+            <td>{{ $v.Result }}</td>
+            <td>{{ printf "%.2f" $v.FWin }}</td>
+            <td>{{ printf "%.2f" $v.FBeforeScore }}</td>
+            <td>{{ printf "%.2f" $v.FAfterScore }}</td>
+            <td>{{ printf "%.2f" $v.FBeforeCash }}</td>
+            <td>{{ printf "%.2f" $v.FAfterCash }}</td>
+            <!-- <td>{{ printf "%.2f" $v.FBeforeBonus }}</td>
+            <td>{{ printf "%.2f" $v.FAfterBonus }}</td> -->
+            <td>{{ printf "%.2f" $v.FCashStock }}</td>
+            <!-- <td>{{ printf "%.2f" $v.FBonusStock }}</td> -->
+            <td>{{ printf "%.2f" $v.FCashMingTax }}</td>
+            <!-- <td>{{ printf "%.2f" $v.FBonusMingTax }}</td> -->
+            <td>{{ printf "%.2f" $v.FCashAnTax }}</td>
+            <!-- <td>{{ printf "%.2f" $v.FBonusAnTax }}</td> -->
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+
+</div>
+</div>

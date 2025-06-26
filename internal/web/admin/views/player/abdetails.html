@@ -1,0 +1,179 @@
+<div class="row">
+    <div class="col-xs-12">
+        <form class="form-horizontal ajax-form" method="post" action="{{urlfor "PlayerController.ABDetails"}}">
+            <div class="form-group" style="border-bottom:1px solid #DCDFE6">
+                <div class="col-sm-12" style="padding-bottom:10px;">
+                    <label for="number" class="col-sm-2 lable-top">局号：{{.info.WaterId}}</label>
+                    <label for="number" class="col-sm-2 lable-top">桌子ID：{{.info.DeskId}}</label>
+                    <label for="number" class="col-sm-2 lable-top">牌型ID：{{.info.CardTypeId}}</label>
+                    <label for="number" class="col-sm-2 lable-top">玩家最终系数：{{.info.FPlayerFactor}}</label>
+                    <label for="number" class="col-sm-2 lable-top">是否对战房：
+                        {{if eq .info.Rtype 1}}
+                            <span>是</span>
+                        {{else}}
+                            <span>否</span>
+                        {{end}}
+                    </label>
+                    {{if eq .info.Rtype 1}}
+                    <label for="number" class="col-sm-2 lable-top">私人房模式：
+                        {{if eq .info.Gmode 0}}
+                            <span>真金</span>
+                        {{else}}
+                            <span>娱乐模式</span>
+                        {{end}}
+                    </label>
+                    {{end}}
+                    <label for="number" class="col-sm-2 lable-top">策略类型：
+                        {{if eq .info.ABDetail.StrategyId 1}}
+                        <span>安能杀死&nbsp;</span>
+                        {{else if eq .info.ABDetail.StrategyId 2}}
+                        <span>安然躺赢&nbsp;</span>
+                        {{else}}
+                        <span>--</span>
+                        {{end}}
+                    </label>
+                    <label for="number" class="col-sm-2 lable-top">可赢分：{{printf "%.2f" .info.ABDetail.FCanWinScore}}</label>
+                    <label for="number" class="col-sm-2 lable-top">是否随机开牌：
+                        {{if eq .info.ABDetail.IsRandom true}}
+                            <span>是</span>
+                        {{else}}
+                            <span>否</span>
+                        {{end}}
+                    </label>
+                    <label for="number" class="col-sm-12 lable-top">
+                        <div style="float: left;">
+                            参与玩家ID：
+                        </div>
+                        <div class="players-panel">{{.info.Players}}</div>
+                    </label>
+                    <div class="page-close">
+                        <a href="{{urlfor "PlayerController.PlayList" "id" .userid "type_id" .typeId "start_date" .startDate "end_date" .endDate "record_id" .recordId "room_id" .roomId}}" class="btn btn-default"><i
+                            class="fa fa-close"></i></a>
+                    </div>
+                </div>
+            </div>
+</form>
+<div style="display: flow-root;">
+    <div class="col-sm-7">
+        <table class="table table-striped table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Key牌</th>
+                    <th>中奖牌</th>
+                    <th>开奖结果1</th>
+                    <th>开奖结果2</th>
+                    <th>总下注</th>
+                    <th>玩家赢分</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div>
+                            <img style="width: 20px" src="assets/cards/{{.info.ABDetail.Joker}}.png">
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <img style="width: 20px" src="assets/cards/{{.info.ABDetail.JackpotValue}}.png">
+                        </div>
+                    </td>
+                    <td>{{.info.ABDetail.WinnerStr }}</td>
+                    <td>{{.info.ABDetail.SideWinnerStr }}</td>
+                    <td>{{ printf "%.2f" .info.ABDetail.FBets }}</td>
+                    <td>{{ printf "%.2f" .info.ABDetail.FPlayerWin }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="col-sm-5">
+        <table class="table table-striped table-bordered table-hover">
+            <tbody>
+                <tr>
+                    <td style="width: 80px;">ANDAR</td>
+                    <td>
+                        <div style="text-align: left;">
+                            {{range $i, $o := .info.ABDetail.ACards}}
+                                <img style="width: 20px" src="assets/cards/{{$o}}.png">
+                            {{end}}
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 80px;">BAHAR</td>
+                    <td>
+                        <div style="text-align: left;">
+                        {{range $i, $o := .info.ABDetail.BCards}}
+                            <img style="width: 20px" src="assets/cards/{{$o}}.png">
+                        {{end}}
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="space-4">
+</div>
+<div  class="table-panel">
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>下注用户ID</th>
+            <th>ANDAR</th>
+            <th>BAHAR</th>
+            <th>1-5</th>
+            <th>6-10</th>
+            <th>11-15</th>
+            <th>16-25</th>
+            <th>26-30</th>
+            <th>31-35</th>
+            <th>36-40</th>
+            <th>41以上</th>
+            <th>结果</th>
+            <th>结算</th>
+            <th>账变前分数</th>
+            <th>账变后分数</th>
+            <th>账变前彩金</th>
+            <th>账变后彩金</th>
+            <!-- <th>账变前奖励金</th>
+            <th>账变后奖励金</th> -->
+            <th>彩金库存</th>
+            <th>彩金明税</th>
+            <!-- <th>彩金暗税</th> -->
+            </tr>
+        </thead>
+        <tbody>
+            {{range $k, $v := .info.ABDetail.UserDetail}}
+            <tr>
+                <td>{{ $v.Userid }}</td>
+                <td>{{ printf "%.2f" $v.ABInfo.Seat1 }}</td>
+                <td>{{ printf "%.2f" $v.ABInfo.Seat2 }}</td>
+                <td>{{ printf "%.2f" $v.ABInfo.Seat3 }}</td>
+                <td>{{ printf "%.2f" $v.ABInfo.Seat4 }}</td>
+                <td>{{ printf "%.2f" $v.ABInfo.Seat5 }}</td>
+                <td>{{ printf "%.2f" $v.ABInfo.Seat6 }}</td>
+                <td>{{ printf "%.2f" $v.ABInfo.Seat7 }}</td>
+                <td>{{ printf "%.2f" $v.ABInfo.Seat8 }}</td>
+                <td>{{ printf "%.2f" $v.ABInfo.Seat9 }}</td>
+                <td>{{ printf "%.2f" $v.ABInfo.Seat10 }}</td>
+                <td>{{ $v.Result }}</td>
+                 <td>{{ printf "%.2f" $v.FWin }}</td>
+                 <td>{{ printf "%.2f" $v.FBeforeScore }}</td>
+                 <td>{{ printf "%.2f" $v.FAfterScore }}</td>
+                 <td>{{ printf "%.2f" $v.FBeforeCash }}</td>
+                 <td>{{ printf "%.2f" $v.FAfterCash }}</td>
+                 <!-- <td>{{ printf "%.2f" $v.FBeforeBonus }}</td>
+                 <td>{{ printf "%.2f" $v.FAfterBonus }}</td> -->
+                 <td>{{ printf "%.2f" $v.FCashMingTax }}</td>
+                 <!-- <td>{{ printf "%.2f" $v.FBonusMingTax }}</td> -->
+                 <td>{{ printf "%.2f" $v.FCashAnTax }}</td>
+                 <!-- <td>{{ printf "%.2f" $v.FBonusAnTax }}</td> -->
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+
+</div>
+</div>

@@ -1,0 +1,105 @@
+appname = goplays-web
+httpport = 18080
+runmode = dev
+namespace = admin
+sessionon = true
+timezone="Asia/Dhaka"
+#timezone="Asia/Kolkata" 
+versions = "mengjiala"
+#versions = "PK" 巴基斯坦
+copyRequestBody = true
+#versions = "origin"
+EnableGzip = true
+StaticExtensionsToGzip = .css, .js, .json, .svg, .ttf, .woff
+gzipCompressLevel = 9
+StaticCacheFileSize = 1048576  # 1M
+StaticCacheFileNum = 50
+
+# nats
+nats.url = "nats://@127.0.0.1:4222"
+
+# 数据库配置
+db.host = "127.0.0.1"
+db.user = root
+db.password = "root"
+db.port = 3306
+db.name = test
+db.prefix = "t_"
+db.timezone = "Asia/Shanghai"
+
+# mgo数据库配置
+mdb.host = "127.0.0.1"
+mdb.user =
+mdb.password =
+mdb.port = 27017
+#mdb.name = huiyindev
+mdb.name = test
+#mdb.name = huiyintest
+mdb.ssh = false
+mdb.sshUser = "ubuntu"
+mdb.sshAddr = "18.162.188.29:60000"
+mdb.sshKey = "/root/.ssh/k8s.pem"
+
+mgodb.host = "127.0.0.1"
+mgodb.user =
+mgodb.password =
+mgodb.port = 27019
+#mdb.name = huiyindev
+mgodb.name = testlog
+#mdb.name = huiyintest
+mgodb.ssh = false
+mgodb.sshUser = "ubuntu"
+mgodb.sshAddr = "18.162.188.29:60000"
+mgodb.sshKey = "/root/.ssh/k8s.pem"
+
+# clickhouse
+clickhouse.logsql = true
+clickhouse.addr  = "127.0.0.1:9000"
+clickhouse.database = "game"
+clickhouse.username = ""
+clickhouse.password = ""
+clickhouse.dial_timeout = 10 # second
+clickhouse.read_timeout = 20 # second
+clickhouse.ssh = false
+clickhouse.sshUser = "ubuntu"
+clickhouse.sshAddr = "18.162.188.29:60000"
+clickhouse.sshKey = "/root/.ssh/k8s.pem"
+
+# NSQ
+nsq.addr = "127.0.0.1:4150"
+
+# gameserver
+gm.host = "127.0.0.1"
+gm.port = "8002"
+gm.path = "/api/web"
+gm.key = "XG0e2Ye/KAUJRXaMNnJ5UH1haBvh2FXOoAggE6f2Utw"
+gm.url = "http://127.0.0.1:8002/api/web"
+gm.cdn = "https://d29jyri7d3jltj.cloudfront.net/"
+gm.cdn.directory = "myfolder"
+
+# 支付服务器
+pay.url = "http://192.168.0.124:16080/api"
+
+# 安卓服务器配置
+ad.host = "192.168.0.12"
+ad.port = "8000"
+ad.path = "/v1/getScoreByAdIds"
+ad.url = "http://grabber.ceroseace.com:8000"
+# 正式地址：http://grabber.ceroseace.com:8000
+# (内网)测试地址：http://192.168.0.12:8000
+
+# 邮件服务器配置
+mail.from = no-reply@example.com
+mail.host = smtp.example.com
+mail.port = 25
+mail.user = username
+mail.password = your password
+
+# 数据目录设置
+#data_dir = /data/golang/src/.../data
+
+# 文件目录设置
+files_dir = ./assets/files
+
+# 日志文件
+log_file = logs/error.log

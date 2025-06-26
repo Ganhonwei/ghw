@@ -1,0 +1,1006 @@
+<div class="row">
+	<div class="col-xs-12">
+	</div>
+</div>
+
+<div class="space-4"></div>
+
+<div class="row">
+	<div class="col-xs-12">
+		{{if .flash.error}}
+		<div class="alert alert-danger alert-dismissible fade in" role="alert">
+			{{.flash.error}}
+		</div>
+		{{end}}
+		{{if .flash.success}}
+		<div class="alert alert-warning alert-dismissible fade in" role="alert">
+			{{.flash.success}}
+		</div>
+		<script>$(".alert").fadeOut(2000);</script>
+		{{end}}
+
+		<form id="main-form" class="form-inline" method="post" action="{{urlfor "PayController.WithdrawList"}}">
+			<!-- <input type="hidden" name="status" value="{{.page}}" /> -->
+			<input type="hidden" name="status" value="{{.status}}" />
+			<div class="input-group table_filtrate">
+				查询:
+				<div class="input-group input-group-sm">
+					<input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-users"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				<div class="input-group input-group-sm">
+					<select name="type_id" id="type_id">
+						{{range $k,$v := .typeList}}
+						<option value="{{$k}}" {{if eq $.typeId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				订单状态:
+				<div class="input-group input-group-sm">
+					<select name="status_id" id="status_id">
+						{{range $k,$v := .statusList}}
+						<option value="{{$k}}" {{if eq $.statusId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				审核方式:
+				<div class="input-group input-group-sm">
+					<select name="audit_id" id="audit_id">
+						{{range $k,$v := .auditList}}
+						<option value="{{$k}}" {{if eq $.auditId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				渠道别名:
+				<div class="input-group input-group-sm" id="alias_div">
+					<select id="selectAlias" class="selectpicker" multiple data-live-search="true"
+						data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+						{{range $k,$v := .packageAliasList}}
+						<option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}
+						</option>
+						{{end}}
+					</select>
+					<input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}"
+						class="form-control" autocomplete="off" />
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				订单生成时间:
+				<div class="input-group input-group-sm">
+					<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+				至
+				<div class="input-group input-group-sm">
+					<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group input-group-sm">
+				<button type="submit" class="btn">查询</button>
+				{{if $.isExport}}
+				<a href="{{urlfor "PayController.WithdrawListExport" "status" .status "start_date" .startDate "end_date" .endDate "userid" .userid "type_id" .type_id "status_id" .status_id "audit_id" .audit_id "alias_id" .alias_id}}" class="btn" style="margin-left: 5px;">导出</a>
+				{{end}}
+			</div>
+		</form>
+	</div>
+</div>
+<div class="space-4"></div>
+<div class="form-inline">
+	用户类型提现设置：
+	<select id="selectWithdrawSettingCtype" 
+		data-width="100px" style="width: 100px !important;margin-right:10px;" title="请选择用户类型">
+		<option value="0" selected>新手</option>
+		<option value="1">平民</option>
+		<option value="2">普充</option>
+		<option value="3">小R</option>
+		<option value="4">中R</option>
+		<option value="5">大R</option>
+		<option value="6">超大R</option>
+	</select>
+	<div class="input-group table_filtrate">
+		机审单价上限:
+		<div class="input-group input-group-sm">
+			<input type="text" disabled id="JQWithdrawMax" class="form-control" autocomplete="off"/>
+		</div>
+	</div>
+	<div class="input-group table_filtrate">
+		机审赢钱上限:
+		<div class="input-group input-group-sm">
+			<input type="text" disabled id="JQWinMax" class="form-control" autocomplete="off"/>
+		</div>
+	</div>
+	<div class="input-group table_filtrate">
+		机审返奖率上限:
+		<div class="input-group input-group-sm">
+			<input type="text" disabled id="JQWinRateMax" class="form-control" autocomplete="off"/>
+		</div>
+	</div>
+	<div class="input-group table_filtrate">
+		银行卡号是否可重复:
+		<div class="input-group input-group-sm">
+			<input type="text" disabled id="IsBankRepeatable" class="form-control" autocomplete="off"/>
+		</div>
+	</div>
+	<div class="input-group input-group-sm">
+		<!-- 权限 -->
+		{{if $.isOperationEdit}}
+		<!-- <button type="submit" class="btn"></button> -->
+		<a id="withdrawSettingEditHref" href="{{urlfor "PayController.WithdrawSettingEdit"}}" class="btn btn-sm btn-default"><i class="fa fa-plus"></i> 修改</a>
+		{{end}}
+	</div>
+</div>
+
+<div id="switch" class="auto-switch">
+	<div style="margin: 5px 0 5px 5px;">
+		<el-switch
+			:value="autoSwitch.autoTransfer"
+			:disabled="!autoSwitch.editable"
+			@change="handleAutoSwitchChange($event, 6)"
+			inactive-text="提现自动转单："
+			:class="{'switch-loading': this.switchLoading}"
+			active-color="#13ce66" inactive-color="#ff4949">
+		</el-switch>
+		<el-switch
+			style="margin-left: 10px;"
+			:value="autoSwitch.autoDispatch"
+			:disabled="!autoSwitch.editable"
+			@change="handleAutoSwitchChange($event, 7)"
+			:class="{'switch-loading': this.switchLoading}"
+			inactive-text="提现自动派单："
+			active-color="#13ce66" inactive-color="#ff4949">
+		</el-switch>
+	</div>
+</div>
+<script>
+	new Vue({
+		delimiters: ['#{', '}'],
+		el: '#switch',
+		data() {
+			return {
+				autoSwitch: {
+					autoTransfer: false,
+					autoDispatch: false,
+					editable: false,
+				},
+				switchLoading: false,
+			}
+		},
+		created() {
+			this.fetchSwitch();
+		},
+		methods: {
+			fetchSwitch() {
+				this.switchLoading = true;
+				fetchGET(`/admin/pay/withdrawlist?action=AutoSwitch`)
+				.then(res => {
+					this.autoSwitch = res.data || {};
+					console.log('stats', this.autoSwitch);
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+					this.switchLoading = false;
+				});
+			},
+			handleAutoSwitchChange(checked, rtype) {
+				console.log(checked, rtype);
+				var msg = `${checked ? '开启' : '关闭'}${rtype == 6 ? '自动转单' : '自动派单'}`;
+				this.$confirm(`确认要${msg}吗`, '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'warning'
+				}).then(() => {
+					this.switchLoading = true;
+					fetchGET(`/admin/pay/withdrawswitchedit?action=EditAutoSwitch&rtype=${rtype}&open=${checked ? 1 : 0}`)
+						.then(res => {
+							this.$message({ type: 'success', message: `${msg}成功` });
+						}).catch(err => {
+							this.$message({ type: 'error', message: `${err.msg}` });
+						}).finally(() => {
+							this.switchLoading = false;
+							this.fetchSwitch();
+						});
+				}).catch(() => { });
+			},
+		}
+	});
+</script>
+<style>
+  .auto-switch .el-switch__label.is-active {
+    color: #303133;
+  }
+  
+  .auto-switch .el-switch.switch-loading .el-switch__core::before {
+    content: ".....";
+  }
+</style>
+
+<div class="space-4"></div>
+
+<div class="table-panel" table-wrap="340">
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+			<tr>
+				<th>
+					<select id="rowsSelector"
+						data-width="60px" style="width:60px !important;margin-right:10px;" title="选择操作">
+						<option value="0"><span style="color: #ccc;"></span></option>
+						<option value="1">全选</option>
+						<option value="2">清空</option>
+						<option class="rowsSelectorOptReverse" value="3">反选</option>
+					</select>
+				</th>
+				<th stickyL>用户ID</th>
+				<th>昵称</th>
+				<th>注册时间</th>
+				<th>渠道别名</th>
+				<th>打码最多的游戏/返奖率</th>
+				<th>玩局数最多的游戏/返奖率</th>
+				<th>玩家总返奖率</th>
+				<th>玩家当前净盈利</th>
+				<th>本单提现金额</th>
+				<th>手续费</th>
+				<th>实到金额</th>
+				<th>总充值金额</th>
+				<th>总提单金额</th>
+				<th>已提现到账金额</th>
+				<th>提单待审核金额</th>
+				<th>审核通过未到账金额</th>
+				<th>提单失败被自动退回金额</th>
+				<th>提现失败被自动退回金额</th>
+				<th>提现被冻结金额</th>
+				<th>其他提现金额</th>
+				<th>玩家提单后携带金额</th>
+				<th>玩家当前携带金额</th>
+				<th>玩家充值成功率</th>
+				<th>玩家提现成功率</th>
+				<th>订单状态</th>
+				<th>用户银行</th>
+				<th>用户银行卡号</th>
+				<th>IFSC</th>
+				<th>转出渠道</th>
+				<th class="table-time">订单生成时间</th>
+				<th>订单号</th>
+				<th>第三方订单号</th>
+				<th class="table-time">订单完成时间</th>
+				<th>审核方式</th>
+				<th>审核人</th>
+				<th>操作时间</th>
+				<th>成功付款次数</th>
+				<th>滞单时长</th>
+				<th>到账实效</th>
+				<th>审核时长</th>
+				<th>转单详情</th>
+				<th>金币流水</th>
+				<th>评分</th>
+				<th stickyR style="min-width:240px">标记信息</th>
+				<th class="table-opt">操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{range $index, $v := .list}}
+			<tr id="row-{{$index}}" 
+			{{if and (eq $v.IsTag true) (eq $v.ExamineWay 2)}}
+				class="highlight" 
+			{{else if and (eq $v.IsTag true) (eq $v.ExamineWay 1)}}
+				class="auto" 
+			{{else}}
+				class="" 
+			{{end}}>
+				<td>
+					{{if eq $v.Userid "总汇"}}{{else}}
+					<input type="checkbox" group="withdraws" name="withdraw" 
+						style="width:15px;height:15px;"
+						class="withdraw_checkbox" value="{{$v.OrderID}}" userid="{{$v.Userid}}" />
+					{{end}}
+				</td>
+				<!-- 用户ID --> 
+				<td>
+					{{if eq $v.Userid "总汇"}}
+					{{$v.Userid}}
+					{{else}}
+					<a href="{{urlfor "Statistics2Controller.PlayerData" "userid" $v.Userid}}" target="_blank">{{$v.Userid}}</a>
+					{{end}}
+				</td>
+				<!-- 昵称 --> 
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{$v.NickName}}</td>
+				{{end}}
+				<!-- 注册时间 --> 
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{date $v.Regtime "Y-m-d H:i:s"}}</td>
+				{{end}}
+				<!--渠道别名-->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{$v.AliasId}}</td>
+				{{end}}
+				<!--打码最多的游戏/返奖率-->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{$v.Game1BetStats}}</td>
+				{{end}}
+				<!--玩局数最多的游戏/返奖率--> <td>{{$v.Game1TimesStats}}</td>
+				<!-- 玩家总返奖率 --> <td>{{$v.RebateRate}}</td>
+				<!-- 玩家当前净盈利 --> <td>{{$v.FProfit}}</td>
+				<!--本单提现金额--> <td>{{ printf "%.2f"  $v.FTotal}}</td>
+				<!-- 手续费 --> <td>{{ printf "%.2f"  $v.FCommission}}</td>
+				<!-- 实到金额 --> <td>{{ printf "%.2f"  $v.FAmount}}</td>
+				<!-- 总充值金额 --> <td>{{$v.RechargeAmount}}</td>
+				<!-- 总提单金额 --> <td>{{$v.WithdrawAmountAll}}</td>
+				<!-- 已提现到账金额 --> <td>{{$v.WithdrawAmount}}</td>
+				<!-- 提单待审核金额 --> <td>{{$v.WithdrawWaitAmount}}</td>
+				<!-- 审核通过未到账金额 --> <td>{{$v.ProcessingAmount}}</td>
+				<!-- 提单失败被自动退回金额 --> <td>{{$v.BackAmount5}}</td>
+				<!-- 提现失败被自动退回金额 --> <td>{{$v.BackAmount7}}</td>
+				<!-- 提现被冻结金额 --> <td>{{$v.FreezeAmount}}</td>
+				<!-- 其他提现金额 --> <td>{{$v.WithdrawOtherAmount}}</td>
+				<!-- 玩家提单后携带金额 --> 
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{ printf "%.2f"  $v.FAfterDiamond}}</td>
+				{{end}}
+				<!--玩家当前携带金额--> <td>{{$v.FDiamond}}</td>
+				<!-- 玩家充值成功率 --> <td>{{$v.RechargeSuccessRate}}</td>
+				<!-- 玩家提现成功率 --> <td>{{$v.WithdrawSuccessRate}}</td>
+				<!-- 订单状态 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					{{if eq $v.OrderStatus 1}}
+					<span class="text-success bigger-110 orange">审核中</span>
+					{{else if eq $v.OrderStatus 2}}
+					<span class="text-success bigger-110 green">提现成功</span>
+					{{else if eq $v.OrderStatus 3}}
+					<span class="text-warning bigger-110 red">提现退回</span>
+					{{else if eq $v.OrderStatus 4}}
+					<span class="text-warning bigger-110 purple">提现冻结</span>
+					{{else if eq $v.OrderStatus 5}}
+					<span class="text-warning bigger-110 red">未知原因付款失败</span>
+					{{else if eq $v.OrderStatus 6}}
+					<span class="text-success bigger-110" style="font-weight: bold;">派单成功</span>
+					{{else if eq $v.OrderStatus 7}}
+					<span class="text-warning bigger-110 red">未知原因派单失败</span>
+					{{else if eq $v.OrderStatus 8}}
+					<span class="text-warning bigger-110" style="color: #ffc400;">待派单</span>
+					{{else if eq $v.OrderStatus 9}}
+					<span class="text-warning bigger-110 red">派单失败需转单</span>
+					{{else if eq $v.OrderStatus 10}}
+					<span class="text-warning bigger-110 red">派单失败需驳回</span>
+					{{else if eq $v.OrderStatus 11}}
+					<span class="text-warning bigger-110 red">付款超时急需转单</span>
+					{{else if eq $v.OrderStatus 12}}
+					<span class="text-warning bigger-110 red">玩家主动申请退回</span>
+					{{else if eq $v.OrderStatus 13}}
+					<span class="text-warning bigger-110 red">付款失败需转单</span>
+					{{else if eq $v.OrderStatus 14}}
+					<span class="text-warning bigger-110 red">付款失败需驳回</span>
+					{{else if eq $v.OrderStatus 15}}
+					<span class="text-warning bigger-110 red">付款超时需转单</span>
+					{{else}}
+					<span class=" bigger-110">--</span>
+					{{end}}
+				</td>
+				{{end}}
+				<!-- 用户银行 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{$v.Blank}}</td>
+				{{end}}
+				<!-- 用户银行卡号 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					{{if eq $v.IsBlankNumber true}}
+						<span class="text-success bigger-110 orange" {{if eq $v.OrderStatus 9}}class="red"{{end}} style="font-weight: bold;">
+							<a href="{{urlfor "PlayerController.List" "userid" $v.BlankNumber "type_id" 5}}" target="_blank">{{$v.BlankNumber}}</a>
+						</span>
+					{{else}}
+					<span {{if eq $v.OrderStatus 9}}class="red"{{end}}>
+						<a href="{{urlfor "PlayerController.List" "userid" $v.BlankNumber "type_id" 5}}" target="_blank">{{$v.BlankNumber}}</a>
+					</span>
+					
+					{{end}}
+				</td>
+				{{end}}
+				<!-- IFSC -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					<span>
+						{{$v.IFSC}}
+					</span>
+				</td>
+				{{end}}
+				<!-- 转出渠道 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+					{{if eq $v.OutChannelStr "USDT"}}
+					<td title="{{$v.USDTMsg}}" ondblclick="copyText(this)">{{$v.OutChannelStr}}</td>
+					{{else}}
+					<td>{{$v.OutChannelStr}}</td>
+					{{end}}
+				{{end}}
+				<!-- 订单生成时间 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+				{{end}}
+				<!-- 订单号 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{$v.OrderID}}</td>
+				{{end}}
+				<!-- 第三方订单号 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{$v.OutTradeNo}}</td>
+				{{end}}
+				<!-- 订单完成时间 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					{{ if $v.WithdrawTime.IsZero }}
+					- <!-- 默认值为空时展示默认格式的时间 -->
+					{{ else }}
+					{{date $v.WithdrawTime "Y-m-d H:i:s"}} <!-- 不为空时展示时间字段的值 -->
+					{{ end }}
+				</td>
+				{{end}}
+				<!-- 审核方式 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					{{if eq $v.ExamineWay 1}}
+					<span class="text-success bigger-110">自动</span>
+					{{else}}
+					<span class="text-success bigger-110">手动</span>
+					{{end}}
+				</td>
+				{{end}}
+				<!-- 审核人 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{$v.ExamineAccount }}</td>
+				{{end}}
+				<!-- 操作时间 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					{{ if $v.ETime.IsZero }}
+					- <!-- 默认值为空时展示默认格式的时间 -->
+					{{ else }}
+					{{date $v.ETime "Y-m-d H:i:s"}} <!-- 不为空时展示时间字段的值 -->
+					{{ end }}
+				</td>
+				{{end}}
+				<!-- 成功付款次数 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					{{ if or (eq $v.RepeatTimes 0) (eq $v.RepeatTimes 1) }}
+						<span>{{$v.RepeatTimes }}</span>
+					{{else}}
+						<span class="red">{{$v.RepeatTimes }}</span>
+					{{end}}
+				</td>
+				{{end}}
+				<!-- 滞单时长 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					{{if eq $v.IsDelay true}}
+						<span ><img class="warn_img" src="assets/img/warn.png" alt=""></span>
+						<span class="red">{{printf "%.1f"  $v.DelayTime}}</span>
+						
+					{{else}}
+						{{printf "%.1f"  $v.DelayTime}}
+					{{end}}	
+				</td>
+				{{end}}
+				<!-- 到账实效 --> 
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{printf "%.1f"  $v.TimeOfArrival}}</td>
+				{{end}}
+				<!-- 审核时长 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>{{printf "%.1f"  $v.AutioTime}}</td>
+				{{end}}
+				<!-- 转单详情 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					{{if gt $v.TransferCount 1}}
+						<a data-toggle="modal" data-target="#addModal" class="bule" data-id="{{$v.OrderID}}">转单详情</a>
+					{{else}}
+						<span>--</span>
+					{{end}}
+				</td>
+				{{end}}
+				<!-- 金币流水 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					<a href="{{urlfor "PlayerController.GoldList" "userid" $v.Userid}}" target="_blank">查看</a>
+				</td>
+				{{end}}
+				<!--评分-->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					{{if eq $v.AndroidScore -1}}
+					<span>-</span>
+					{{else}}
+					<span>{{$v.AndroidScore}}</span>
+					{{end}}
+				</td>
+				{{end}}
+				<!-- 标记信息 -->
+				{{if eq $v.Userid "总汇"}}<td>--</td>{{else}}
+				<td>
+					{{range $index, $msg := $v.ErrorMsgs}}
+					<p>{{$msg}}</p>
+					{{end}}
+					{{if $.isOperation }}
+						<div><a class="orange2" onclick="WithdrawTag(this)" title="{{$v.OrderID}}">标记</a></div>
+					{{end}}
+				</td>
+				{{end}}
+				<!-- 操作 -->
+				{{if eq $v.Userid "总汇"}}
+				<td>
+					<a class="green" onclick="WithdrawAudit(this, true)" title="{{$v.OrderID}}">通过</a>
+					|
+					<a class="green" onclick="WithdrawDispatch(this, true)" title="{{$v.OrderID}}">派单</a>
+					|
+					<a class="red" onclick="WithdrawReturn(this, true)" title="{{$v.OrderID}}">退回</a>
+					|
+					<a style="color: #3888ff;" onclick="WithdrawFrozen(this, true)" title="{{$v.OrderID}}">冻结</a>
+					|
+					<a class="red" onclick="WithdrawBan(this, true)" title="{{$v.OrderID}}" userid="{{$v.Userid}}">封号</a>
+				</td>
+				{{else}}
+				<td style="font-weight: bold;">
+					{{if $.isOperation }}
+						{{if and (ne $v.OrderStatus 1) (ne $v.OrderStatus 2) (ne $v.OrderStatus 3) (ne $v.OrderStatus 4) (ne $v.OrderStatus 6) (ne $v.OrderStatus 8)}}
+						<!-- <a class="orange2" href="javascript:highlightRow({{$index}},{{$v.OrderID}},{{$v.IsTag}})">标记</a> -->
+						<!-- <a class="orange2" onclick="WithdrawTag(this)" title="{{$v.OrderID}}">标记</a> -->
+						<!-- | -->
+						<a class="red" onclick="WithdrawReturn(this)" title="{{$v.OrderID}}">退回</a>
+						|
+						<a style="color: #3888ff;" onclick="WithdrawFrozen(this)" title="{{$v.OrderID}}">冻结</a>
+						|
+						{{end}}
+						{{if eq $v.OrderStatus 1}}
+						<a class="green" onclick="WithdrawAudit(this)" title="{{$v.OrderID}}">通过</a>
+						|
+						<a class="red" onclick="WithdrawReturn(this)" title="{{$v.OrderID}}">退回</a>
+						|
+						<a style="color: #3888ff;" onclick="WithdrawFrozen(this)" title="{{$v.OrderID}}">冻结</a>
+						|
+						{{end}}
+						{{if eq $v.OrderStatus 8}}
+						<a class="green" onclick="WithdrawDispatch(this)" title="{{$v.OrderID}}">派单</a>
+						|
+						<a class="red" onclick="WithdrawReturn(this)" title="{{$v.OrderID}}">退回</a>
+						|
+						<a style="color: #3888ff;" onclick="WithdrawFrozen(this)" title="{{$v.OrderID}}">冻结</a>
+						|
+						{{end}}
+						<a class="red" onclick="WithdrawBan(this)" title="{{$v.OrderID}}" userid="{{$v.Userid}}">封号</a>
+					{{end}}
+					{{if $.isOperationTransferOrder }}
+						{{if or (eq $v.OrderStatus 5) (eq $v.OrderStatus 7) (eq $v.OrderStatus 9) (eq $v.OrderStatus 11) (eq $v.OrderStatus 13) (eq $v.OrderStatus 15)}}
+						|
+						<a class="bule" onclick="TransferOrder(this)" title="{{$v.OrderID}}">转单</a>
+						{{end}}
+					{{end}}
+				</td>
+				{{end}}
+			</tr>
+			{{end}}
+	
+			{{if eq .count 0}}
+			<tr>
+				<td colspan="20">暂无记录...</td>
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+</div>
+<div class="row">
+	<div class="row-page"> 
+		{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+</div>
+</div>
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+	<form class="form-inline" method="post" >
+		<div class="modal-dialog"  style="width: 60% !important;">
+			<div class="modal-content" >
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel">
+						转单详情
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div id="game-info">
+					</div>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+<style>
+	.highlight {
+		background-color: #f1f5a4 !important;
+	}
+	.auto {
+		background-color: #ecccfc !important;
+	}
+	.table-br-time{
+		width: 100px !important;
+	}
+	.warn_img{
+    width: 20px !important;
+    margin-right: 5px;
+}
+</style>
+<script>
+	function copyText(event) {
+		var clickedElement = event;
+		var text = clickedElement.getAttribute('title');
+
+		var textField = document.createElement('textarea');
+		textField.value = text;
+		document.body.appendChild(textField);
+		textField.select();
+		document.execCommand('copy');
+		document.body.removeChild(textField);
+		alert("已成功复制！");
+	}
+
+	$(document).ready(function(){
+		$('#addModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var orderid = $(event.relatedTarget).data('id');
+			$.post("/admin/pay/transferdetail?id=" + orderid, function(data){
+				// 将查询结果填充到模态框中
+				$('#game-info').html(data);
+			});
+		});
+	})
+	function WithdrawTag(element) {
+		var userId = element.getAttribute('title');
+		var tag = prompt('请输入标记信息', '');
+		if (tag) {
+			element.classList.toggle("highlight");
+
+			$.post("/admin/pay/withdrawtag?id=" + userId + "&tag=" + tag, function(data){
+				console.log(data);
+				if (data.status === 0) {
+					$("#main-form").submit();
+				}
+				// 将查询结果填充到模态框中
+				// $('.td_pannel').html(data);
+			});
+		}
+		// if (confirm("是否要标记"+userId+"的提现订单？")) {
+		// 	element.classList.toggle("highlight");
+			
+		// 	$.post("/admin/pay/withdrawtag?id=" + userId, function(data){
+		// 		// 将查询结果填充到模态框中
+		// 		$('.td_pannel').html(data);
+		// 	});
+		// } else {
+		// 	return false;
+		// }
+	}
+	// 退回
+	function WithdrawReturn(element, batch) {
+		var orderId = "";
+		if (batch) { // 批量
+			var orders = getCheckedOrders();
+			if (!orders.orderids) {
+				alert("请选择要退回的订单");
+				return
+			}
+			orderId = orders.orderids;
+		} else {
+			orderId = element.getAttribute('title');
+		}
+		
+		if (confirm("是否要退回"+orderId+"的提现订单？")) {
+			
+			$.post("/admin/pay/withdrawreturn?id=" + orderId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					// alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+					location.reload();
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+	// 冻结
+	function WithdrawFrozen(element, batch) {
+		var orderId = "";
+		if (batch) { // 批量
+			var orders = getCheckedOrders();
+			if (!orders.orderids) {
+				alert("请选择要冻结的订单");
+				return
+			}
+			orderId = orders.orderids;
+		} else {
+			orderId = element.getAttribute('title');
+		}
+
+		if (confirm("是否要冻结"+orderId+"的提现订单？")) {
+			$.post("/admin/pay/withdrawfrozen?id=" + orderId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					// alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+					location.reload();
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+
+	function getCheckedOrders() {
+		var orderids = [];
+		var userids = [];
+		$(".withdraw_checkbox").each((i, ele) => {
+			if (ele.checked) {
+				// console.log(ele.checked, ele.value, ele.getAttribute('userid'))
+				orderids.push(ele.value);
+				var userid = ele.getAttribute('userid');
+				if (userids.indexOf(userid) < 0) {
+					userids.push(userid);
+				}
+			}
+		})
+		return {orderids: orderids.join(","), userids: userids.join(",")};
+	}
+
+	// 封号
+	function WithdrawBan(element, batch) {
+		var orderId = "";
+		var userId = "";
+		if (batch) { // 批量
+			var orders = getCheckedOrders();
+			if (!orders.orderids) {
+				alert("请选择要封号的订单");
+				return
+			}
+			orderId = orders.orderids;
+			userId = orders.userids;
+		} else {
+			orderId = element.getAttribute('title');
+			userId = element.getAttribute('userid');
+		}
+		console.log(userId, orderId);
+		if (confirm("是否要封号提现用户"+userId)) {
+			$.post("/admin/pay/withdrawban?id=" + orderId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					// alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+					location.reload();
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+
+	function TransferOrder(element) {
+		var userId = element.getAttribute('title');
+		if (confirm("是否要转单"+userId+"的提现订单？")) {
+			
+			$.post("/admin/pay/transferorder?id=" + userId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					// alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+	// 审核
+	function WithdrawAudit(element, batch) {
+		var orderId = "";
+		if (batch) { // 批量
+			var orders = getCheckedOrders();
+			if (!orders.orderids) {
+				alert("请选择要通过的订单");
+				return
+			}
+			orderId = orders.orderids;
+		} else {
+			orderId = element.getAttribute('title');
+		}
+		
+		if (confirm("是否审核通过"+orderId+"的提现订单？")) {
+			$.post("/admin/pay/withdrawaudit?id=" + orderId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					// alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+					location.reload();
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+	// 派单
+	function WithdrawDispatch(element, batch) {
+		var orderId = "";
+		if (batch) { // 批量
+			var orders = getCheckedOrders();
+			if (!orders.orderids) {
+				alert("请选择要通过的订单");
+				return
+			}
+			orderId = orders.orderids;
+		} else {
+			orderId = element.getAttribute('title');
+		}
+		
+		if (confirm("是否派单"+orderId+"的提现订单？")) {
+			$.post("/admin/pay/withdrawdispatch?id=" + orderId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					// alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+					location.reload();
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+
+	var withdrawSettings = {{.withdrawSettings}};
+
+	$(function () {
+		$("#rowsSelector").on("change", function(e) {
+			// console.log('change', e.target.value)
+			var opt = e.target.value;
+			if (opt == '1') {
+				// console.log("全选")
+				$(".withdraw_checkbox").prop("checked", true)
+
+			} else if (opt == '2') {
+				// console.log("清空")
+				$(".withdraw_checkbox").prop("checked", false)
+
+			} else if (opt != '0') {
+				// console.log("反选");
+				$(".rowsSelectorOptReverse").remove();
+				$("#rowsSelector").append($(`<option class="rowsSelectorOptReverse" value="${Date.now()}">反选</option>`))
+				
+				$(".withdraw_checkbox").each(function(i, ele) {
+					if ($(ele).prop("checked")) {
+						$(ele).prop("checked", false);
+					} else {
+						$(ele).prop("checked", true);
+					}
+				})
+			}
+		})
+		
+
+		function withdrawSettingByCtype() {
+            var ctype = $("#selectWithdrawSettingCtype").val();
+			$("#withdrawSettingEditHref").attr("href", `/admin/pay/withdrawsettingedit?ctype=${ctype}`);
+			for (var i = 0; i < withdrawSettings.length; i++) {
+				var setting = withdrawSettings[i];
+				if (setting.id == ctype) {
+					$("#JQWithdrawMax").val(setting.jq_withdraw_max)
+					$("#JQWinMax").val(setting.jq_win_max)
+					$("#JQWinRateMax").val(setting.jq_win_rate_max)
+					$("#IsBankRepeatable").val(setting.is_bank_repeatable ? "是" : "否")
+					break
+				}
+			}
+		}
+		withdrawSettingByCtype();
+		// 用户类型配置
+		$("#selectWithdrawSettingCtype").on("change", function() {
+			withdrawSettingByCtype()
+		})
+
+        // 渠道别名
+        $("#selectAlias").on("change", function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias：" + selectVal)
+            $("#alias_id").val(selectVal)
+        });
+		
+        // 渠道别名
+        var aliasVal = $("#alias_id").val()
+        if (aliasVal) {
+            var arr1 = aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr1:" + arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+
+
+        $("#selectPackage").on("change",function () {
+        	var selectVal = $("#selectPackage").val()
+        	console.log(selectVal);
+        	$("#package_id").val(selectVal);
+    	});
+
+        var packVal =  $("#package_id").val()
+        if (packVal){
+            
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+				console.log("str:"+str)
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+    });
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

@@ -1,0 +1,23 @@
+package smsxxy
+
+import (
+	"fmt"
+	"testing"
+)
+
+func TestSend(t *testing.T) {
+	code := "1111"
+	content := fmt.Sprintf("[CasinoWin]The verification code is:%s.Please do not share it with others.Team QUICKCELLAR", code)
+	phone := "918077425674"
+	appKey := "acQ3fF"
+	appsecret := "PaaQr1"
+	appcode := "1000"
+	url := "http://190.92.241.159:9090/sms/batch/v2"
+	err := SendSmsXXY(url, appKey, appsecret, appcode, phone, content)
+	if err != nil {
+		t.Logf("err %v", err)
+		t.Logf("send sms failed phone %s, code %s", phone, code)
+	} else {
+		t.Logf("send sms successful phone %s, code %s", phone, code)
+	}
+}

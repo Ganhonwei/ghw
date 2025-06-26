@@ -1,0 +1,611 @@
+#!/bin/bash
+
+set -e
+
+SCRIPT_DIR=$(cd `dirname $0`; pwd)
+
+cd $SCRIPT_DIR
+
+PROJECT_DIR=$(cd ${SCRIPT_DIR}/../; pwd)
+
+PROTO_DIR="${PROJECT_DIR}/proto"
+
+TABLE_DIR="${PROJECT_DIR}/table"
+
+TABLE_DIR_M="${PROJECT_DIR}/m-table"
+
+TBL_DIR="${PROJECT_DIR}/tbl"
+
+PB_DIR="${PROJECT_DIR}/pb"
+
+LOG_DIR="${PROJECT_DIR}/bin/logs"
+
+CMD_PB_DIR="${PROJECT_DIR}/misc/tool/pb"
+
+LOG_FILE="${SCRIPT_DIR}/ctrl.log"
+
+WEB_DIR="${PROJECT_DIR}/web"
+
+WEBAGENT_DIR="${PROJECT_DIR}/web-agent"
+
+WEBSTATS_DIR="${PROJECT_DIR}/web-stats"
+
+usage() {
+    echo " ./ctrl cmd "
+    echo " cmd : build (login|gate|dbms) "
+    echo " cmd : start (gate) -node=1 "
+    echo " cmd : start (dbms|login|...) "
+    echo " cmd : start (hua|...) -node=1 "
+    echo " cmd : status (login|gate|dbms) (-node=1) "
+    echo " cmd : stop (login|gate|dbms) (-node=1) "
+    echo " cmd : restart (login|gate|dbms) (-node=1) "
+    echo " cmd : proto, buildall, startall, stopall, show "
+}
+
+get_curr_time() {
+    echo `date +"%Y-%m-%d %H:%M:%S"`
+}
+
+save_log() {
+    echo "" >> ${LOG_FILE}
+    echo "Time: "`get_curr_time`"   $1 " >> ${LOG_FILE}
+}
+
+get_src_file() {
+    echo ${PROJECT_DIR}/$1
+}
+
+get_bin_file() {
+    echo ${SCRIPT_DIR}/$1.bin
+}
+
+get_nodeid() {
+    # $1=-node=1
+    if [[ $1 == '-node='* ]]; then
+        echo ${1:0-1:1}
+    fi
+}
+
+get_pid() {
+    binFile=`get_bin_file $1`
+    nodeid=`get_nodeid $2`
+    if [[ ${nodeid} == '' ]]; then
+        ps aux | grep ${binFile} | grep -v grep | awk '{print $2}' | head -1
+    else
+        ps aux | grep ${binFile} | grep node=${nodeid} | grep -v grep | awk '{print $2}' | head -1
+    fi
+}
+
+get_logfile() {
+    nodeid=`get_nodeid $2`
+    if [[ ${nodeid} == '' ]]; then
+        echo $1-node.log
+    else
+        echo $1-node-${nodeid}.log
+    fi
+}
+
+
+# 生成协议
+proto() {
+    if [[ ! -d ${PROTO_DIR} ]]; then
+        echo "协议文件路径不存在"
+        exit 1
+    fi
+    cd ${PROTO_DIR}/
+    protoc -I=. -I=${PROJECT_DIR}/third_party/ --gogoslick_out=plugins=grpc:${PB_DIR} actor*.proto game*.proto hua*.proto lhd*.proto up*.proto crash*.proto rm*.proto joker*.proto ak47*.proto andar*.proto lottery*.proto plane*.proto redblack*.proto
+    
+    protoc -I=. --gogoslick_out=plugins=grpc:${CMD_PB_DIR} const_commands.proto
+    cd ${PROJECT_DIR}/misc/tool
+    go run gen.go
+}
+
+table() {
+    cd ${TABLE_DIR}
+    ./gen.sh
+    # cd ${TBL_DIR}
+    # go mod init goserver/gen/tb
+    # go work use .
+    cd "${TABLE_DIR}/Datas"
+    mkdir -p "${PROJECT_DIR}/bin/free" && cp -f -r *.json "${PROJECT_DIR}/bin/free/"
+
+    cp -f -r ${PROJECT_DIR}/bin/config/table/json/*.json ${PROJECT_DIR}/config/table/json/
+}
+
+table_m() {
+    cd ${TABLE_DIR_M}
+    ./gen.sh
+    # cd ${TBL_DIR}
+    # go mod init goserver/gen/tb
+    # go work use .
+    cd "${TABLE_DIR_M}/Datas"
+    mkdir -p "${PROJECT_DIR}/bin/free" && cp -f -r *.json "${PROJECT_DIR}/bin/free/"
+}
+
+check_param() {
+    if [[ $1 == '' ]]; then
+        echo "未指定服务器类型"
+        exit 1
+    fi
+}
+
+build() {
+    check_param $1
+    binFile=`get_bin_file $1`
+    srcFile=`get_src_file $1`
+    if [[ ${binFile} == '' ]]; then
+        echo "未指定输出文件"
+        exit 1
+    fi
+    if [[ ! -d ${srcFile} ]]; then
+        echo "${srcFile}目录不存在"
+        exit 1
+    fi
+
+    echo "${srcFile}编译中 ... "
+    save_log "${srcFile}编译中 ... "
+    go build -o ${binFile} -ldflags "-w -s" ${srcFile}
+}
+
+check_bin() {
+    check_param $1
+    binFile=`get_bin_file $1`
+    if [[ ! -e ${binFile} ]]; then
+        echo "失败, 执行文件不存在"
+        exit 1
+    fi
+}
+
+start() {
+    check_bin $1
+    pid=`get_pid $1 $2`
+
+    if [ "$pid" != '' ]; then
+        echo "服务正在运行中, 进程ID为${pid}"
+    else
+        logFile=`get_logfile $1 $2`
+        if [[ ${1} == '' ]]; then
+            echo "未指定输出日志文件"
+            exit 1
+        fi
+        echo -n "正在启动 ... "
+        save_log "正在启动 ${binFile} ${2} ... "
+        # $2 as -node="1"
+        #ulimit -HSn 65535
+        # ulimit -HSn 1024
+        # ${binFile} $2 -log_dir="logs" -stderrthreshold="DEBUG" >& ${logFile} &
+        ${binFile} $2 &
+        save_log "${binFile} started $! ... "
+        sleep 3s
+        status $1 $2
+    fi
+}
+
+status() {
+    check_bin $1
+    pid=`get_pid $1 $2`
+
+    if [[ -z "$pid" ]]; then
+        echo "服务不在运行状态"
+    else
+        echo "服务正在运行中, 进程ID为${pid}"
+    fi
+}
+
+stop() {
+    check_bin $1
+    pid=`get_pid $1 $2`
+    
+    if [ "$pid" != '' ]; then
+        echo -n "正在停止 ... "
+        save_log "正在停止 ${pid} ... "
+        kill -9 $pid
+        # kill -2 $pid
+        # sleep 15s
+        echo "$pid killed!"
+        save_log "${pid} killed! "
+    else
+        echo "服务不在运行状态"
+    fi
+}
+
+restart() {
+    echo -n "正在重启 ... "
+    stop $1 $2
+    sleep 1s
+    start $1 $2
+}
+
+# 编译
+build_all() {
+    build login 
+    build dbms 
+    build gate 
+    build hua 
+    # build hua2 
+    build joker
+    build ak47
+    build lhd
+    build robot 
+    build 7up
+    build crash
+    build rm
+    build rm2
+    build pay
+    build sms
+    build andarbahar
+    build lottery
+    build plane
+    build redblack
+}
+
+start_all() {
+    start dbms
+    start gate -node=1
+    start hua -node=1
+    # start lhd -node=1
+    start login
+} 
+
+stop_all() {
+    stop login
+    stop hua -node=1
+    stop gate -node=1
+    stop lhd -node=1
+    stop dbms
+}
+
+show() {
+    ps -ef | grep -v grep | grep login.bin
+    ps -ef | grep -v grep | grep gate.bin
+    ps -ef | grep -v grep | grep dbms.bin
+    ps -ef | grep -v grep | grep hua.bin
+}
+
+sync(){
+    scp *.bin code:/root/game
+}
+
+sync_table(){
+    scp -r table code:/root/game
+    scp -r free code:/root/game
+}
+
+synctest_table(){
+    scp -r ${PROJECT_DIR}/configs/table test:/home/ubuntu/game
+    scp -r ${PROJECT_DIR}/configs/free test:/home/ubuntu/game
+}
+
+syncgame_table(){
+    scp -r table game:/home/ubuntu/game
+    scp -r free game:/home/ubuntu/game
+}
+
+mjlgame_table(){
+    scp -r table mjl-game:/home/ubuntu/game
+    scp -r free mjl-game:/home/ubuntu/game
+}
+
+synctest(){
+    scp *.bin test:/home/ubuntu/game
+}
+
+syncgame(){
+    scp *.bin game:/home/ubuntu/game
+}
+
+syncmjlgame(){
+    scp *.bin mjl-game:/home/ubuntu/game
+}
+
+buildweb(){
+    cd ${WEB_DIR}
+    go build
+}
+
+syncweb-code(){
+    cd ${WEB_DIR}
+    scp web code:/root/game/web/
+    scp -r assets code:/root/game/web/
+    scp -r views code:/root/game/web/
+    scp -r conf code:/root/game/web/
+}
+
+syncweb-test(){
+    cd ${WEB_DIR}
+    go build
+    scp web test:/home/ubuntu/game/web/
+    scp -r assets test:/home/ubuntu/game/web/
+    scp -r views test:/home/ubuntu/game/web/
+    scp -r conf test:/home/ubuntu/game/web/
+}
+
+syncweb-db(){
+    cd ${PROJECT_DIR}
+    git pull
+    cd ${WEB_DIR}
+    go build
+    ssh db "ps aux | grep -w web | grep -v grep | awk '{print \$2}' | xargs kill -9" || true
+    scp web db:/home/ubuntu/web/
+    scp -r assets db:/home/ubuntu/web/
+    scp -r views db:/home/ubuntu/web/
+    scp -r conf db:/home/ubuntu/web/
+    ssh db "cd /home/ubuntu/web/; nohup ./web &> /dev/null &"
+}
+
+syncmjlweb-db(){
+    cd ${PROJECT_DIR}
+    git pull
+    cd ${WEB_DIR}
+    go build
+    ssh mjl-db "ps aux | grep -w web | grep -v grep | awk '{print \$2}' | xargs kill -9" || true
+    scp web mjl-db:/home/ubuntu/web/
+    scp -r assets mjl-db:/home/ubuntu/web/
+    scp -r views mjl-db:/home/ubuntu/web/
+    scp -r conf mjl-db:/home/ubuntu/web/
+    ssh mjl-db "cd /home/ubuntu/web/; nohup ./web &> /dev/null &"
+}
+
+syncwebstats-code(){
+    cd ${PROJECT_DIR}
+    git pull
+    cd ${WEBSTATS_DIR}
+    go build
+    scp webStats code:/root/game/web-stats/
+    scp -r assets code:/root/game/web-stats/
+    scp -r views code:/root/game/web-stats/
+    scp -r conf code:/root/game/web-stats/
+}
+
+syncwebstats-test(){
+    cd ${PROJECT_DIR}
+    git pull
+    cd ${WEBSTATS_DIR}
+    go build
+    scp webStats test:/home/ubuntu/game/web-stats/
+    scp -r assets test:/home/ubuntu/game/web-stats/
+    scp -r views test:/home/ubuntu/game/web-stats/
+    scp -r conf test:/home/ubuntu/game/web-stats/
+}
+
+syncwebstats-db(){
+    cd ${PROJECT_DIR}
+    git pull
+    cd ${WEBSTATS_DIR}
+    go build
+    ssh db "ps aux | grep -w webStats | grep -v grep | awk '{print \$2}' | xargs kill -9" || true
+    scp webStats db:/home/ubuntu/web-stats/
+    # scp -r assets db:/home/ubuntu/web-stats/
+    # scp -r views db:/home/ubuntu/web-stats/
+    # scp -r conf db:/home/ubuntu/web-stats/
+    ssh db "cd /home/ubuntu/web-stats/; nohup ./webStats &> /dev/null &"
+}
+
+syncmjlwebstats-db(){
+    cd ${PROJECT_DIR}
+    git pull
+    cd ${WEBSTATS_DIR}
+    go build
+    ssh mjl-db "ps aux | grep -w webStats | grep -v grep | awk '{print \$2}' | xargs kill -9" || true
+    scp webStats mjl-db:/home/ubuntu/web-stats/
+    # scp -r assets mjl-db:/home/ubuntu/web-stats/
+    # scp -r views mjl-db:/home/ubuntu/web-stats/
+    # scp -r conf mjl-db:/home/ubuntu/web-stats/
+    ssh mjl-db "cd /home/ubuntu/web-stats/; nohup ./webStats &> /dev/null &"
+}
+
+syncwebagent-db(){
+    cd ${PROJECT_DIR}
+    git pull
+    cd ${WEBAGENT_DIR}
+    go build
+    ssh db "ps aux | grep -w webAgent | grep -v grep | awk '{print \$2}' | xargs kill -9" || true
+    scp webAgent db:/home/ubuntu/web-agent/
+    scp -r assets db:/home/ubuntu/web-agent/
+    scp -r views db:/home/ubuntu/web-agent/
+    scp -r conf db:/home/ubuntu/web-agent/
+    ssh db "cd /home/ubuntu/web-agent/; nohup ./webAgent &> /dev/null &"
+}
+
+syncwebagent-test(){
+    cd ${WEBAGENT_DIR}
+    scp webAgent test:/home/ubuntu/game/web-agent/
+    scp -r assets test:/home/ubuntu/game/web-agent/
+    scp -r views test:/home/ubuntu/game/web-agent/
+    scp -r conf test:/home/ubuntu/game/web-agent/
+}
+syncwebagent-code(){
+    cd ${WEBAGENT_DIR}
+    scp webAgent code:/root/game/web-agent/
+    scp -r assets code:/root/game/web-agent/
+    scp -r views code:/root/game/web-agent/
+    scp -r conf code:/root/game/web-agent/
+}
+
+clearlog(){
+    cd ${LOG_DIR}/
+    rm -rf *
+}
+
+choose_game_server() {
+    options=("origin-game" "mengjiala-game")
+    select opt in "${options[@]}"; do
+        if [[ -n "$opt" ]]; then
+            echo "$opt"
+            return 0
+        else
+            echo ""
+            return 0
+        fi
+    done
+}
+
+choose_db_server() {
+    options=("origin-db" "mengjiala-db")
+    select opt in "${options[@]}"; do
+        if [[ -n "$opt" ]]; then
+            echo "$opt"
+            return 0
+        else
+            echo ""
+            return 0
+        fi
+    done
+}
+
+check_server() {
+    if [[ $1 == '' ]]; then
+        echo "无效服务器"
+        exit 1
+    fi
+}
+
+publish(){
+    server=$(choose_game_server)
+    check_server $server
+    scp *.bin $server:/home/ubuntu/game
+}
+
+publish_table(){
+    server=$(choose_game_server)
+    check_server $server
+    scp -r table $server:/home/ubuntu/game
+    scp -r free $server:/home/ubuntu/game
+}
+
+publish_web(){
+    server=$(choose_db_server)
+    check_server $server
+
+    cd ${PROJECT_DIR}
+    git pull
+    cd ${WEB_DIR}
+    go build
+    ssh $server "ps aux | grep -w web | grep -v grep | awk '{print \$2}' | xargs kill -9" || true
+    scp web $server:/home/ubuntu/web/
+    scp -r assets $server:/home/ubuntu/web/
+    scp -r views $server:/home/ubuntu/web/
+    scp -r conf $server:/home/ubuntu/web/
+    ssh $server "cd /home/ubuntu/web/; nohup ./web &> /dev/null &"
+}
+
+publish_stats(){
+    server=$(choose_db_server)
+    check_server $server
+
+    cd ${PROJECT_DIR}
+    git pull
+    cd ${WEBSTATS_DIR}
+    go build
+    ssh $server "ps aux | grep -w webStats | grep -v grep | awk '{print \$2}' | xargs kill -9" || true
+    scp webStats $server:/home/ubuntu/web-stats/
+    # scp -r assets db:/home/ubuntu/web-stats/
+    # scp -r views db:/home/ubuntu/web-stats/
+    scp -r conf $server:/home/ubuntu/web-stats/
+    ssh $server "cd /home/ubuntu/web-stats/; nohup ./webStats &> /dev/null &"
+}
+
+refresh-o(){
+    aws cloudfront create-invalidation --distribution-id E1H0KE8X3958V1 --paths "/*"
+}
+
+refresh-r(){
+    aws cloudfront create-invalidation --distribution-id E1YRUVSR9EQ0D6 --paths "/*"
+}
+
+refresh-m(){
+    aws cloudfront create-invalidation --distribution-id E65XRK5TT4AJO --paths "/*"
+}
+
+refresh-all(){
+    refresh-o
+    refresh-r
+    refresh-m
+}
+
+case $1 in
+    build)
+        build $2 $3;;
+    buildall)
+        build_all;;
+    start)
+        start $2 $3;;
+    startall)
+        start_all;;
+    stop)
+        stop $2 $3;;
+    stopall)
+        stop_all;;
+    restart)
+        restart $2 $3;;
+    status)
+        status $2 $3;;
+    show)
+        show;;
+    proto) 
+        proto;; 
+    table)
+        table;;
+    table_m)
+        table_m;;
+    sync)
+        sync;;
+    sync_table)
+        sync_table;;
+    publish)
+        publish;;
+    publish_table)
+        publish_table;;
+    publish_web)
+        publish_web;;
+    publish_stats)
+        publish_stats;;
+    synctest_table)
+        synctest_table;;
+    syncgame_table)
+        syncgame_table;;
+    mjlgame_table)
+        mjlgame_table;;
+    synctest)
+        synctest;;
+    syncgame)
+        syncgame;;
+    syncmjlgame)
+        syncmjlgame;;
+    buildweb)
+        buildweb;;
+    sync-w-code)
+        syncweb-code;;
+    sync-w-test)
+        syncweb-test;;
+    sync-w-db)
+        syncweb-db;;
+    sync-mjl-w-db)
+        syncmjlweb-db;;
+    sync-wa-db)
+        syncwebagent-db;;
+    sync-wa-test)
+        syncwebagent-test;;
+    sync-wa-code)
+        syncwebagent-code;;
+    sync-ws-code)
+        syncwebstats-code;;
+    sync-ws-test)
+        syncwebstats-test;;
+    sync-ws-db)
+        syncwebstats-db;;
+    sync-mjl-ws-db)
+        syncmjlwebstats-db;;
+    clearlog)
+        clearlog;;
+    refresh-origin)
+        refresh-o;;
+    refresh-random)
+        refresh-r;;
+    refresh-mjl)
+        refresh-m;;
+    refresh-all)
+        refresh-all;;
+    *)
+        usage;;
+esac

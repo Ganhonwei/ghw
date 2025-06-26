@@ -1,0 +1,496 @@
+[
+	{
+		"name": "用户管理",
+		"icon": "fa-user",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "用户列表",
+				"route": "player.list",
+				"action": "PlayerController.List"
+			},
+			{
+				"name": "对局列表",
+				"route": "player.playlist",
+				"action": "PlayerController.PlayList"
+			},
+			{
+				"name": "对局曲线",
+				"route": "player.gamecurve",
+				"action": "PlayerController.GameCurve"
+			},
+			{
+				"name": "金币流水",
+				"route": "player.goldlist",
+				"action": "PlayerController.GoldList"
+			},
+			{
+				"name": "VB流水",
+				"route": "player.vbwater",
+				"action": "PlayerController.VbWater"
+			},
+			
+			{
+				"name": "在线玩家",
+				"route": "player.onlineplayer",
+				"action": "PlayerController.OnlinePlayer"
+			},
+			{
+				"name": "登录日志",
+				"route": "logger.loginlist",
+				"action": "LoggerController.LoginList"
+			},
+			{
+				"name": "可提现金额日志",
+				"route": "logger.outdiamond",
+				"action": "LoggerController.OutDiamond"
+			},
+			{
+				"name": "黑白名单",
+				"route": "player.blacklist",
+				"action": "PlayerController.BlackList"
+			}
+		]
+	},
+	{
+		"name": "财务管理",
+		"icon": "fa-money",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "充值记录",
+				"route": "pay.paylist",
+				"action": "PayController.PayList"
+			},
+			{
+				"name": "提现记录与审核",
+				"route": "pay.withdrawlist",
+				"action": "PayController.WithdrawList"
+			},
+			{
+				"name": "渠道成功率",
+				"route": "pay.channel",
+				"action": "PayController.Channel"
+			},
+			{
+				"name": "支付渠道统计",
+				"route": "pay.paychannelstats",
+				"action": "PayController.PayChannelStats"
+			},
+			{
+				"name": "支付渠道日志",
+				"route": "pay.paychannellog",
+				"action": "PayController.PayChannelLog"
+			},
+			{
+				"name": "修改金币日志",
+				"route": "pay.coinlog",
+				"action": "PayController.CoinLog"
+			},
+			{
+				"name": "提现配置",
+				"route": "pay.setwithdraw",
+				"action": "PayController.SetWithdraw"
+			},
+			{
+				"name": "支付渠道统计通知",
+				"route": "pay.paychannelstatnotice",
+				"action": "PayController.PayChannelStatNotice"
+			},
+			{
+				"name": "通道配置",
+				"route": "pay.paychannel",
+				"action": "PayController.PayChannel"
+			}
+		]
+	},
+	
+	{
+		"name": "统计管理",
+		"icon": "fa-line-chart",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "实时数据监控",
+				"route": "statistics.livedata",
+				"action": "StatisticsController.LiveData"
+			},
+			{
+				"name": "打码统计",
+				"route": "statistics.playerbetstats",
+				"action": "StatisticsController.PlayerBetStats"
+			},
+			{
+				"name": "数据汇总(按时间)",
+				"route": "statistics.dtlist",
+				"action": "StatisticsController.DtList"
+			},
+			{
+				"name": "玩家分析",
+				"route": "statistics.useranalysis2",
+				"action": "StatisticsController.UserAnalysis2"
+			},
+			{
+				"name": "用户分层",
+				"route": "statistics.userlevelctype",
+				"action": "StatisticsController.UserLevelCtype"
+			},
+			{
+				"name": "金币流水曲线",
+				"route": "statistics.goldflowcurve",
+				"action": "StatisticsController.GoldFlowCurve"
+			},
+			{
+				"name": "LTV统计",
+				"route": "statistics.ltvstat",
+				"action": "StatisticsController.LtvStat"
+			},
+			{
+				"name": "首充口径LTV",
+				"route": "statistics.firstpayltvstat",
+				"action": "StatisticsController.FirstPayLtvStat"
+			},
+			{
+				"name": "游戏营收LTV",
+				"route": "statistics.gameltvstat",
+				"action": "StatisticsController.GameLtvStat"
+			},
+			{
+				"name": "回收周期计算",
+				"route": "statistics.recoverycycle",
+				"action": "StatisticsController.RecoveryCycle"
+			},
+			{
+				"name": "流失玩家分析页",
+				"route": "statistics.losingplayers",
+				"action": "StatisticsController.LosingPlayers"
+			},
+			{
+				"name": "玩家行为分析",
+				"route": "statistics2.behavioranalysis",
+				"action": "Statistics2Controller.BehaviorAnalysis"
+			},
+			{
+				"name": "玩家充值统计",
+				"route": "statistics.playerrecharge",
+				"action": "StatisticsController.PlayerRecharge"
+			},
+			{
+				"name": "商品购买统计",
+				"route": "statistics.goodsbuy",
+				"action": "StatisticsController.GoodsBuy"
+			},
+			{
+				"name": "房间数据",
+				"route": "statistics.room",
+				"action": "StatisticsController.Room"
+			},
+			{
+				"name": "新用户埋点统计",
+				"route": "statistics.pointlist",
+				"action": "StatisticsController.PointList"
+			},
+			{
+				"name": "新手库存",
+				"route": "statistics.novicestock",
+				"action": "StatisticsController.NoviceStock"
+			},
+			{
+				"name": "首充分析",
+				"route": "statistics.firstcharge",
+				"action": "StatisticsController.FirstCharge"
+			},
+			{
+				"name": "正常库存",
+				"route": "statistics.roomresources",
+				"action": "StatisticsController.RoomResources"
+			},
+			{
+				"name": "充值来源",
+				"route": "statistics.paysource",
+				"action": "StatisticsController.PaySource"
+			},
+			{
+				"name": "AD上报统计",
+				"route": "statistics.adreport",
+				"action": "StatisticsController.AdReport"
+			},
+			{
+				"name": "收银台统计",
+				"route": "statistics.checkstand",
+				"action": "StatisticsController.Checkstand"
+			},
+			{
+				"name": "短信统计",
+				"route": "statistics.sms",
+				"action": "StatisticsController.SMS"
+			},
+			{
+				"name": "玩家综合情况总览",
+				"route": "statistics.usergeneralstats",
+				"action": "StatisticsController.UserGeneralStats"
+			}
+		]
+	},
+	{
+		"name": "统计管理（新）",
+		"icon": "fa-line-chart",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "数据汇总",
+				"route": "statistics.datalist",
+				"action": "StatisticsController.DataList"
+			},
+			{
+				"name": "日数据概览",
+				"route": "statistics2.daydatalist",
+				"action": "Statistics2Controller.DayDataList"
+			},
+			{
+				"name": "经济日报",
+				"route": "statistics2.financestats",
+				"action": "Statistics2Controller.FinanceStats"
+			},
+			{
+				"name": "游戏行为日报",
+				"route": "statistics2.gamebetstats",
+				"action": "Statistics2Controller.GameBetStats"
+			},
+			{
+				"name": "用户留存",
+				"route": "statistics.retained",
+				"action": "StatisticsController.Retained"
+			},
+			{
+				"name": "LTV统计",
+				"route": "statistics2.ltvstat2",
+				"action": "Statistics2Controller.LtvStat2"
+			},
+			{
+				"name": "子项目收益",
+				"route": "statistics2.subprojectincome",
+				"action": "Statistics2Controller.SubprojectIncome"
+			},
+			{
+				"name": "库存管理",
+				"route": "game.inventory",
+				"action": "GameController.Inventory"
+			},
+			{
+				"name": "游戏状态",
+				"route": "statistics2.gamestate",
+				"action": "Statistics2Controller.GameState"
+			},
+			{
+				"name": "剧情局盘口",
+				"route": "statistics2.tpstorystock",
+				"action": "Statistics2Controller.TpStoryStock"
+			},
+			{
+				"name": "排行榜",
+				"route": "statistics2.rankinglist",
+				"action": "Statistics2Controller.RankingList"
+			},
+			{
+				"name": "玩家数据",
+				"route": "statistics2.playerdata",
+				"action": "Statistics2Controller.PlayerData"
+			}
+		]
+	},
+	{
+		"name": "游戏统计",
+		"icon": "fa-line-chart",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "TP",
+				"route": "gamestats.tp",
+				"action": "GameStatsController.TP"
+			},
+			{
+				"name": "TP(新)",
+				"route": "gamestats.tpnew",
+				"action": "GameStatsController.TPNew"
+			},
+			{
+				"name": "龙虎",
+				"route": "gamestats.lhd",
+				"action": "GameStatsController.LHD"
+			  },
+			  {
+				  "name": "7Updown",
+				  "route": "gamestats.updown",
+				  "action": "GameStatsController.Updown"
+			  },
+			{
+				"name": "Crash",
+				"route": "gamestats.crash",
+				"action": "GameStatsController.Crash"
+			},
+			{
+				"name": "AB",
+				"route": "gamestats.ab",
+				"action": "GameStatsController.AB"
+			},
+			{
+				"name": "CP",
+				"route": "gamestats.cp",
+				"action": "GameStatsController.CP"
+			},
+			{
+				"name": "Aviator",
+				"route": "gamestats.plane",
+				"action": "GameStatsController.Plane"
+			},
+			{
+				"name": "红黑",
+				"route": "gamestats.rb",
+				"action": "GameStatsController.RB"
+			},
+			{
+				"name": "Mines",
+				"route": "gamestats.mines",
+				"action": "GameStatsController.Mines"
+			}
+		]
+	},
+	{
+		"name": "游戏管理",
+		"icon": "fa-gamepad",
+		"route": "#",
+		"submenu": [
+			
+			{
+				"name": "点控玩家",
+				"route": "game.control",
+				"action": "GameController.Control"
+			},
+			{
+				"name": "客服管理",
+				"route": "message.customermanager",
+				"action": "MessageController.CustomerManager"
+			},
+			{
+				"name": "客服消息",
+				"route": "message.customer",
+				"action": "MessageController.Customer"
+			},
+			{
+				"name": "运营功能",
+				"route": "message.noticelist",
+				"action": "MessageController.NoticeList"
+			},
+			{
+				"name": "系统设置",
+				"route": "game.systemlist",
+				"action": "GameController.SystemList"
+			},
+			{
+				"name": "配置上传",
+				"route": "upload.config",
+				"action": "UploadController.Config"
+			},
+			{
+				"name": "渠道设置",
+				"route": "channel.list",
+				"action": "ChannelController.List"
+			},
+			{
+				"name": "博主账号",
+				"route": "channel.bloggeraccount",
+				"action": "ChannelController.BloggerAccount"
+			}
+		]
+	},
+	{
+		"name": "活动管理",
+		"icon": "fa-share-alt",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "基础付费活动",
+				"route": "activity.basicpay",
+				"action": "ActivityController.BasicPay"
+			},
+			{
+				"name": "基础免费活动",
+				"route": "activity.basicfree",
+				"action": "ActivityController.BasicFree"
+			},
+			{
+				"name": "分享活动",
+				"route": "activity.sharing",
+				"action": "ActivityController.Sharing"
+			},
+			{
+				"name": "小米活动",
+				"route": "activity.miui",
+				"action": "ActivityController.Miui"
+			},
+			{
+				"name": "彩票活动",
+				"route": "activity.lottery",
+				"action": "ActivityController.Lottery"
+			},
+			{
+				"name": "玩游戏分享抽大奖活动",
+				"route": "activity.sharedraw",
+				"action": "ActivityController.Sharedraw"
+			},
+			{
+				"name": "排行榜",
+				"route": "activity.betrank",
+				"action": "ActivityController.BetRank"
+			},
+			{
+				"name": "转盘",
+				"route": "activity.turn",
+				"action": "ActivityController.Turn"
+			},
+			{
+				"name": "礼包码",
+				"route": "activity.giftpackcode",
+				"action": "ActivityController.GiftPackCode"
+			},
+			{
+				"name": "波动返水",
+				"route": "activity.volatilitysubsidy",
+				"action": "ActivityController.VolatilitySubsidy"
+			},
+			{
+				"name": "代理活动",
+				"route": "activity.shareagent",
+				"action": "ActivityController.ShareAgent"
+			},
+			{
+				"name": "满减券",
+				"route": "activity.usercoupon",
+				"action": "ActivityController.UserCoupon"
+			}
+		]
+	},
+	{
+		"name": "系统管理",
+		"icon": "fa-cog",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "角色管理",
+				"route": "role.list",
+				"action": "RoleController.List"
+			},
+			{
+				"name": "用户管理",
+				"route": "user.list",
+				"action": "UserController.List"
+			},
+			{
+				"name": "管理员操作日志",
+				"route": "action.list",
+				"action": "ActionController.List"
+			}
+		]
+	}
+]

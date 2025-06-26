@@ -1,0 +1,498 @@
+<div class="row">
+	<div class="col-xs-12">
+	</div>
+</div>
+
+<div class="space-4"></div>
+
+<div class="row">
+	<div class="col-xs-12">
+		{{if .flash.error}}
+		<div class="alert alert-danger alert-dismissible fade in" role="alert">
+			{{.flash.error}}
+		</div>
+		{{end}}
+		{{if .flash.success}}
+		<div class="alert alert-warning alert-dismissible fade in" role="alert">
+			{{.flash.success}}
+		</div>
+		<script>$(".alert").fadeOut(2000);</script>
+		{{end}}
+
+		<form class="form-inline" method="post" action="{{urlfor "PayController.WithdrawList"}}">
+			<!-- <input type="hidden" name="status" value="{{.page}}" /> -->
+			<input type="hidden" name="status" value="{{.status}}" />
+			<div class="input-group table_filtrate">
+				查询:
+				<div class="input-group input-group-sm">
+					<input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-users"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				<div class="input-group input-group-sm">
+					<select name="type_id" id="type_id">
+						{{range $k,$v := .typeList}}
+						<option value="{{$k}}" {{if eq $.typeId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				订单状态:
+				<div class="input-group input-group-sm">
+					<select name="status_id" id="status_id">
+						{{range $k,$v := .statusList}}
+						<option value="{{$k}}" {{if eq $.statusId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				审核方式:
+				<div class="input-group input-group-sm">
+					<select name="audit_id" id="audit_id">
+						{{range $k,$v := .auditList}}
+						<option value="{{$k}}" {{if eq $.auditId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				渠道:
+				<div class="input-group" id="package_div">
+					<select id="selectPackage" class="selectpicker" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择渠道">
+						{{range $k,$v := .packageList}}
+						<option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+						{{end}}
+					</select>
+					<input type="hidden" id="package_id" name="package_id" value="{{.packageId}}" class="form-control" autocomplete="off" />
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				订单生成时间:
+				<div class="input-group input-group-sm">
+					<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+				至
+				<div class="input-group input-group-sm">
+					<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group input-group-sm">
+				<button type="submit" class="btn">查询</button>
+			</div>
+	</div>
+</div>
+</form>
+<div class="space-4"></div>
+
+<div class="table-panel">
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+			<tr>
+				<th>用户ID</th>
+				<th>昵称</th>
+				<th>渠道</th>
+				<th>订单状态</th>
+				
+				<th>提现金额</th>
+				<th>手续费</th>
+				<th>实际金额</th>
+				<th>用户银行</th>
+				<th>用户银行卡号</th>
+				<th>IFSC</th>
+				<th>转出渠道</th>
+				<th class="table-time">订单生成时间</th>
+				<th>订单号</th>
+				<th>第三方订单号</th>
+				<th class="table-time">订单完成时间</th>
+				<th>评分</th>
+				<th>已充值金额</th>
+				<th>已提现金额</th>
+				<th>审核方式</th>
+				<th>审核人</th>
+				<th>操作时间</th>
+				<th>标记信息</th>
+				<th>注册时间</th>
+				<th>成功付款次数</th>
+				<th>滞单时长</th>
+				<th>到账时效</th>
+				<th>审核时长</th>
+				<th>转单详情</th>
+				<th>金币流水</th>
+				{{if $.isOperation }}
+				<th class="table-opt">操作</th>
+				{{end}}
+			</tr>
+		</thead>
+		<tbody>
+			{{range $index, $v := .list}}
+			<tr id="row-{{$index}}" 
+			{{if and (eq $v.IsTag true) (eq $v.ExamineWay 2)}}
+				class="highlight" 
+			{{else if and (eq $v.IsTag true) (eq $v.ExamineWay 1)}}
+				class="auto" 
+			{{else}}
+				class="" 
+			{{end}}>
+				<td>
+					<a href="{{urlfor "Statistics2Controller.PlayerData" "userid" $v.Userid}}" target="_blank">{{$v.Userid}}</a>
+				</td>
+				<td>{{$v.NickName}}</td>
+				<td>{{$v.PackageId}}</td>
+				<td>
+					{{if eq $v.OrderStatus 1}}
+					<span class="text-success bigger-110 orange">审核中</span>
+					{{else if eq $v.OrderStatus 2}}
+					<span class="text-success bigger-110 green">提现成功</span>
+					{{else if eq $v.OrderStatus 3}}
+					<span class="text-warning bigger-110 red">提现退回</span>
+					{{else if eq $v.OrderStatus 4}}
+					<span class="text-warning bigger-110 purple">提现冻结</span>
+					{{else if eq $v.OrderStatus 5}}
+					<span class="text-warning bigger-110 red">提现失败</span>
+					{{else if eq $v.OrderStatus 6}}
+					<span class="text-success bigger-110" style="font-weight: bold;">提单成功</span>
+					{{else if eq $v.OrderStatus 7}}
+					<span class="text-warning bigger-110 red">提单失败</span>
+					{{else if eq $v.OrderStatus 8}}
+					<span class="text-warning bigger-110 blue">核单中</span>
+					{{else if eq $v.OrderStatus 9}}
+					<span class="text-warning bigger-110 red">银行信息错误</span>
+					{{else if eq $v.OrderStatus 10}}
+					<span class="text-warning bigger-110 red">商户号余额不足</span>
+					{{else if eq $v.OrderStatus 11}}
+					<span class="text-warning bigger-110 red">支付通道错误</span>
+					{{else}}
+					<span class=" bigger-110">--</span>
+					{{end}}
+				</td>
+				
+				<td>{{ printf "%.2f"  $v.FTotal}}</td>
+				<td>{{ printf "%.2f"  $v.FCommission}}</td>
+				<td>{{ printf "%.2f"  $v.FAmount}}</td>
+				<td>{{$v.Blank}}</td>
+				<td>
+					{{if eq $v.IsBlankNumber true}}
+						<span class="text-success bigger-110 orange" {{if eq $v.OrderStatus 9}}class="red"{{end}} style="font-weight: bold;">
+							<a href="{{urlfor "PlayerController.List" "userid" $v.BlankNumber "type_id" 5}}" target="_blank">{{$v.BlankNumber}}</a>
+						</span>
+					{{else}}
+					<span {{if eq $v.OrderStatus 9}}class="red"{{end}}>
+						<a href="{{urlfor "PlayerController.List" "userid" $v.BlankNumber "type_id" 5}}" target="_blank">{{$v.BlankNumber}}</a>
+					</span>
+					
+					{{end}}
+				</td>
+				<td>
+					<span {{if eq $v.OrderStatus 9}}class="red"{{end}}>
+						{{$v.IFSC}}
+					</span>
+				</td>
+				
+				{{if eq $v.OutChannelStr "USDT"}}
+				<td title="{{$v.USDTMsg}}" ondblclick="copyText(this)">{{$v.OutChannelStr}}</td>
+				{{else}}
+				<td>{{$v.OutChannelStr}}</td>
+				{{end}}
+				<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+				<td>{{$v.OrderID}}</td>
+				<td>{{$v.OutTradeNo}}</td>
+				<td>
+					{{ if $v.WithdrawTime.IsZero }}
+					- <!-- 默认值为空时展示默认格式的时间 -->
+					{{ else }}
+					{{date $v.WithdrawTime "Y-m-d H:i:s"}} <!-- 不为空时展示时间字段的值 -->
+					{{ end }}
+				</td>
+				<td>
+					{{if eq $v.AndroidScore -1}}
+					<span>-</span>
+					{{else}}
+					<span>{{$v.AndroidScore}}</span>
+					{{end}}
+				</td>
+				<td>{{ printf "%.2f"  $v.FMoney}}</td>
+				<td>{{ printf "%.2f"  $v.FCashOut}}</td>
+				<td>
+					{{if eq $v.ExamineWay 1}}
+					<span class="text-success bigger-110">自动</span>
+					{{else}}
+					<span class="text-success bigger-110">手动</span>
+					{{end}}
+				</td>
+				<td>{{$v.ExamineAccount }}</td>
+				<td>
+					{{ if $v.ETime.IsZero }}
+					- <!-- 默认值为空时展示默认格式的时间 -->
+					{{ else }}
+					{{date $v.ETime "Y-m-d H:i:s"}} <!-- 不为空时展示时间字段的值 -->
+					{{ end }}
+				</td>
+				<td>{{$v.ErrorMsg }}</td>
+				<td>{{date $v.Regtime "Y-m-d H:i:s"}}</td>
+				<td>
+					{{ if or (eq $v.RepeatTimes 0) (eq $v.RepeatTimes 1) }}
+						<span>{{$v.RepeatTimes }}</span>
+					{{else}}
+						<span class="red">{{$v.RepeatTimes }}</span>
+					{{end}}
+				</td>
+				<td>
+					{{if eq $v.IsDelay true}}
+						<span ><img class="warn_img" src="assets/img/warn.png" alt=""></span>
+						<span class="red">{{printf "%.1f"  $v.DelayTime}}</span>
+						
+					{{else}}
+						{{printf "%.1f"  $v.DelayTime}}
+					{{end}}	
+				</td>
+				<td>{{printf "%.1f"  $v.TimeOfArrival}}</td>
+				<td>{{printf "%.1f"  $v.AutioTime}}</td>
+				<td>
+					{{if eq $v.IsTransfer true}}
+						<a data-toggle="modal" data-target="#addModal" class="bule" data-id="{{$v.OrderID}}">转单详情</a>
+					{{else}}
+						<span>--</span>
+					{{end}}
+				</td>
+				<td>
+					<a href="{{urlfor "PlayerController.GoldList" "userid" $v.Userid}}" target="_blank">查看</a>
+				</td>
+				
+				<td style="font-weight: bold;">
+					{{if $.isOperation }}
+						{{if or (eq $v.OrderStatus 5) (eq $v.OrderStatus 7)}}
+						<!-- <a class="orange2" href="javascript:highlightRow({{$index}},{{$v.OrderID}},{{$v.IsTag}})">标记</a> -->
+						<a class="orange2" onclick="WithdrawTag(this)" title="{{$v.OrderID}}">标记</a>
+						|
+						<a class="red" onclick="WithdrawReturn(this)" title="{{$v.OrderID}}">退回</a>
+						|
+						<a class="orange" onclick="WithdrawFrozen(this)" title="{{$v.OrderID}}">冻结</a>
+						{{end}}
+						{{if eq $v.OrderStatus 1}}
+						<a class="green" onclick="WithdrawAudit(this)" title="{{$v.OrderID}}">通过</a>
+						|
+						<a class="orange2" onclick="WithdrawTag(this)" title="{{$v.OrderID}}">标记</a>
+						|
+						<a class="red" onclick="WithdrawReturn(this)" title="{{$v.OrderID}}">退回</a>
+						|
+						<a class="orange" onclick="WithdrawFrozen(this)" title="{{$v.OrderID}}">冻结</a>
+						{{end}}
+					{{end}}
+					{{if $.isOperationTransferOrder }}
+						{{if eq $v.OrderStatus 6}}
+						<a class="bule" onclick="TransferOrder(this)" title="{{$v.OrderID}}">转单</a>
+						{{end}}
+					{{end}}
+				</td>
+			</tr>
+			{{end}}
+	
+			{{if eq .count 0}}
+			<tr>
+				<td colspan="20">暂无记录...</td>
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+</div>
+<div class="row">
+	<div class="row-page"> 
+		{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+</div>
+</div>
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+	<form class="form-inline" method="post" >
+		<div class="modal-dialog"  style="width: 800px !important;">
+			<div class="modal-content" >
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel">
+						转单详情
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div id="game-info">
+					</div>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+<style>
+	.highlight {
+		background-color: #f1f5a4 !important;
+	}
+	.auto {
+		background-color: #ecccfc !important;
+	}
+	.table-br-time{
+		width: 100px !important;
+	}
+	.warn_img{
+    width: 20px !important;
+    margin-right: 5px;
+}
+</style>
+<script>
+	function copyText(event) {
+		var clickedElement = event;
+		var text = clickedElement.getAttribute('title');
+
+		var textField = document.createElement('textarea');
+		textField.value = text;
+		document.body.appendChild(textField);
+		textField.select();
+		document.execCommand('copy');
+		document.body.removeChild(textField);
+		alert("已成功复制！");
+	}
+
+	$(document).ready(function(){
+		$('#addModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var orderid = $(event.relatedTarget).data('id');
+			$.post("/admin/pay/transferdetail?id=" + orderid, function(data){
+				// 将查询结果填充到模态框中
+				$('#game-info').html(data);
+			});
+		});
+	})
+	function WithdrawTag(element) {
+		var userId = element.getAttribute('title');
+		if (confirm("是否要标记"+userId+"的提现订单？")) {
+			element.classList.toggle("highlight");
+			
+			$.post("/admin/pay/withdrawtag?id=" + userId, function(data){
+				// 将查询结果填充到模态框中
+				$('.td_pannel').html(data);
+			});
+		} else {
+			return false;
+		}
+	}
+	// 退回
+	function WithdrawReturn(element) {
+		var userId = element.getAttribute('title');
+		if (confirm("是否要退回"+userId+"的提现订单？")) {
+			
+			$.post("/admin/pay/withdrawreturn?id=" + userId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+	// 冻结
+	function WithdrawFrozen(element) {
+		var userId = element.getAttribute('title');
+		if (confirm("是否要冻结"+userId+"的提现订单？")) {
+			
+			$.post("/admin/pay/withdrawfrozen?id=" + userId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+
+	function TransferOrder(element) {
+		var userId = element.getAttribute('title');
+		if (confirm("是否要转单"+userId+"的提现订单？")) {
+			
+			$.post("/admin/pay/transferorder?id=" + userId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+	// 审核
+	function WithdrawAudit(element) {
+		var userId = element.getAttribute('title');
+		if (confirm("是否审核通过"+userId+"的提现订单？")) {
+			$.post("/admin/pay/withdrawaudit?id=" + userId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+
+	$(function () {
+        $("#selectPackage").on("change",function () {
+        	var selectVal = $("#selectPackage").val()
+        	console.log(selectVal);
+        	$("#package_id").val(selectVal);
+    	});
+
+        var packVal =  $("#package_id").val()
+        if (packVal != ""){
+            
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+				console.log("str:"+str)
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+    });
+</script>

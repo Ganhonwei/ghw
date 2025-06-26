@@ -1,0 +1,115 @@
+<div class="row">
+    <div class="col-xs-12">
+        <form class="form-horizontal ajax-form" method="post" action="{{urlfor "PlayerController.Ak47Details"}}">
+            <div class="form-group" style="border-bottom:1px solid #DCDFE6">
+                <div class="col-sm-12" style="padding-bottom:10px;">
+                    <div>
+                        <label for="number" class="col-sm-2 lable-top">局号：{{.info.WaterId}}</label>
+                        <label for="number" class="col-sm-2 lable-top">桌子ID：{{.info.DeskId}}</label>
+                        <label for="number" class="col-sm-2 lable-top">牌型ID：{{.info.CardTypeId}}</label>
+                        <label for="number" class="col-sm-2 lable-top">是否换牌：{{.info.ChangeCardTypeName}}</label>
+                        <label for="number" class="col-sm-2 lable-top">策略局：
+                            {{if eq .info.IsStrategy true}}
+                                <span>是</span>
+                            {{else}}
+                                <span>否</span>
+                            {{end}}
+                        </label>
+                        <label for="number" class="col-sm-2 lable-top">策略局类型：{{.info.StrategyType}}</label>
+                        <label for="number" class="col-sm-2 lable-top">换牌档位：{{printf "%.2f" .info.FChargeMoney}}</label>
+                        <label for="number" class="col-sm-2 lable-top">开局换牌控制方式：{{.info.ControlTypeName}}</label>
+                        <label for="number" class="col-sm-2 lable-top">当前赢分：{{printf "%.2f" .info.FWinScore}}</label>
+                        <label for="number" class="col-sm-2 lable-top">当前赢分(局中)：{{printf "%.2f" .info.FWinScore2}}</label>
+                        <label for="number" class="col-sm-2 lable-top">当局可赢(局中)：{{printf "%.2f" .info.FWinScore1}}</label>
+                        <label for="number" class="col-sm-2 lable-top">换牌引用玩家系数：{{.info.PlayerFactor}}</label>
+                        <label for="number" class="col-sm-2 lable-top">是否真人对局：
+                            {{if eq .info.RealGame true}}
+                                <span>是</span>
+                            {{else}}
+                                <span>否</span>
+                            {{end}}
+                            </label>
+                    </div>
+                    <label for="number" class="col-sm-12 lable-top">
+                        <div style="float: left;">
+                            参与玩家ID：
+                        </div>
+                        <div class="players-panel">{{.info.Players}}</div>
+                    </label>
+                    <div class="page-close">
+                        <a href="{{urlfor "PlayerController.PlayList" "id" .userid "type_id" .typeId "start_date" .startDate "end_date" .endDate "record_id" .recordId "room_id" .roomId}}" class="btn btn-default"><i
+                            class="fa fa-close"></i></a>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+</form>
+<div class="space-4">
+</div>
+
+<div class="table-panel">
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>座位号</th>
+                <th>用户ID</th>
+                <th class="table-device">牌型</th>
+                <th>结算</th>
+                <th>账变前分数</th>
+                <th>账变后分数</th>
+                <th>账变前彩金</th>
+                <th>账变后彩金</th>
+                <!-- <th>账变前奖励金</th>
+                <th>账变后奖励金</th> -->
+                <th>总投注</th>
+                <th>底注</th>
+                <th>彩金库存</th>
+                <!-- <th>奖励金库存</th> -->
+                <th>彩金明税</th>
+                <!-- <th>奖励金明税</th> -->
+                <th>彩金暗税</th>
+                <!-- <th>奖励金暗税</th> -->
+                {{range $i, $n := .maxlen}}
+                <th>轮次:{{$n}}</th>
+                {{end}}
+            </tr>
+        </thead>
+        <tbody>
+            {{range $k, $v := .info.AK47Detail}}
+            <tr>
+                <td>{{ $v.SeatId }}</td>
+                <td>{{ $v.UserId }}</td>
+                <td>
+                    <div>
+                        {{range $i, $o := $v.Cards}}
+                            <img style="width: 20px" src="assets/cards/{{$o}}.png">
+                        {{end}}
+                    </div>
+                </td>
+                <td>{{ printf "%.2f" $v.FScore }}</td>
+                <td>{{ printf "%.2f" $v.FBeforeScore }}</td>
+                <td>{{ printf "%.2f" $v.FAfterScore }}</td>
+                <td>{{ printf "%.2f" $v.FBeforeCash }}</td>
+                <td>{{ printf "%.2f" $v.FAfterCash }}</td>
+                <!-- <td>{{ printf "%.2f" $v.FBeforeBonus }}</td>
+                <td>{{ printf "%.2f" $v.FAfterBonus }}</td> -->
+                <td>{{ printf "%.2f" $v.FBet }}</td>
+                <td>{{ printf "%.2f" $v.FBottom }}</td>
+                <td>{{ printf "%.2f" $v.FCashStock }}</td>
+                <!-- <td>{{ printf "%.2f" $v.FBonusStock }}</td> -->
+                <td>{{ printf "%.2f" $v.FCashMingTax }}</td>
+                <!-- <td>{{ printf "%.2f" $v.FBonusMingTax }}</td> -->
+                <td>{{ printf "%.2f" $v.FCashAnTax }}</td>
+                <!-- <td>{{ printf "%.2f" $v.FBonusAnTax }}</td> -->
+                {{range $J, $e := $v.AK47DetailTurn}}
+                    <td>{{ $e.Operation | trunc }}</td>
+                {{end}}
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+
+</div>
+</div>

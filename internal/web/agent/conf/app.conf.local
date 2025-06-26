@@ -1,0 +1,43 @@
+appname = goplays-web
+httpport = 16060
+runmode = dev
+namespace = admin
+timezone="Asia/Kolkata" 
+
+# 数据库配置
+db.host = "127.0.0.1"
+db.user = root
+db.password = "root"
+db.port = 3306
+db.name = test
+db.prefix = "t_"
+db.timezone = "Asia/Shanghai"
+
+# mgo数据库配置
+mdb.host = "127.0.0.1"
+mdb.user =
+mdb.password =
+mdb.port = 27017
+#mdb.name = huiyindev
+mdb.name = test
+#mdb.name = huiyintest
+
+mgodb.host = "127.0.0.1"
+mgodb.user =
+mgodb.password =
+mgodb.port = 27019
+#mdb.name = huiyindev
+mgodb.name = testlog
+#mdb.name = huiyintest
+
+
+# 数据目录设置
+#data_dir = /data/golang/src/.../data
+
+# 文件目录设置
+files_dir = ./assets/files
+
+# 日志文件
+log_file = logs/error.log
+
+#test

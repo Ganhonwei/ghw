@@ -1,0 +1,62 @@
+<div class="form-inline">
+
+    <form class="form-horizontal ajax-form" method="post" action="{{urlfor "PayController.PayChannelStatNotice"}}">
+        <div class="input-item table_filtrate">
+            <div class="input-label">当天统计触发频率(分钟)：</div>
+            <div class="input-group-sm" style="display: inline-block;">
+                <input type="text"  id="dayTicker" class="form-control" autocomplete="off" name="dayTicker" value="{{$.dayTicker}}"/>
+            </div>
+        </div>
+        <div class="input-item table_filtrate">
+            <div class="input-label">时段统计单次时段(分钟)：</div>
+            <div class="input-group-sm" style="display: inline-block;">
+                <input type="text"  id="timeTicker" class="form-control" autocomplete="off" name="timeTicker" value="{{$.timeTicker}}" />
+            </div>
+        </div>
+        <div class="input-item table_filtrate">
+            <div class="input-label">提现审核提醒频率(分钟)：</div>
+            <div class="input-group-sm" style="display: inline-block;">
+                <input type="text"  id="withdrawTicker" class="form-control" autocomplete="off" name="withdrawTicker" value="{{$.withdrawTicker}}" />
+            </div>
+        </div>
+        <div class="input-item table_filtrate">
+            <div class="input-label">支付订单UTR补分通知频率(分钟)：</div>
+            <div class="input-group-sm" style="display: inline-block;">
+                <input type="text"  id="payUtrTicker" class="form-control" autocomplete="off" name="payUtrTicker" value="{{$.payUtrTicker}}" />
+            </div>
+        </div>
+        <div class="input-item table_filtrate">
+            <div class="input-label">当天统计下次触发时间：</div>
+            <span>{{$.dayNextTime}}</span>
+        </div>
+        <div class="input-item table_filtrate">
+            <div class="input-label">时段统计触发时间：</div>
+            <span>{{$.timeNextTime}}</span>
+        </div>
+        <div class="input-item table_filtrate">
+            <div class="input-label">提现审核提醒触发时间：</div>
+            <span>{{$.withdrawNextTime}}</span>
+        </div>
+        <div class="input-item table_filtrate">
+            <div class="input-label">支付订单UTR补分通知触发时间：</div>
+            <span>{{$.payUtrNextTime}}</span>
+        </div>
+        <div class="input-item input-group-sm">
+            <div class="input-label"></div>
+            <a id="withdrawSettingEditHref" href="{{urlfor "PayController.PayChannelStatNotice"}}" class="btn btn-sm btn-default">刷新</a>
+            <button style="margin-left: 8px;" class="btn btn-sm btn-default" type="submit">保存修改</button>
+        </div>
+    </form>
+</div>
+
+<style>
+.input-item {
+    vertical-align: middle;
+    margin-bottom: 10px;
+}
+
+.input-label {
+    display: inline-block;
+    width: 220px;
+}
+</style>

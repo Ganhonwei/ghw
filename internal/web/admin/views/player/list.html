@@ -1,0 +1,454 @@
+<div class="row">
+	<div class="col-xs-12">
+	</div>
+</div>
+
+<div class="space-4"></div>
+
+<div class="row">
+	<div class="col-xs-12">
+
+		{{if .flash.error}}
+		<div class="alert alert-danger alert-dismissible fade in" role="alert">
+			{{.flash.error}}
+		</div>
+		{{end}}
+		{{if .flash.success}}
+		<div class="alert alert-warning alert-dismissible fade in" role="alert">
+			{{.flash.success}}
+		</div>
+		<script>$(".alert").fadeOut(2000);</script>
+		{{end}}
+
+		<form class="form-inline" method="post" action="{{urlfor "PlayerController.List"}}">
+			<input type="hidden" name="status" value="{{.status}}" />
+			<div style="margin-bottom: 5px;">
+				<div class="input-group table_filtrate">
+					账号查询:
+					<div class="input-group input-group-sm">
+						<input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+							placeholder="玩家ID" autocomplete="off" />
+						<span class="input-group-addon">
+							<i class="ace-icon fa fa-users"></i>
+						</span>
+					</div>
+				</div>
+				<div class="input-group table_filtrate">
+					<div class="input-group input-group-sm">
+						<select name="type_id" id="type_id">
+							{{range $k,$v := .typeList}}
+							<option value="{{$k}}" {{if eq $.typeId $k}}selected{{end}}>{{$v}}</option>
+							{{end}}
+						</select>
+					</div>
+				</div>
+				<div class="input-group table_filtrate">
+					用户类型:
+					<div class="input-group input-group-sm">
+						<select name="utype_id" id="utype_id">
+							{{range $k,$v := .usertype}}
+							<option value="{{$k}}" {{if eq $.usertypeId $k}}selected{{end}}>{{$v}}</option>
+							{{end}}
+						</select>
+					</div>
+				</div>
+				<div class="input-group table_filtrate">
+					账号类型:
+					<div class="input-group input-group-sm">
+						<select name="account_id" id="account_id">
+							{{range $k,$v := .accountType}}
+							<option value="{{$k}}" {{if eq $.accountId $k}}selected{{end}}>{{$v}}</option>
+							{{end}}
+						</select>
+					</div>
+				</div>
+				<div class="input-group table_filtrate">
+					局数:
+					<div class="input-group input-group-sm">
+						<!-- <select name="num_id" id="num_id">
+							{{range $k,$v := .gameNumList}}
+							<option value="{{$k}}" {{if eq $.numId $k}}selected{{end}}>{{$v}}</option>
+							{{end}}
+						</select> -->
+						<div class="input-group input-group-sm">
+							<input type="number" id="num_statr" name="num_statr" value="{{.num_statr}}" class="form-control number-input" autocomplete="off"/>
+						</div>
+						-
+						<div class="input-group input-group-sm">
+							<input type="number" id="num_end" name="num_end" value="{{.num_end}}" class="form-control number-input" autocomplete="off"/>
+						</div>
+					</div>
+				</div>
+				<div class="input-group table_filtrate">
+					渠道:
+					<div class="input-group" id="package_div">
+						<select id="selectPackage" class="selectpicker" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择渠道">
+							{{range $k,$v := .packageList}}
+							<option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+							{{end}}
+						</select>
+						<input type="hidden" id="package_id" name="package_id" value="{{.packageId}}" class="form-control" autocomplete="off" />
+					</div>
+				</div>
+				
+			</div>
+
+			<div>
+				<div class="input-group table_filtrate">
+					注册日期:
+					<div class="input-group input-group-sm">
+						<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off" />
+						<span class="input-group-addon">
+							<i class="ace-icon fa fa-calendar"></i>
+						</span>
+					</div>
+					至
+					<div class="input-group input-group-sm">
+						<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off" />
+						<span class="input-group-addon">
+							<i class="ace-icon fa fa-calendar"></i>
+						</span>
+					</div>
+				</div>
+				<div class="input-group table_filtrate">
+					最后登录日期:
+					<div class="input-group input-group-sm">
+						<input type="text" id="start_date1" name="start_date1" value="{{.startDate1}}" class="form-control" autocomplete="off" />
+						<span class="input-group-addon">
+							<i class="ace-icon fa fa-calendar"></i>
+						</span>
+					</div>
+					至
+					<div class="input-group input-group-sm">
+						<input type="text" id="end_date1" name="end_date1" value="{{.endDate1}}" class="form-control" autocomplete="off" />
+						<span class="input-group-addon">
+							<i class="ace-icon fa fa-calendar"></i>
+						</span>
+					</div>
+				</div>
+	
+				<div class="input-group input-group-sm">
+					<button type="submit" class="btn">查询</button>
+					<!-- <a href="{{urlfor "PlayerController.ExportUser"}}"  class="btn" style="margin-left: 5px;">导出</a> -->
+				</div>
+			</div>
+	</div>
+</div>
+</form>
+<div class="space-4"></div>
+
+
+<div class="table-panel" table-wrap="290">
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+			<tr>
+				<th stickyL class="fixed-column">用户ID</th>
+				<th>昵称</th>
+				<th>用户类型</th>
+				<th>账户类型</th>
+				<th>渠道</th>
+				<th>手机号</th>
+				<th class="table-time">注册时间</th>
+				<th>注册IP</th>
+				<th class="table-time">最后登录时间</th>
+				<th>最后登录IP</th>
+				<th class="ellipsis">设备号</th>
+				<th>银行卡</th>
+				<th>总资产</th>
+				<th>显示金额</th>
+				<th>彩金</th>
+				<th>奖励金</th>
+				<th>可提现金额</th>
+				<th>赠送金额</th>
+				<!-- <th>其他资产</th> -->
+				<th>已充值金额</th>
+				<th>已提现金额</th>
+				<th>当前赢分</th>
+				<th>起伏线</th>
+				<th>状态</th>
+				<th>总游戏局数</th>
+				<th>局数详情</th>
+				{{if $.isOperation }}
+				<th stickyR class="table-user-opt">操作</th>
+				{{end}}
+				
+			</tr>
+		</thead>
+		<tbody>
+			{{range $k, $v := .list}}
+			<tr>
+				<td>{{$v.Userid}}</td>
+				<td>{{$v.Nickname}}</td>
+					<td>
+						<span class="bigger-110">
+							{{$v.UserType}}
+						</span>
+					</td>
+					<td>
+						{{if eq $v.RegistArea 1}}
+							<span class="bigger-110">B类</span>
+						{{else if eq $v.RegistArea 2}}
+							<span class="bigger-110">C类</span>
+						{{else}}
+							<span class="bigger-110">A类</span>
+						{{end}}
+					</td>
+				<td>{{$v.AD_BundleId}}</td>
+				<td>{{$v.Phone}}</td>
+				<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+				<td>{{$v.RegistIP}}</td>
+				<td>
+					{{ if $v.LoginTime.IsZero }}
+					- <!-- 默认值为空时展示默认格式的时间 -->
+					{{ else }}
+					{{date $v.LoginTime "Y-m-d H:i:s"}} <!-- 不为空时展示时间字段的值 -->
+					{{ end }}
+				</td>
+				<td>
+					{{if eq $v.IsIpRepeat true}}
+						<span class="text-success bigger-110 red" style="font-weight: bold;">{{$v.LoginIP}}</span>
+					{{else}}
+						<span>{{$v.LoginIP}}</span>
+						
+					{{end}}
+				</td>
+				<td class="ellipsis" >
+					<div title="{{$v.AD_ADID}}" ondblclick="copyText(this)">
+						{{if eq $v.IsAppIdRepeat true}}
+						<span class="text-success bigger-110 orange" style="font-weight: bold;">{{$v.AD_ADID | StringCutOff }}</span>
+					{{else}}
+						<span>{{$v.AD_ADID | StringCutOff }}</span>
+						
+					{{end}}
+					</div>
+				</td>
+				<td>{{ $v.BankAccounts }}</td>
+				<td>{{ printf "%.2f" $v.Assets}}</td>
+				<td>{{ printf "%.2f" $v.ShowAmount}}</td>
+				<td>{{ printf "%.2f" $v.FDiamond}}</td>
+				<td>{{ printf "%.2f" $v.FCoin}}</td>
+				<td>{{ printf "%.2f" $v.FOutDiamond}}</td>
+				<td>{{ printf "%.2f" $v.FGiveDiamond}}</td>
+				<!-- <td>{{ printf "%.2f" $v.FShadowDiamond}}</td> -->
+				<td>{{ printf "%.2f" $v.FMoney}}</td>
+				<td>
+					{{ printf "%.2f" $v.FCashOut}}
+				</td>
+				<td>{{ printf "%.2f" $v.FWin}}</td>
+				<td>
+					{{ printf "%.2f" $v.FluctuateLine}}
+				</td>
+				<td>
+					{{if eq $v.Status 1}}
+					<span class="text-success bigger-110 green">正常</span>
+					{{else if eq $v.Status 3}}
+					<span class="text-warning bigger-110 red">封禁</span>
+					{{else if eq $v.Status 4}}
+					<span class="text-warning bigger-110 green">白名单</span>
+					{{else}}
+					<span class="text-success bigger-110 orange">锁定</span>
+					{{end}}
+				</td>
+				<td>
+					{{$v.GameNumber}}
+				</td>
+				<td>
+					<a data-toggle="modal" data-target="#addModal" class="bule" data-id="{{$v.Userid}}">查看</a>
+				</td>
+				{{if $.isOperation }}
+					<td>
+					<a href="{{urlfor "PlayerController.RechargeDiamond" "id" $v.Userid}}" class="pink" >充值彩金</a>
+					|
+					<a href="{{urlfor "PlayerController.EditDiamond" "id" $v.Userid}}" class="orange">修改彩金</a>
+					|
+					<a href="{{urlfor "PlayerController.Edit" "id" $v.Userid}}" class="grey">资料修改</a> |
+					
+					<a href="{{urlfor "PlayerController.RechargeCoin" "id" $v.Userid}}" class="pink">充值bonus</a>
+					<br />
+					<a href="{{urlfor "PlayerController.EditCoin" "id" $v.Userid}}" class="orange">修改bonus</a>
+					|
+					{{ if or (eq $v.Status 1) (eq $v.Status 4) }}
+					<a href="{{urlfor "PlayerController.BlackListAdd" "id" $v.Userid}}" class="red">移入黑名单</a>
+					{{else}}
+					<a href="{{urlfor "PlayerController.BlackListDel" "id" $v.Userid}}" class="green">移出黑名单</a>
+					{{end}}
+					|
+					<a data-toggle="modal" data-target="#updateType" class="bule" data-id="{{$v.Userid}}" data-usertype="{{$v.UserType}}">修改类型</a>
+					<br />
+					<a href="{{urlfor "PlayerController.EditCashOut" "id" $v.Userid}}" class="orange">增加可提现金额</a>
+					</td>
+				{{end}}
+			</tr>
+			{{end}}
+			{{if eq .count 0}}
+			<tr>
+				<td colspan="20">暂无记录...</td>
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+</div>
+<div class="row">
+	<div class="row-page"> 
+		{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+	<form class="form-inline" method="post" >
+		<div class="modal-dialog" style="width: 1200px !important;">
+			<div class="modal-content" >
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel">
+						游戏局数
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div id="game-info">
+					</div>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="updateType" tabindex="-1" role="dialog" aria-labelledby="updateTypeLabel" aria-hidden="true">
+    <form class="form-inline" method="post" action="{{urlfor "PlayerController.EditUserType"}}">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="myModalLabel">修改类型</h4>
+				</div>
+				<div class="modal-body">
+					<input type="hidden" class="form-control" id="updateuserid" name="updateuserid">
+					<div style="margin-bottom: 10px;">
+						<label for="name">默认类型：</label>
+						<input type="text" class="form-control" id="updateusertype" disabled>
+					</div>
+					<div style="margin-bottom: 10px;">
+						<label for="name">手动修改：</label>
+						<select name="listusertype" id="listusertype" >
+							<option value="">默认类型</option>
+							<option value="羊毛党">羊毛党</option>
+							<option value="多设备用户">多设备用户</option>
+							<option value="多银行卡用户">多银行卡用户</option>
+							<option value="赢家">赢家</option>
+							<option value="大赢家">大赢家</option>
+							<option value="6">自定义</option>
+						</select>
+						<!-- <input type="text" class="form-control" id="name" placeholder="请输入名称"> -->
+					</div>
+					<div class="form-group" id="customgroup" style="display: none;">
+						<label for="name" style="width: 70px;"></label>
+						<input type="text" class="form-control" id="customtype" name="customtype" autocomplete="off" placeholder="请输入自定义类型">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+					<button type="submit" class="btn btn-primary">保存</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+
+</div>
+</div>
+<script>
+	$(document).ready(function(){
+		$('#addModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var userId = $(event.relatedTarget).data('id');
+			// 发起 AJAX 请求查询用户信息
+			
+			$.post("/admin/player/usergames?id=" + userId, function(data){
+				// 将查询结果填充到模态框中
+				$('#game-info').html(data);
+			});
+		});
+		$('#updateType').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var userId = $(event.relatedTarget).data('id');
+			var userType = $(event.relatedTarget).data('usertype');
+			// updateusertype
+			$('#customtype').val('')
+            $('#listusertype').val('')
+			var contentElement = document.getElementById("customgroup");
+        	contentElement.style.display = "none";
+			
+			var myInput = document.getElementById("updateuserid");
+      		myInput.value = userId;
+			var myInputtype = document.getElementById("updateusertype");
+			myInputtype.value = userType;
+		});
+		
+	});
+	var mySelect = document.getElementById("listusertype");
+	mySelect.addEventListener("change", function(event) {
+        	// 获取点击的选项的值
+        	var selectedValue = event.target.value;
+			if (selectedValue === "6") {
+				var contentElement = document.getElementById("customgroup");
+        		contentElement.style.display = "block";
+			}else{
+				var contentElement = document.getElementById("customgroup");
+        		contentElement.style.display = "none";
+			}
+        	console.log("点击了：" + selectedValue);
+	});
+	function copyText(event){
+		var clickedElement = event;
+		var text = clickedElement.getAttribute('title');
+
+		var textField = document.createElement('textarea');
+      textField.value = text;
+      document.body.appendChild(textField);
+      textField.select();
+      document.execCommand('copy');
+      document.body.removeChild(textField);
+      alert("设备号已成功复制！");
+	}
+
+	$(function () {
+        $("#selectPackage").on("change",function () {
+        	var selectVal = $("#selectPackage").val()
+        	console.log(selectVal);
+        	$("#package_id").val(selectVal);
+    	});
+
+        var packVal =  $("#package_id").val()
+        if (packVal != ""){
+            
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+				console.log("str:"+str)
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+    });
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

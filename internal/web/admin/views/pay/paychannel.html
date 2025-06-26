@@ -1,0 +1,550 @@
+<div id="app" class="paychannel">
+  <div class="args-wrap">
+    <el-button size="small" :loading="loading" @click="fetchDatas">查询</el-button>
+    <el-button type="primary" size="small" @click="() => {test.dialogVisible = true}">测试</el-button>
+  </div>
+  <div class="table-wrap paychannel-wrap">
+    <!-- header-contextmenu	 -->
+    <el-table :data="datas" row-key="id" size="small" border v-loading="loading" :max-height="layout.tableHeight"
+      class="go-table" @sort-change="onTableSort">
+      <el-table-column v-for="c in columns" v-if="!c.hidden" :key="c.prop" :prop="c.prop" :label="c.label"
+        :fixed="c.fixed" :sortable="c.sortable" :min-width="c.minWidth" :sort-method="c.sortMethod" :show-overflow-tooltip="c.showOverflowTooltip">
+        <template slot="header" slot-scope="scope">
+          <template v-if="scope.column.property === 'fPaySuccessHourRate'">
+              <span>#{scope.column.label}</span>
+              <el-button size="mini" type="primary" plain :loading="hourSuccessRateLoading" @click="fetchHourSuccessRate">刷新</el-button>
+          </template>
+          <template v-else-if="scope.column.property === 'fBalance'">
+              <span>#{scope.column.label}</span>
+              <el-button size="mini" type="primary" plain :loading="hourBalancesLoading" @click="fetchBalances(1)">刷新</el-button>
+          </template>
+          <template v-else><span>#{scope.column.label}</span></template>
+        </template>
+        <template slot-scope="scope">
+          <template v-if="c.prop === 'switch'">
+            <el-switch :value="scope.row.status === 1"
+              @change="handleSwitchChange($event, scope.row.id, 1, scope.row.name)"
+              :class="{'switch-loading': this.switchLoading && this.switchPayId === scope.row.id && this.this.switchPayType === 1}"
+              inactive-text="代收" active-color="#13ce66" inactive-color="#ff4949">
+            </el-switch>
+            <el-switch :value="scope.row.wstatus === 1"
+              @change="handleSwitchChange($event, scope.row.id, 2, scope.row.name)"
+              :class="{'switch-loading': this.switchLoading && this.switchPayId === scope.row.id && this.this.switchPayType === 2}"
+              inactive-text="代付" active-color="#13ce66" inactive-color="#ff4949">
+            </el-switch>
+          </template>
+          <template v-else-if="c.prop === 'operate'">
+            <el-button size="mini" @click="handleChannelEdit(scope.row)">编辑</el-button>
+          </template>
+          <template v-else-if="c.prop === 'operate'">
+            <el-button size="mini" @click="handleChannelEdit(scope.row)">编辑</el-button>
+          </template>
+          <template v-else>#{scope.row[c.prop]}</template>
+        </template>
+      </el-table-column>
+    </el-table>
+  </div>
+
+  <el-dialog title="通道编辑" :visible.sync="edit.dialogVisible" class="channel-edit">
+    <el-form :model="edit" label-width="auto">
+      <p style="color:red">代收固定手续费、实时余额、充值、提现金额范围填写1.00等于100分</p>
+      <el-form-item label="通道名称" :required="true">
+        <span>#{edit.name}</span>
+      </el-form-item>
+      <el-form-item label="支付开关" :required="true">
+        <el-select size="small" v-model="edit.status" placeholder="" @change="v => edit.status = v">
+          <el-option label="开" :value="1"></el-option>
+          <el-option label="关" :value="0"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="提现开关" :required="true">
+        <el-select size="small" v-model="edit.wstatus" placeholder="" @change="v => edit.wstatus = v">
+          <el-option label="开" :value="1"></el-option>
+          <el-option label="关" :value="0"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="通道类型" >
+        <el-select size="small" v-model="edit.ptype" placeholder="" @change="v => edit.ptype = v">
+          <el-option label="纯原生" :value="1"></el-option>
+          <el-option label="纯唤醒" :value="2"></el-option>
+          <el-option label="原唤混" :value="3"></el-option>
+          <el-option label="未知" :value="0"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="代收费率" :required="false">
+        <el-input-number size="small" type="number" v-model="edit.payRate" :precision="2" :min="0" :max="100" :step="0.01" :step-strictly="true" :controls="false" style="width: 100px"></el-input-number>
+        <span>%</span>
+      </el-form-item>
+      <el-form-item label="代付费率" :required="false">
+        <el-input-number size="small" type="number" v-model="edit.withdrawRate" :precision="2" :min="0" :max="100" :step="0.01" :step-strictly="true" :controls="false" style="width: 100px">
+          <!-- <span slot="suffix" style="font-weight: bold;">%</span> -->
+        </el-input-number>
+        <span>%</span>
+      </el-form-item>
+      <el-form-item label="代付单笔额外费用" :required="false">
+        <el-input-number size="small" v-model="edit.withdrawFee" :min="0" :precision="2" :controls="false" style="width:190px"></el-input-number>
+      </el-form-item>
+      <el-form-item label="支持的支付方式"  :required="true" v-if="version != 'PK' || version == 'dev'">
+        <el-select size="small" v-model="edit.payOptions" placeholder="" multiple  style="width:300px">
+          <el-option label="DirectLaunchTheApp" :value="1"></el-option>
+          <el-option label="QRcode" :value="2"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="支持的支付app" :required="true">
+        <el-select size="small" v-model="edit.payApps" placeholder="" multiple style="width:300px">
+          <el-option label="Paytm" :value="1"></el-option>
+          <el-option label="PhonePe" :value="2"></el-option>
+          <el-option label="Mobikwik" :value="3"></el-option>
+          <el-option label="BHIM" :value="4"></el-option>
+          <el-option label="GooglePay" :value="5"></el-option>
+          <el-option label="Other UPI" :value="6"></el-option>
+          <el-option label="Nagad" :value="101"></el-option>
+          <el-option label="bkash" :value="102"></el-option>
+          <el-option label="EASYPAISA" :value="1001"></el-option>
+          <el-option label="JAZZCASH" :value="1002"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="是否需要UTR" :required="true" v-if="version != 'PK' || version == 'dev'">
+        <el-select size="small" v-model="edit.utrRequired" placeholder="" @change="v => edit.utrRequired = v" style="text-align: center;">
+          <el-option label="是" :value="true"></el-option>
+          <el-option label="否" :value="false"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="代付支持的钱包" :required="true" v-if="version == 'PK' || version == 'dev'">
+        <el-select size="small" v-model="edit.withdrawWallets" placeholder="" multiple style="width:300px">
+          <el-option v-for="option in pakWallets" :key="option.value" :label="option.label" :value="option.value"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="代付支持的银行" :required="true" v-if="version == 'PK' || version == 'dev'">
+        <el-select size="small" v-model="edit.withdrawBanks" placeholder="" multiple style="width:300px">
+          <el-option v-for="option in pakBanks" :key="option.value" :label="option.label" :value="option.value"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="代收权重" :required="true">
+        <el-input-number size="small" v-model="edit.payWeight" :min="0" :precision="0" :controls="false" style="width:259px"></el-input-number>
+      </el-form-item>
+      <el-form-item label="充值金额区间" :required="true">
+        <el-input-number size="small" v-model="edit.payMin" :min="0" :precision="2" :controls="false" style="width:120px"></el-input-number>
+        <span>~</span>
+        <el-input-number size="small" v-model="edit.payMax" :min="0" :precision="2" :controls="false" style="width:120px"></el-input-number>
+      </el-form-item>
+      <el-form-item label="代付权重" :required="true">
+        <el-input-number size="small" v-model="edit.withdrawWeight" :min="0" :precision="0" :controls="false" style="width:259px"></el-input-number>
+      </el-form-item>
+      <el-form-item label="提现金额区间" :required="true">
+        <el-input-number size="small" v-model="edit.withdrawMin" :min="0" :precision="2" :controls="false" style="width:120px"></el-input-number>
+        <span>~</span>
+        <el-input-number size="small" v-model="edit.withdrawMax" :min="0" :precision="2" :controls="false" style="width:120px"></el-input-number>
+      </el-form-item>
+      <!-- <el-form-item label="通道余额" :required="false">
+        <el-input-number size="small" v-model="edit.balance" :precision="2" :controls="false" style="width:259px"></el-input-number>
+      </el-form-item> -->
+    </el-form>
+    <div slot="footer" class="dialog-footer">
+      <el-button size="small" @click="edit.dialogVisible = false">取 消</el-button>
+      <el-button size="small" type="primary" :loading="edit.dialogLoading" @click="handleChannelSubmit">确 定</el-button>
+    </div>
+  </el-dialog>
+
+  
+  <el-dialog title="通道测试" :visible.sync="test.dialogVisible" class="channel-edit">
+    <el-form :model="test" label-width="auto">
+      <p style="color:red">金额填写1.00等于100分</p>
+      <el-form-item label="支付通道" :required="true">
+        <el-select size="small" v-model="test.channelId" placeholder="" style="width:180px">
+          <el-option v-for="c in datas" :key="c.id" :label="c.name" :value="c.id"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="金额" :required="true">
+        <el-input-number size="small" v-model="test.amount" :precision="2" :controls="false" :step="1" :step-strictly="true" style="width:180px"></el-input-number>
+      </el-form-item>
+      <el-form-item label="收银台链接" :required="false">
+        <el-input :readonly="true" size="small" v-model="test.payUrl" style="width:300px"></el-input>
+        <el-button size="small" @click="handleCopyPayUrl">复制</el-button>
+      </el-form-item>
+    </el-form>
+    <div slot="footer" class="dialog-footer" style="text-align: center;">
+      <el-button size="small" @click="test.dialogVisible = false">取 消</el-button>
+      <el-button size="small" type="primary" :loading="test.dialogLoading" @click="handleChannelTestSubmit">生成支付链接</el-button>
+    </div>
+  </el-dialog>
+</div>
+
+<script>
+  // 创建 Vue 实例
+  new Vue({
+    delimiters: ['#{', '}'],
+    el: '#app',
+    data() {
+      return {
+        layout: {
+          tableHeight: 600,
+        },
+        loading: false,
+        args: {
+          sortBy: '',
+          asc: 0,
+        },
+        datas: [],
+        version: '',
+        pakWallets: [ // 巴基斯坦支持的钱包
+          { label: 'EASYPAISA', value: 'EASYPAISA' },
+          { label: 'JAZZCASH', value: 'JAZZCASH' }
+        ],
+        pakBanks: [ // 巴基斯坦支持的银行
+          { label: 'ALBARAKA ISLAMIC BANK', value: 'ALBARAKA ISLAMIC BANK' },
+          { label: 'ALLIED BANK LIMITED', value: 'ALLIED BANK LIMITED' },
+          { label: 'APNA MICRO FINANCE BANK', value: 'APNA MICRO FINANCE BANK' },
+          { label: 'ASKARI BANK LIMITED', value: 'ASKARI BANK LIMITED' },
+          { label: 'BANK AL HABIB LIMITED', value: 'BANK AL HABIB LIMITED' },
+          { label: 'BANK ALFALAH LIMITED', value: 'BANK ALFALAH LIMITED' },
+          { label: 'BANK ISLAMI PAKISTAN LIMITED', value: 'BANK ISLAMI PAKISTAN LIMITED' },
+          { label: 'BANK OF KHYBER', value: 'BANK OF KHYBER' },
+          { label: 'CITI BANK NA', value: 'CITI BANK NA' },
+          { label: 'DUBAI ISLAMIC BANK PAKISTAN LIMITED', value: 'DUBAI ISLAMIC BANK PAKISTAN LIMITED' },
+          { label: 'FAYSAL BANK LIMITED', value: 'FAYSAL BANK LIMITED' },
+          { label: 'FINCA MICRO FINANCE BANK', value: 'FINCA MICRO FINANCE BANK' },
+          { label: 'FIRST WOMEN BANK LIMITED', value: 'FIRST WOMEN BANK LIMITED' },
+          { label: 'HABIB BANK LIMITED', value: 'HABIB BANK LIMITED' },
+          { label: 'HABIB METROPOLITAN BANK LIMITED', value: 'HABIB METROPOLITAN BANK LIMITED' },
+          { label: 'JS BANK LIMITED', value: 'JS BANK LIMITED' },
+          { label: 'MCB BANK LIMITED', value: 'MCB BANK LIMITED' },
+          { label: 'MCB ISLAMIC', value: 'MCB ISLAMIC' },
+          { label: 'MEEZAN BANK', value: 'MEEZAN BANK' },
+          { label: 'NATIONAL BANK OF PAKISTAN', value: 'NATIONAL BANK OF PAKISTAN' },
+          { label: 'NRSP MICRO FINANCE BANK', value: 'NRSP MICRO FINANCE BANK' },
+          { label: 'NIB BANK LIMITED', value: 'NIB BANK LIMITED' },
+          { label: 'SAMBA BANK LIMITED', value: 'SAMBA BANK LIMITED' },
+          { label: 'SILK BANK LIMITED', value: 'SILK BANK LIMITED' },
+          { label: 'SINDH BANK LIMITED', value: 'SINDH BANK LIMITED' },
+          { label: 'SONERI BANK LIMITED', value: 'SONERI BANK LIMITED' },
+          { label: 'STANDARD CHARTERED BANK LTD', value: 'STANDARD CHARTERED BANK LTD' },
+          { label: 'SUMMIT BANK LIMITED', value: 'SUMMIT BANK LIMITED' },
+          { label: 'TELENOR MICRO FINANCE BANK', value: 'TELENOR MICRO FINANCE BANK' },
+          { label: 'THE BANK OF PUNJAB', value: 'THE BANK OF PUNJAB' },
+          { label: 'U MICRO FINANCE BANK', value: 'U MICRO FINANCE BANK' },
+          { label: 'UNITED BANK LIMITED', value: 'UNITED BANK LIMITED' }
+        ],
+        // columns: [
+        // { prop: "name", label: "通道名称", fixed: "left", sortable: false, minWidth: '138px' },
+        //   { prop: "fPtype", label: "通道类型", fixed: false, sortable: false, minWidth: '100px' },
+        //   { prop: "fPayRate", label: "代收费率", fixed: false, sortable: false, minWidth: '100px' },
+        //   { prop: "fWithdrawRate", label: "代付费率", fixed: false, sortable: false, minWidth: '100px' },
+        //   { prop: "fWithdrawFee", label: "代付单笔额外费用", fixed: false, sortable: false, minWidth: '130px' },
+        //   { prop: "fPayOptions", label: "支持的支付方式", fixed: false, sortable: false, minWidth: '210px' },
+        //   { prop: "fPayApps", label: "支持的支付app", fixed: false, sortable: false, minWidth: '260px' },
+        //   { prop: "fUtrRequired", label: "是否需要UTR", fixed: false, sortable: false, minWidth: '120px' },
+        //   { prop: "payWeight", label: "代收权重", fixed: false, sortable: false, minWidth: '100px' },
+        //   { prop: "fPayRange", label: "充值金额区间", fixed: false, sortable: false, minWidth: '150px' },
+        //   { prop: "fPaySuccessHourRate", label: "近1小时代收成功率", fixed: false, sortable: false, minWidth: '220px' },
+        //   { prop: "withdrawWallet", label: "代付支持的钱包", fixed: false, sortable: false, minWidth: '260px' },
+        //   { prop: "withdrawBank", label: "代付支持的银行", fixed: false, sortable: false, minWidth: '300px', showOverflowTooltip: true},
+        //   { prop: "withdrawWeight", label: "代付权重", fixed: false, sortable: false, minWidth: '100px' },
+        //   { prop: "fWithdrawRange", label: "提现金额区间", fixed: false, sortable: false, minWidth: '150px' },
+        //   { prop: "fBalance", label: "通道余额", fixed: false, sortable: false, minWidth: '160px' },
+        //   { prop: "switch", label: "总控开关", fixed: "right", sortable: 'custom', minWidth: '100px' },
+        //   { prop: "operate", label: "操作", fixed: "right", sortable: false, minWidth: '80px' },       
+        // ],
+        switchLoading: false,
+        switchPayId: '',
+        switchPayType: 0,
+        hourSuccessRateLoading: false,
+        hourBalancesLoading: false,
+        edit: {
+          id: '',
+          name: '',
+          sortId: 0,
+          dialogVisible: false,
+          dialogLoading: false,
+          status: 0,
+          wstatus: 0,
+          ptype: 0,
+          payRate: 0,
+          withdrawRate: 0,
+          withdrawFee: 0,
+          payOptions: [],
+          payApps: [],
+          withdrawWallets: [],
+          withdrawBanks: [],
+          utrRequired: 0,
+          payWeight: 0,
+          payMin: 0,
+          payMax: 0,
+          withdrawWeight: 0,
+          withdrawMin: 0,
+          withdrawMax: 0,
+          balance: 0,
+          dialogVisible: 0,
+        },
+        test: {
+          dialogVisible: false,
+          dialogLoading: false,
+          channelId: '',
+          amount: 0,
+          payUrl: '',
+        },
+      };
+    },
+    created() {
+      calcInnerRestHeight(180, height => this.layout.tableHeight = height);
+      this.fetchAside();
+      this.fetchDatas();
+    },
+    methods: {
+      onTableSort(sort) {
+        if (!sort.order) {
+          this.args.sortBy = '';
+          this.args.asc = 0;
+        } else {
+          this.args.sortBy = sort.prop;
+          this.args.asc = sort.order === "ascending" ? 1 : 0;
+        }
+        this.fetchDatas();
+        return 0
+      },
+      fetchAside() {
+        fetchGET(`/admin/pay/paychannel?action=Aside`)
+        .then(res => {
+          if (!res.data.isOperation) {
+            this.columns.find(item => item.prop === 'switch').hidden = true;
+            this.columns.find(item => item.prop === 'operate').hidden = true;
+          }
+        }).catch(err => {
+          this.$message({type: 'error', message: `${err.msg}`});
+        });
+      },
+      fetchDatas() {
+        this.loading = true;
+        fetchGET(`/admin/pay/paychannel?action=PayChannels&sortBy=${this.args.sortBy}&asc=${this.args.asc}`)
+          .then(res => {
+            console.log('channels', res)
+            this.datas = res.data.list || [];
+            this.total = res.data.total;
+            this.version = res.data.version;
+            this.columns = [
+            { prop: "name", label: "通道名称", fixed: "left", sortable: false, minWidth: '138px' },
+              { prop: "fPtype", label: "通道类型", fixed: false, sortable: false, minWidth: '100px' },
+              { prop: "fPayRate", label: "代收费率", fixed: false, sortable: false, minWidth: '100px' },
+              { prop: "fWithdrawRate", label: "代付费率", fixed: false, sortable: false, minWidth: '100px' },
+              { prop: "fWithdrawFee", label: "代付单笔额外费用", fixed: false, sortable: false, minWidth: '130px' },
+              { prop: "fPayOptions", label: "支持的支付方式", fixed: false, sortable: false, minWidth: '210px', hidden: this.version === 'PK' || this.version === 'dev' },
+              { prop: "fPayApps", label: "支持的支付app", fixed: false, sortable: false, minWidth: '260px' },
+              { prop: "fUtrRequired", label: "是否需要UTR", fixed: false, sortable: false, minWidth: '120px', hidden: this.version === 'PK' || this.version === 'dev' },
+              { prop: "payWeight", label: "代收权重", fixed: false, sortable: false, minWidth: '100px' },
+              { prop: "fPayRange", label: "充值金额区间", fixed: false, sortable: false, minWidth: '150px' },
+              { prop: "fPaySuccessHourRate", label: "近1小时代收成功率", fixed: false, sortable: false, minWidth: '220px' },
+              { prop: "fWithdrawWallets", label: "代付支持的钱包", fixed: false, sortable: false, minWidth: '260px', hidden: this.version != 'PK' && this.version != 'dev' },
+              { prop: "fWithdrawBanks", label: "代付支持的银行", fixed: false, sortable: false, minWidth: '300px', showOverflowTooltip: true, hidden: this.version != 'PK' && this.version != 'dev' },
+              { prop: "withdrawWeight", label: "代付权重", fixed: false, sortable: false, minWidth: '100px' },
+              { prop: "fWithdrawRange", label: "提现金额区间", fixed: false, sortable: false, minWidth: '150px' },
+              { prop: "fBalance", label: "通道余额", fixed: false, sortable: false, minWidth: '160px' },
+              { prop: "switch", label: "总控开关", fixed: "right", sortable: 'custom', minWidth: '100px' },
+              { prop: "operate", label: "操作", fixed: "right", sortable: false, minWidth: '80px' },       
+            ];
+            this.fetchBalances(0);
+          }).catch(err => {
+            console.log(err)
+            this.$message({ type: 'error', message: `${err.msg}` });
+          }).finally(() => {
+            this.loading = false;
+          });
+      },
+      handleSwitchChange(checked, payid, paytype, name) {
+        var msg = `${checked ? '开启' : '关闭'}[${name}]${paytype == '1' ? '代收' : '代付'}`;
+        this.$confirm(`确认要${msg}吗`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.switchLoading = true;
+          this.switchPayId = payid;
+          this.switchPayType = paytype;
+          fetchGET(`/admin/pay/paychanneledit?action=EditSwitch&payid=${payid}&paytype=${paytype}&open=${checked ? 1 : 0}`)
+            .then(res => {
+              this.fetchDatas();
+            }).catch(err => {
+              this.$message({ type: 'error', message: `${err.msg}` });
+            }).finally(() => this.switchLoading = false);
+        }).catch(() => { });
+      },
+      handleChannelEdit(channel) {
+        this.edit.id = channel.id;
+        this.edit.name = channel.name;
+        this.edit.sortId = channel.sort_id;
+        this.edit.status = channel.status;
+        this.edit.wstatus = channel.wstatus;
+        this.edit.ptype = channel.ptype;
+        this.edit.payRate = channel.payRate;
+        this.edit.withdrawRate = channel.withdrawRate;
+        this.edit.withdrawFee = channel.withdrawFee;
+        this.edit.payOptions = !channel.payOptions ? [] : [].concat(channel.payOptions);
+        this.edit.payApps = !channel.payApps ? [] : [].concat(channel.payApps);
+        this.edit.withdrawBanks = !channel.withdrawBanks ? [] : [].concat(channel.withdrawBanks);
+        this.edit.withdrawWallets = !channel.withdrawWallets ? [] : [].concat(channel.withdrawWallets);
+        this.edit.utrRequired = channel.utrRequired;
+        this.edit.payWeight = channel.payWeight;
+        this.edit.payMin = channel.payMin / 100;
+        this.edit.payMax = channel.payMax / 100;
+        this.edit.withdrawWeight = channel.withdrawWeight;
+        this.edit.withdrawMin = channel.withdrawMin  / 100;
+        this.edit.withdrawMax = channel.withdrawMax  / 100;
+        this.edit.balance = channel.balance;
+        this.edit.dialogVisible = true;
+        console.log('editing:', this.edit);
+      },
+      handleChannelSubmit() {
+        if (this.edit.payMin > this.edit.payMax) {
+          this.$message({ type: 'warning', message: "充值金额范围有误" });
+          return
+        }
+        if (this.edit.withdrawMin > this.edit.withdrawMax) {
+          this.$message({ type: 'warning', message: "提现金额范围有误" });
+          return
+        }
+        var body = {
+          id: this.edit.id,
+          name: this.edit.name,
+          sortId: this.edit.sortId,
+          status: this.edit.status,
+          wstatus: this.edit.wstatus,
+          ptype: this.edit.ptype,
+          payRate: this.edit.payRate,
+          withdrawRate: this.edit.withdrawRate,
+          withdrawFee: this.edit.withdrawFee,
+          payOptions: this.edit.payOptions,
+          payApps: this.edit.payApps,
+          utrRequired: this.edit.utrRequired,
+          withdrawBanks: this.edit.withdrawBanks,
+          withdrawWallets: this.edit.withdrawWallets,
+          payWeight: this.edit.payWeight,
+          payMin: this.edit.payMin * 100,
+          payMax: this.edit.payMax * 100,
+          withdrawWeight: this.edit.withdrawWeight,
+          withdrawMin: this.edit.withdrawMin * 100,
+          withdrawMax: this.edit.withdrawMax * 100,
+          balance: this.edit.balance,
+        };
+        this.edit.dialogLoading = true;
+        fetchPOST(`/admin/pay/paychanneledit?action=EditChannel`, body)
+          .then(res => {
+            this.$message({type: 'success', message: '修改成功'});
+            this.edit.dialogVisible = false;
+            this.fetchDatas();
+          })
+          .catch(err => {
+            this.$message({ type: 'error', message: `${err.msg}` });
+          })
+          .finally(() => this.edit.dialogLoading = false);
+      },
+      handleChannelTestSubmit() {
+        if (!this.test.channelId) {
+          this.$message({ type: 'warning', message: "请选择支付通道" });
+          return
+        }
+        this.test.dialogLoading = true;
+        this.test.payUrl = '';
+        fetchGET(`/admin/pay/paychanneltest?id=${this.test.channelId}&amount=${this.test.amount}`)
+            .then(res => {
+              console.log('pay res:', res);
+              this.test.payUrl = res.data.paymentUrl;
+            }).catch(err => {
+              this.$message({ type: 'error', message: `${err.msg}` });
+            }).finally(() => this.test.dialogLoading = false);
+      },
+      handleCopyPayUrl() {
+        if (!this.test.payUrl) {
+          this.$message({type: 'warning', message: '请先生成测试链接'});
+          return
+        }
+        try {
+          copyText(this.test.payUrl);
+          this.$message({type: 'success', message: '复制成功'});
+        }catch(err) {
+          console.error(err);
+          this.$message({type: 'error', message: '复制失败，请检查是否打开剪切板权限'});
+        }
+      },
+      fetchHourSuccessRate() {
+        this.hourSuccessRateLoading = true;
+        fetchGET(`/admin/pay/paychannel?action=HourPaySuccessRate`)
+          .then(res => {
+            // console.log('HourPaySuccessRate res:', res);
+            this.datas = this.datas.map(data => {
+              data.fPaySuccessHourRate = res.data.rates[data.id] || '--';
+              return data;
+            });
+          }).catch(err => {
+            this.$message({ type: 'error', message: `${err.msg}` });
+          }).finally(() => this.hourSuccessRateLoading = false);
+      },
+      fetchBalances(force) {
+        this.hourBalancesLoading = true;
+        fetchGET(`/admin/pay/paychannel?action=BalanceQuery&force=${force}`)
+          .then(res => {
+            // console.log('BalanceQuery res:', res);
+            if (!res.data.bss) {
+              return
+            }
+            this.datas = this.datas.map(data => {
+              data.fBalance = res.data.bss[data.id] || '--';
+              return data;
+            });
+          }).catch(err => {
+            console.error(err);
+            this.$message({ type: 'error', message: `通道余额查询失败:${err.msg}` });
+          }).finally(() => this.hourBalancesLoading = false);
+      },
+    },
+  });
+  
+	function copyText(text){
+		var textField = document.createElement('textarea');
+    textField.value = text;
+    document.body.appendChild(textField);
+    textField.select();
+    document.execCommand('copy');
+    document.body.removeChild(textField);
+	}
+</script>
+
+<style>
+  .args-wrap {
+    margin-bottom: 10px;
+  }
+
+  .paychannel-wrap .el-switch__label.is-active {
+    color: #303133;
+  }
+
+  .paychannel-wrap .el-switch .el-switch__core::before {
+    content: "关";
+    /* width: 16px; */
+    line-height: 16px;
+    font-size: 12px;
+    text-align: center;
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    width: 16px;
+    height: 16px;
+    z-index: 1;
+  }
+
+  .paychannel-wrap .el-switch.is-checked .el-switch__core::before {
+    content: "开";
+    left: 100%;
+    margin-left: -17px;
+  }
+
+  .paychannel-wrap .el-switch.switch-loading .el-switch__core::before {
+    content: "..";
+  }
+
+  .channel-edit .el-form-item {
+    margin-bottom: 0;
+  }
+  .channel-edit .el-select input[readonly] {
+    color: inherit;
+    background-color: inherit !important;
+  }
+</style>

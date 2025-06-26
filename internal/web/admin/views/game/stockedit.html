@@ -1,0 +1,46 @@
+
+<div class="alert alert-warning alert-dismissible hide" role="alert"></div>
+
+<form class="form-horizontal ajax-form" method="post" action="{{urlfor "GameController.StockEdit"}}">
+	<input type="hidden" name="id" value="{{.info.Id}}" />
+  <input type="hidden" name="type" value="{{.type}}" />
+	{{if eq .type 1}}
+  <div class="form-group">
+		<label for="name" class="col-sm-2 control-label">彩金库存当前值</label>
+		<div class="col-sm-6">
+			<label class="control-label">{{.info.CashStock}}</label>
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="name" class="col-sm-2 control-label">彩金库存修改值</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="new_stock" name="new_stock" value="" autocomplete="off" required/>
+		</div>
+	</div>
+  {{else}}
+  <div class="form-group">
+		<label for="name" class="col-sm-2 control-label">奖励金库存当前值</label>
+		<div class="col-sm-6">
+			<label class="control-label">{{.info.BonusStock}}</label>
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="name" class="col-sm-2 control-label">奖励金库存修改值</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="new_stock" name="new_stock" value="" autocomplete="off" required/>
+		</div>
+	</div>
+  {{end}}
+  <div class="form-group">
+	<label for="diamond" class="col-sm-2 control-label">备注</label>
+	<div class="col-sm-5">
+		<textarea name="remark" id="remark" class="form-control" rows="6" required></textarea>	
+	</div>
+</div>
+	<div class="clearfix form-actions">
+		<div class="col-sm-offset-2 col-sm-10">
+			<button type="submit" class="btn btn-info"><i class="ace-icon fa fa-check bigger-110"></i>提交</button>
+			<a href="{{urlfor "GameController.Inventory"}}" class="btn btn-default"><i class="ace-icon fa fa-reply bigger-110"></i>返回</a>
+		</div>
+	</div>
+</form>

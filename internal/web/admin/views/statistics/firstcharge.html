@@ -1,0 +1,240 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <div class="tabbable">
+            <div class="row">
+                <div class="col-xs-12">
+                    <form class="form-inline" method="post" action="{{urlfor "StatisticsController.FirstCharge"}}">
+                        <input type="hidden" name="status" value="{{.status}}" />
+                        <div class="input-group table_filtrate">
+                            渠道:
+                            <div class="input-group" id="package_div">
+                                <select id="selectPackage" class="selectpicker" multiple data-live-search="true"
+                                    data-width="200px" style="width: 200px !important;" title="请选择渠道">
+                                    {{range $k,$v := .packageList}}
+                                    <option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>{{$v.Name}}
+                                    </option>
+                                    {{end}}
+                                </select>
+                                <input type="hidden" id="package_id" name="package_id" value="{{.packageId}}"
+                                    class="form-control" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="input-group table_filtrate">
+                            渠道别名:
+                            <div class="input-group input-group-sm" id="alias_div">
+                                <select id="selectAlias" class="selectpicker" multiple data-live-search="true"
+                                    data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                    {{range $k,$v := .packageAliasList}}
+                                    <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}
+                                    </option>
+                                    {{end}}
+                                </select>
+                                <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}"
+                                    class="form-control" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="input-group table_filtrate">
+                            查询:
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="alias_name" name="alias_name" value="{{.aliasName}}"
+                                    class="form-control" placeholder="请输入渠道别名" autocomplete="off" />
+                                <span class="input-group-addon">
+                                    <i class="ace-icon fa fa-users"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="input-group table_filtrate">
+                            时间:
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="start_date" name="start_date" value="{{.startDate}}"
+                                    class="form-control" autocomplete="off" />
+                                <span class="input-group-addon">
+                                    <i class="ace-icon fa fa-calendar"></i>
+                                </span>
+                            </div>
+                            至
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="end_date" name="end_date" value="{{.endDate}}"
+                                    class="form-control" autocomplete="off" />
+                                <span class="input-group-addon">
+                                    <i class="ace-icon fa fa-calendar"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="input-group input-group-sm">
+                            <button type="submit" class="btn">查询</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="space-4"></div>
+
+            <div class="table-panel" table-wrap="300">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>注册人数</th>
+                            <th stickyL>首充人数</th>
+                            {{range $k, $v := .list}}
+                            {{if eq $k 0}}
+                            {{range $j,$o := $v.TPCharge}}
+                            <th>TP({{$o.Amount}})</th>
+                            {{end}}
+                            {{range $j,$o := $v.RMCharge}}
+                            <th>RM({{$o.Amount}})</th>
+                            {{end}}
+                            {{range $j,$o := $v.LHDCharge}}
+                            <th>LHD({{$o.Amount}})</th>
+                            {{end}}
+                            {{range $j,$o := $v.UPCharge}}
+                            <th>7UP({{$o.Amount}})</th>
+                            {{end}}
+                            {{range $j,$o := $v.AK47Charge}}
+                            <th>AK47({{$o.Amount}})</th>
+                            {{end}}
+                            {{range $j,$o := $v.JokerCharge}}
+                            <th>Joker({{$o.Amount}})</th>
+                            {{end}}
+                            {{range $j,$o := $v.CrashCharge}}
+                            <th>Crash({{$o.Amount}})</th>
+                            {{end}}
+                            {{range $j,$o := $v.CPCharge}}
+                            <th>彩票({{$o.Amount}})</th>
+                            {{end}}
+                            {{range $j,$o := $v.ABCharge}}
+                            <th>AB({{$o.Amount}})</th>
+                            {{end}}
+                            {{range $j,$o := $v.FJCharge}}
+                            <th>飞机({{$o.Amount}})</th>
+                            {{end}}
+                            {{range $j,$o := $v.RMTwoCharge}}
+                            <th>RM双人({{$o.Amount}})</th>
+                            {{end}}
+                            {{end}}
+                            {{end}}
+                            <th>其他</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $k, $v := .list}}
+                        <tr>
+                            <td>{{date $v.SDate "Y-m-d"}}</td>
+                            <td>{{$v.RegNumber}}</td>
+                            <td>{{$v.FirstNumber}}</td>
+                            {{range $j,$o := $v.TPCharge}}
+                            <td>{{$o.Number}}({{ printf "%.2f" $o.Rate}}%)</td>
+                            {{end}}
+                            {{range $j,$o := $v.RMCharge}}
+                            <td>{{$o.Number}}({{ printf "%.2f" $o.Rate}}%)</td>
+                            {{end}}
+                            {{range $j,$o := $v.LHDCharge}}
+                            <td>{{$o.Number}}({{ printf "%.2f" $o.Rate}}%)</td>
+                            {{end}}
+                            {{range $j,$o := $v.UPCharge}}
+                            <td>{{$o.Number}}({{ printf "%.2f" $o.Rate}}%)</td>
+                            {{end}}
+                            {{range $j,$o := $v.AK47Charge}}
+                            <td>{{$o.Number}}({{ printf "%.2f" $o.Rate}}%)</td>
+                            {{end}}
+                            {{range $j,$o := $v.JokerCharge}}
+                            <td>{{$o.Number}}({{ printf "%.2f" $o.Rate}}%)</td>
+                            {{end}}
+                            {{range $j,$o := $v.CrashCharge}}
+                            <td>{{$o.Number}}({{ printf "%.2f" $o.Rate}}%)</td>
+                            {{end}}
+                            {{range $j,$o := $v.CPCharge}}
+                            <td>{{$o.Number}}({{ printf "%.2f" $o.Rate}}%)</td>
+                            {{end}}
+                            {{range $j,$o := $v.ABCharge}}
+                            <td>{{$o.Number}}({{ printf "%.2f" $o.Rate}}%)</td>
+                            {{end}}
+                            {{range $j,$o := $v.FJCharge}}
+                            <td>{{$o.Number}}({{ printf "%.2f" $o.Rate}}%)</td>
+                            {{end}}
+                            {{range $j,$o := $v.RMTwoCharge}}
+                            <td>{{$o.Number}}({{ printf "%.2f" $o.Rate}}%)</td>
+                            {{end}}
+                            <td>{{$v.QTNumber}}({{ printf "%.2f" $v.QTRate}}%)</td>
+
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+                <div class="row-page">
+                    {{if gt .count 20}}
+                    {{str2html .pageBar}}
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $("#selectPackage").on("change", function () {
+            var selectVal = $("#selectPackage").val()
+            console.log(selectVal)
+            $("#package_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change", function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias：" + selectVal)
+            $("#alias_id").val(selectVal)
+        });
+        var packVal = $("#package_id").val()
+        if (packVal != "") {
+
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null) {
+                $("#selectPackage").val(arr)
+                $.each(arr, function (index, value) {
+                    if (value == "0") {
+                        arr[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr[index] = "其他";
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+        // 渠道别名
+        var aliasVal = $("#alias_id").val()
+        if (aliasVal != "") {
+            var arr1 = aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr1:" + arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+    });
+
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

@@ -1,0 +1,256 @@
+<!-- <div class="row">
+	<div class="col-xs-12">
+	<a href="{{urlfor "GameController.GameAdd"}}" class="btn btn-sm btn-default"><i class="fa fa-plus"></i> 添加</a>
+	</div>
+</div> -->
+<div class="space-4"></div>
+
+<div class="row">
+	<div class="col-xs-12">
+
+		<div class="tabbable">
+			<ul class="nav nav-tabs" id="list-tab">
+				<li {{if eq .gtype 1}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 1}}">Teen Patti</a>
+				</li>
+				<li {{if eq .gtype 2}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 2}}">DRAGON TIGER</a>
+				</li>
+				<li {{if eq .gtype 3}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 3}}">7UPDOWN</a>
+				</li>
+				<li {{if eq .gtype 4}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 4}}">RUMMY</a>
+				</li>
+				<li {{if eq .gtype 5}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 5}}">AK47</a>
+				</li>
+				<li {{if eq .gtype 6}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 6}}">JOKER</a>
+				</li>
+				<li {{if eq .gtype 7}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 7}}">CRASH</a>
+				</li>
+				<li {{if eq .gtype 8}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 8}}">ANDARBAHAR</a>
+				</li>
+				<li {{if eq .gtype 9}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 9}}">彩票</a>
+				</li>
+				<li {{if eq .gtype 10}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 10}}">飞机</a>
+				</li>
+				<li {{if eq .gtype 11}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 11}}">红黑大战</a>
+				</li>
+				<li {{if eq .gtype 12}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 12}}">Rummy双人</a>
+				</li>
+				<li {{if eq .gtype 13}}class="active" {{end}}>
+					<a href="{{urlfor "GameController.Inventory" "gtype" 13}}">TP2</a>
+				</li>
+			</ul>
+
+			<div class="tab-content">
+				<div class="table-panel" table-wrap="300">
+					{{if or (eq .gtype 9) (eq .gtype 8) (eq .gtype 11)}}
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th>彩金库存当前值</th>
+								<!-- <th>奖励金库存当前值</th> -->
+								<th>彩金明税</th>
+								<!-- <th>奖励金明税</th> -->
+								<th>彩金暗税</th>
+								<!-- <th>奖励金暗税</th> -->
+								{{if $.isShow }}
+								<th>库存曲线</th>
+								{{end}}
+								{{if $.isOperation }}
+								<th class="table-opt">操作</th>
+								{{end}}
+							</tr>
+						</thead>
+						<tbody>
+							{{range $k, $v := .list}}
+							<tr>
+								<td>
+									{{if eq $v.IsCashStock true}}
+										<span class="text-warning bigger-110 red">
+											{{ printf "%.2f" $v.FCashStock}}
+										</span>
+									{{else}}
+										<span class="bigger-110">
+											{{ printf "%.2f" $v.FCashStock}}
+										</span>
+									{{end}}
+								</td>
+								<!-- <td>{{ printf "%.2f" $v.FBonusStock}}</td> -->
+								<td>{{ printf "%.2f" $v.FCashMingTax}}</td>
+								<!-- <td>{{ printf "%.2f" $v.FBonusMingTax}}</td> -->
+								<td>{{ printf "%.2f" $v.FCashAnTax}}</td>
+								<!-- <td>{{ printf "%.2f" $v.FBonusAnTax}}</td> -->
+								{{if $.isShow }}
+									<td>
+										<a href="{{urlfor "GameController.StockInfo" "roomId" $v.Id "gtype" $v.Id }}" target="_blank">查看</a>
+									</td>
+									{{end}}
+								{{if $.isOperation }}
+									<td><a style="margin-left: 5px;" data-toggle="modal" data-target="#addModal" data-id="{{$v.Id}}" data-name="{{$v.CashStock}}">修改</a></td>
+								{{end}}
+							</tr>
+							{{end}}
+	
+							{{if eq .count 0}}
+							<tr>
+								<td colspan="20">暂无记录...</td>
+							</tr>
+							{{end}}
+						</tbody>
+					</table>
+					{{else}}
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th>房间ID</th>
+								<th stickyL>房间名称</th>
+								<th>房间开关</th>
+								<th>房间AI开关</th>
+								<th>最低准入</th>
+								<th>最高准入</th>
+								<th>库存期望值</th>
+								<th>彩金库存当前值</th>
+								<!-- <th>奖励金库存当前值</th> -->
+								<th>彩金明税</th>
+								<!-- <th>奖励金明税</th> -->
+								<th>彩金暗税</th>
+								<!-- <th>奖励金暗税</th> -->
+								<th>当前房间系数</th>
+								{{if $.isShow }}
+								<th>库存曲线</th>
+								{{end}}
+								{{if $.isOperation }}
+								<th class="table-opt">操作</th>
+								{{end}}
+							</tr>
+						</thead>
+						<tbody>
+							{{range $k, $v := .list}}
+							<tr>
+								<td>{{$v.Id}}</td>
+								<td>{{$v.GameInfo.Name}}</td>
+								<td>
+									{{if eq $v.GameInfo.Status 1}}
+									<span class="text-success bigger-110 green">开</span>
+									{{else}}
+									<span class="text-warning bigger-110 red">关</span>
+									{{end}}
+								</td>
+								<td>
+									{{if eq $v.GameInfo.Ai_Status 1}}
+									<span class="text-success bigger-110 green">开</span>
+									{{else}}
+									<span class="text-warning bigger-110 red">关</span>
+									{{end}}
+								</td>
+								<td>{{ printf "%.2f" $v.GameInfo.FMin_Access}}</td>
+								<td>{{ printf "%.2f" $v.GameInfo.FMax_Access}}</td>
+								<td>{{ printf "%.2f" $v.GameInfo.FStock_Expect}}</td>
+								<td>
+									{{if eq $v.IsCashStock true}}
+										<span class="text-warning bigger-110 red">
+											{{ printf "%.2f" $v.FCashStock}}
+										</span>
+									{{else}}
+										<span class="bigger-110">
+											{{ printf "%.2f" $v.FCashStock}}
+										</span>
+									{{end}}
+								</td>
+								<!-- <td>{{ printf "%.2f" $v.FBonusStock}}</td> -->
+								<td>{{ printf "%.2f" $v.FCashMingTax}}</td>
+								<!-- <td>{{ printf "%.2f" $v.FBonusMingTax}}</td> -->
+								<td>{{ printf "%.2f" $v.FCashAnTax}}</td>
+								<!-- <td>{{ printf "%.2f" $v.FBonusAnTax}}</td> -->
+								<td>{{ printf "%.2f" $v.Factor}}</td>
+							
+									{{if $.isShow }}
+									<td>
+										<a href="{{urlfor "GameController.StockInfo" "roomId" $v.Id "gtype" $v.GameInfo.Gtype}}" target="_blank">查看</a>
+									</td>
+									{{end}}
+								{{if $.isOperation }}
+								<td>
+									<a href="{{urlfor "GameController.StockEdit" "id" $v.Id "type" 1}}"  class="pink">修改彩金库存</a>
+									|
+									<a href="{{urlfor "GameController.StockEdit" "id" $v.Id "type" 2}}" class="orange">修改奖励金库存</a>
+								</td>
+								{{end}}
+								
+							</tr>
+							{{end}}
+	
+							{{if eq .count 0}}
+							<tr>
+								<td colspan="20">暂无记录...</td>
+							</tr>
+							{{end}}
+						</tbody>
+					</table>
+					{{end}}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+	<form class="form-horizontal ajax-form" method="post" action="{{urlfor "GameController.CPStockEdit"}}">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel">修改</h4>
+				</div>
+				<div class="modal-body">
+					<div id="alert-warning" class="alert alert-warning alert-dismissible hide" role="alert"></div>
+					<input type="hidden" id="gtype" name="gtype">
+					<div class="form-group">
+						<label class="col-sm-3 form-lable">彩金库存：</label>
+						<input class="col-sm-8" type="number" class="form-control" id="stock" name="stock" placeholder="请输入新手库存" autocomplete="off" />
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn">确定</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+
+<script>
+	$(document).ready(function(){
+		$('#addModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			// var userId = $(event.relatedTarget).data('id');
+			var war = document.getElementById("alert-warning");
+			war.classList.add("hide");
+            $('#stock').val('')
+			var id = $(event.relatedTarget).data('id');
+			var name = $(event.relatedTarget).data('name');
+			if (typeof id !== "undefined" && id !== "") {
+				$('#gtype').val(id)
+			}
+			if (typeof name !== "undefined" && name !== "") {
+				$('#stock').val(name)
+			}
+		});
+	});
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.gtype}}) });
+</script>

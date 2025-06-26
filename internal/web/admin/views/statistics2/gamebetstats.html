@@ -1,0 +1,260 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <div class="tabbable">
+            <div class="tab-content">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <form class="form-inline" method="post" action="{{urlfor "Statistics2Controller.GameBetStats"}}">
+                            <div class="input-group table_filtrate">
+                                渠道类:
+                                <div class="input-group input-group-sm" id="class_div">
+                                    <select id="selectClass" class="selectpicker" multiple data-live-search="true"
+                                        data-width="100px" style="width: 100px !important;" title="请选择渠道类">
+                                        {{range $k,$v := .packageClassAll}}
+                                        <option value="{{$v.Key}}" {{if eq $.classId $v.Key}}selected{{end}}>{{$v.Name}}
+                                        </option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="class_id" name="class_id" value="{{.classId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                渠道别名:
+                                <div class="input-group input-group-sm" id="alias_div">
+                                    <select id="selectAlias" class="selectpicker" multiple data-live-search="true" data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                        {{range $k,$v := .packageAliasList}}
+                                        <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}" class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                账号类型:
+                                <div class="input-group input-group-sm">
+                                    <select name="registArea" id="registArea" style="width: 80px;">
+                                        <option value="0" {{if eq 0 $.registArea}}selected{{end}}>全部</option>
+                                        <option value="1" {{if eq 1 $.registArea}}selected{{end}}>A类</option>
+                                        <option value="2" {{if eq 2 $.registArea}}selected{{end}}>B类</option>
+                                        <option value="3" {{if eq 3 $.registArea}}selected{{end}}>C类</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                日期:
+                                <div class="input-group input-group-sm" style="width: 90px;">
+                                    <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off" style="border-right:0;padding-right:0;" placeholder="开始日期"/>
+                                </div>
+                                <div class="input-group input-group-sm" style="width: 120px;">
+                                    <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off" style="border-left:0;padding-left:0;" placeholder="结束日期"/>
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <button type="submit" class="btn">查询</button>
+                                {{if $.isExport }}
+                                <a href="{{urlfor "Statistics2Controller.GameBetStatsExport" "start_date" .startDate "end_date" .endDate "registArea" .registArea "alias_id" .aliasId "class_id" .classId}}" class="btn" style="margin-left: 5px;">导出</a>
+                                {{end}}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="space-4"></div>
+
+                <div class="table-panel" table-wrap="200">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th stickyL style="min-width:125px;">日期</th>
+                                <th>日活</th>
+                                <th>新用户日活</th>
+                                <th>老用户日活</th>
+                                <th>付费用户日活</th>
+                                <th>总投注人数</th>
+                                <th>新用户投注人数</th>
+                                <th>老用户投注人数</th>
+                                <th>总充投比</th>
+                                <th>新用户总充投比</th>
+                                <th>老用户总充投比</th>
+                                <th>总投注金额</th>
+                                <th>新用户投注金额</th>
+                                <th>老用户投注金额</th>
+                                <th>总人均日投注额</th>
+                                <th>新用户人均日投注额</th>
+                                <th>老用户人均日投注额</th>
+                                <th>总日活投注率</th>
+                                <th>总付费投注率</th>
+                                <th>新用户日活投注率</th>
+                                <th>新用户付费投注率</th>
+                                <th>老用户日活投注率</th>
+                                <th>老用户付费投注率</th>
+                                <th>总返奖率</th>
+                                <th>新用户返奖率</th>
+                                <th>老用户返奖率</th>
+                                <th>总游戏收入</th>
+                                <th>新用户游戏收入</th>
+                                <th>老用户游戏收入</th>
+                                <th>总杀率</th>
+                                <th>新用户杀率</th>
+                                <th>老用户杀率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--日期--> <td>{{$v.SDate}}</td>
+                                <!--日活--> <td>{{$v.LoginUsers}}</td>
+                                <!--新用户日活--> <td>{{$v.NewLoginUsers}}</td>
+                                <!--老用户日活--> <td>{{$v.OldLoginUsers}}</td>
+                                <!--付费用户日活--> <td>{{$v.PayLoginUsers}}</td>
+                                <!--总投注人数--> <td>{{$v.BetUsers}}</td>
+                                <!--新用户投注人数--> <td>{{$v.NewBetUsers}}</td>
+                                <!--老用户投注人数--> <td>{{$v.OldBetUsers}}</td>
+                                <!--总充投比--> <td>{{$v.BetPayRate}}</td>
+                                <!--新用户总充投比--> <td>{{$v.NewBetPayRate}}</td>
+                                <!--老用户总充投比--> <td>{{$v.OldBetPayRate}}</td>
+                                <!--总投注金额--> <td>{{$v.Bets}}</td>
+                                <!--新用户投注金额--> <td>{{$v.NewBets}}</td>
+                                <!--老用户投注金额--> <td>{{$v.OldBets}}</td>
+                                <!--总人均日投注额--> <td>{{$v.BetsAvg}}</td>
+                                <!--新用户人均日投注额--> <td>{{$v.NewBetsAvg}}</td>
+                                <!--老用户人均日投注额--> <td>{{$v.OldBetsAvg}}</td>
+                                <!--总日活投注率--> <td>{{$v.BetsRate}}</td>
+                                <!--总付费投注率--> <td>{{$v.PayBetsRate}}</td>
+                                <!--新用户日活投注率--> <td>{{$v.NewBetsRate}}</td>
+                                <!--新用户付费投注率--> <td>{{$v.NewPayBetsRate}}</td>
+                                <!--老用户日活投注率--> <td>{{$v.OldBetsRate}}</td>
+                                <!--老用户付费投注率--> <td>{{$v.OldPayBetsRate}}</td>
+                                <!--总返奖率--> <td>{{$v.RebateRate}}</td>
+                                <!--新用户返奖率--> <td>{{$v.NewRebateRate}}</td>
+                                <!--老用户返奖率--> <td>{{$v.OldRebateRate}}</td>
+                                <!--总游戏收入--> <td>{{$v.Income}}</td>
+                                <!--新用户游戏收入--> <td>{{$v.NewIncome}}</td>
+                                <!--老用户游戏收入--> <td>{{$v.OldIncome}}</td>
+                                <!--总杀率--> <td>{{$v.KillRate}}</td>
+                                <!--新用户杀率--> <td>{{$v.NewKillRate}}</td>
+                                <!--老用户杀率--> <td>{{$v.OldKillRate}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $("#selectPackage").on("change",function () {
+            var selectVal = $("#selectPackage").val()
+            console.log(selectVal)
+            $("#package_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change",function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias："+selectVal)
+            $("#alias_id").val(selectVal)
+        });
+
+        // 渠道类
+        $("#selectClass").on("change", function () {
+            var selectVal = $("#selectClass").val()
+            console.log("selectClass" + selectVal)
+            $("#class_id").val(selectVal)
+        });
+        
+        // 账号类型
+        $("#selectTabId").on("change", function () {
+            var selectVal = $("#selectTabId").val()
+            $("#registArea").val(selectVal)
+        });
+
+        var packVal =  $("#package_id").val()
+        if (packVal){
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+        // 渠道别名
+        var aliasVal =  $("#alias_id").val()
+        if (aliasVal){
+            var arr1= aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null){
+                console.log("arr1:"+arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function(index, value) {
+                    if (value == "0"){
+                        arr1[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr1[index] = "其他"; 
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+
+        // 渠道类
+        var classVal = $("#class_id").val()
+        if (classVal) {
+            var arr1 = classVal.split(",");
+            $('#selectClass').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr2:" + arr1)
+                $("#selectClass").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#class_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectClass').selectpicker({ width: 200 });
+        }
+    });
+
+</script>
+<style>
+    .highlight{
+        background-color: #9AFF9A !important;
+    }
+</style>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

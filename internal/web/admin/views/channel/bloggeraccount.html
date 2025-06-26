@@ -1,0 +1,199 @@
+<div class="row">
+	<div class="col-xs-12">
+		<form class="form-inline" method="post" action="{{urlfor "ChannelController.BloggerAccount"}}">
+			<div style="margin-bottom: 5px;">
+				<div class="input-group table_filtrate">
+					账号查询:
+					<div class="input-group input-group-sm">
+						<input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+							placeholder="玩家ID" autocomplete="off" />
+						<span class="input-group-addon">
+							<i class="ace-icon fa fa-users"></i>
+						</span>
+					</div>
+				</div>
+				<div class="input-group table_filtrate">
+					<div class="input-group input-group-sm">
+						<select name="type_id" id="type_id">
+							{{range $k,$v := .typeList}}
+							<option value="{{$k}}" {{if eq $.typeId $k}}selected{{end}}>{{$v}}</option>
+							{{end}}
+						</select>
+					</div>
+				</div>
+                <div class="input-group input-group-sm">
+					<button type="submit" class="btn">查询</button>
+					<!-- <a href="{{urlfor "PlayerController.ExportUser"}}"  class="btn" style="margin-left: 5px;">导出</a> -->
+				</div>
+			</div>
+</form>
+<div class="space-4"></div>
+<div class="table-panel" table-wrap="300">
+	<table class="table table-striped table-bordered table-hover">
+        <thead>
+            <tr>
+                <th stickyL>用户ID</th>
+                <th>昵称</th>
+                <th>渠道</th>
+                <th>博主账号</th>
+                <th>手机号</th>
+                <th>上级</th>
+                <th>下级</th>
+                <th>注册时间</th>
+                <th>注册IP</th>
+                <th>最后登录时间</th>
+                <th>IP地址</th>
+                <th>设备号</th>
+                {{if $.isOperation }}
+                <th stickyR>操作</th>
+                {{end}}
+            </tr>
+        </thead>
+        <tbody>
+            {{range $k, $v := .list}}
+            <tr>
+                <td>
+                    <a href="{{urlfor "PlayerController.List" "userid" $v.Userid}}" target="_blank">{{$v.Userid}}</a>
+                </td>
+                <td>{{$v.Nickname}}</td>
+                <td>{{$v.AD_BundleId}}</td>
+                <td>
+                    {{if $v.IsBlogger }}
+                        <span class="bigger-110">是</span>
+                    {{else}}
+                        <span class="bigger-110">否</span>
+                    {{end}}
+                </td>
+                <td>{{$v.Phone}}</td>
+                <td>
+                    <a href="{{urlfor "PlayerController.List" "userid" $v.ShareSuperior}}" target="_blank">{{$v.ShareSuperior}}</a>
+                </td>
+                <td>
+                    <a data-toggle="modal" data-target="#addModal" class="bule" data-id="{{$v.Userid}}"> {{len $v.ShareBelow}}</a>
+                </td>
+                <td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+                <td>{{$v.RegistIP}}</td>
+                <td>
+                    {{ if $v.LoginTime.IsZero }}
+                    - <!-- 默认值为空时展示默认格式的时间 -->
+                    {{ else }}
+                    {{date $v.LoginTime "Y-m-d H:i:s"}} <!-- 不为空时展示时间字段的值 -->
+                    {{ end }}
+                </td>
+                <td>{{$v.LoginIP}}</td>
+                <td class="ellipsis" >
+                    <div title="{{$v.AD_ADID}}" ondblclick="copyText(this)">
+                        <span>{{$v.AD_ADID | StringCutOff }}</span>
+                    </div>
+                </td>
+                {{if $.isOperation }}
+                <td>
+                    {{if $v.IsBlogger }}
+                        <a class="red" onclick="CancelBlogger(this)" title="{{$v.Userid}}">取消博主</a>
+                    {{else}}
+                        <a class="bule" onclick="SetBlogger(this)" title="{{$v.Userid}}">设置博主</a>
+                    {{end}}
+                </td>
+                {{end}}
+            </tr>
+            {{end}}
+            
+            {{if eq .count 0}}
+            <tr>
+                <td colspan="20">暂无记录...</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+<div class="row">
+	<div class="row-page"> 
+		{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+	<form class="form-inline" method="post" action="{{urlfor "ChannelController.BloggerDetails"}}">
+		<div class="modal-dialog">
+			<div class="modal-content" style="width: 1000px !important;">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title">
+						下级玩家
+					</h4>
+				</div>
+				<div style="height: 600px;overflow: auto;margin-bottom: 20px;margin: 15px;">
+					<input type="hidden" id="cid" name="cid">
+					<div id="game-info">
+					</div>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+
+</div>
+</div>
+<script>
+    $(document).ready(function(){
+		$('#addModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var userid = $(event.relatedTarget).data('id');
+			$('#cid').val(userid)
+			// 发起 AJAX 请求查询用户信息
+			$.post("/admin/channel/bloggerdetails?id=" + userid, function(data){
+				// 将查询结果填充到模态框中
+				// console.log(data)
+				$('#game-info').html(data);
+			});
+		});
+    });
+
+    // 设置博主账号
+    function SetBlogger(element) {
+		var userId = element.getAttribute('title');
+		if (confirm("是否要设置"+userId+"该用户为博主账号？")) {
+			
+			$.post("/admin/channel/bloggerset?id=" + userId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+    // 取消博主账号
+    function CancelBlogger(element) {
+		var userId = element.getAttribute('title');
+		if (confirm("是否取消该"+userId+"用户为博主账号？")) {
+			
+			$.post("/admin/channel/bloggercancel?id=" + userId, function(data){
+				// 将查询结果填充到模态框中
+				if (data.status == 0){
+					alert("操作成功！")
+					// 操作成功，刷新页面
+					location.reload();
+				}else{
+					alert(data.msg)
+				}
+			});
+		} else {
+			return false;
+		}
+	}
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

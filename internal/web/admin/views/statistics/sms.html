@@ -1,0 +1,71 @@
+<div class="row">
+	<div class="col-xs-12">
+		<form class="form-inline" method="post" action="{{urlfor "StatisticsController.SMS"}}">
+			<div class="input-group table_filtrate">
+				时间:
+				<div class="input-group input-group-sm">
+					<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+				至
+				<div class="input-group input-group-sm">
+					<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group input-group-sm">
+				<button type="submit" class="btn">查询</button>
+			</div>
+	</div>
+</div>
+</form>
+<div class="space-4"></div>
+
+<div class="table-panel" table-wrap="300">
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+		<tr>
+			<th>时间</th>
+			<th>总发送</th>
+			<th>发送成功</th>
+			<th>发送成功率</th>
+            <th>使用成功</th>
+            <th>使用成功率</th>
+		</tr>
+		</thead>
+	<tbody>
+		{{range $k, $v := .list}}
+			<tr>
+				<td>{{ date $v.SDate "Y-m-d" }}</td>
+				<td>{{ $v.TotalSendSMS }}</td>
+				<td>{{ $v.SendCount }}</td>
+                <td>{{ printf "%.2f" $v.SendSMSRatio }}%</td>
+				<td>{{ $v.UseSMS }}</td>
+                <td>{{ printf "%.2f" $v.UseSMSRatio }}%</td>
+			</tr>
+		{{end}}
+        {{if eq .count 0}}
+					<tr>
+						<td colspan="20">暂无记录...</td>
+					</tr>
+				{{end}}
+		</tbody>
+	</table>
+</div>
+<div class="row">
+	<div class="row-page"> 
+		{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+</div>
+</div>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

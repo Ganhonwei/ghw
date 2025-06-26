@@ -1,0 +1,1356 @@
+<!-- CDNJS :: Sortable (https://cdnjs.com/) -->
+<script src="//cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+
+<div id="app" >
+    <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+        <el-tab-pane label="我的消息" name="messages"></el-tab-pane>
+        <el-tab-pane label="沟通记录" name="historys"></el-tab-pane>
+        <el-tab-pane label="全部消息" name="allSessions"></el-tab-pane>
+        <el-tab-pane label="头像" name="avatars"></el-tab-pane>
+        <el-tab-pane label="个人状态" name="customer"></el-tab-pane>
+    </el-tabs>
+    <!-- style="height: 600px;" -->
+     <div id="customer-wrap" v-show="activeTab === 'messages' || activeTab === 'historys'" >
+        <el-container style="height: calc(100vh - 94px - 20px - 54px); max-width: 1000px;">
+            <el-aside width="300px" id="chat-aside">
+                <div>
+                    <div class="session-search">
+                        <el-input placeholder="搜索用户id" size="small" :clearable="true" v-model="sessionSearch" class="session-search-input">
+                          <el-button slot="append" icon="el-icon-search" :loading="loading.sessions" @click="handleSesstionSearch"></el-button>
+                        </el-input>
+                    </div>
+                    <div v-for="se in sessions" :key="se.sessionId2" @click="handleSessionOpen(se)" :class="{'session-wrap': true, 'session-wrap-open': openSession && openSession.sessionId2 === se.sessionId2}">
+                        <div class="session-avatar">
+                            <img v-if="se.photo" :src="se.photo" />
+                            <!-- <img src="https://q2.itc.cn/images01/20250611/c704c9099a5d44f2ae8c88b175e40145.jpeg" /> -->
+                        </div>
+                        <div style="width: calc(100% - 60px)">
+                            <div style="display: flex; justify-content: space-between;">
+                                <div style="font-weight: bold;">#{se.userid}</div>
+                                <div>#{se.ctime}</div>
+                            </div>
+                            <div v-if="se.latestMsg" class="session-msg-wrap">
+                                <div style="width: 172px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
+                                    <span v-if="se.latestMsg.reply" style="font-style: italic;">[#{se.latestMsg.senderName}]: </span>
+                                    <span v-if="se.latestMsg.ctype == 0">#{se.latestMsg.content}</span>
+                                    <span v-else-if="se.latestMsg.ctype == 1" style="font-style: italic;">[图片]:#{se.latestMsg.filename}</span>
+                                    <span v-else-if="se.latestMsg.ctype == 2" style="font-style: italic;">[视频]:#{se.latestMsg.filename}</span>
+                                    <span v-else-if="se.latestMsg.ctype == 3" style="font-style: italic;">[PDF]:#{se.latestMsg.filename}</span>
+                                    <span v-else style="font-style: italic;">[文件]:#{se.latestMsg.filename}</span>
+                                </div>
+                                <div :class="{'session-msg-unread': true, 'session-msg-unread-gray': se.customer !== adminId, 'session-msg-unread-end': se.etime > 0}">
+                                    <span v-if="se.etime == 0">#{se.unread}</span>
+                                    <span v-else-if="se.customer === adminId">已结束</span>
+                                    <span v-else>已结束</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: center;">
+                        <el-button v-if="sessionHasMore" type="text" size="mini" style="background-color: rgba(255,255,255,0) !important;"
+                            :loading="loading.sessions"
+                            @click="fetchSessionHistory"
+                        >点击加载更多会话</el-button>
+                        <span v-else style="color:#777777">没有更多会话了</span>
+                    </div>
+                </div>
+            </el-aside>
+            <el-container>
+                <el-header>
+                    <div v-if="openSession" id="chat-header" style="display:flex; justify-content:space-between; align-items:content; height: 100%;">
+                        <div style="display: flex; flex-direction: column; justify-content: space-evenly;">
+                            <div style="font-weight: bold;">
+                                <span>用户ID：#{openSession.userid}</span>
+                                <span style="margin-left:10px;">VIP等级：#{openSession.vipLv}</span>
+                            </div>
+                            <div style="color:#434343">在线状态：#{openSession.online ? '在线' : '离线'}</div>
+                        </div>
+                        <el-button size="medium":plain="true" style="height:50px;margin-top:5px;"
+                            :disabled="openSession.etime !== 0 || openSession.customer != adminId"
+                            @click="handleChatSessionClose"
+                            :loading="loading.closeSession"
+                        >结束聊天</el-button>
+                    </div>
+                </el-header>
+                <el-main>
+                    <div v-if="openSession" id="chat-main">
+                        <div style="display: flex; justify-content: center;">
+                            <el-button v-if="messageHasMore" type="text" size="mini" style="background-color: rgba(255,255,255,0) !important;"
+                                :loading="loading.messages"
+                                @click="handleMessageMore"
+                            >点击加载更多消息</el-button>
+                            <span v-else style="color:#777777">没有更多消息了</span>
+                        </div>
+                        <!-- @contextmenu.prevent.stop="handleMessageContextMenu($event, msg)" -->
+                        <div v-for="msg in messages" :key="msg.id2" :class="{'msg-wrap': true, 'msg-wrap-reply': msg.reply}">
+                            <div class="msg-attach">
+                                <span>#{msg.ctime}</span>
+                                <span v-if="msg.reply" style="color: #a7915a;">#{msg.senderName}</span>
+                            </div>
+                            <div class="msg-content">
+                                <span v-if="msg.reply && msg.sender == adminId" class="msg-revoke" @click="handleReplyMessageRevoke(msg)">撤回</span>
+                                <div class="msg-text" v-if="msg.ctype == 0">#{msg.content}</div>
+                                <div class="msg-image" v-else-if="msg.ctype == 1">
+                                    <el-image
+                                        style="max-width: 100%"
+                                        :src="msg.content" 
+                                        :preview-src-list="[msg.content]">
+                                    </el-image>
+                                    <br/>
+                                    <a :href="msg.content" target="_blank">
+                                        <!-- <img :src="msg.content" :alt="msg.filename" style="max-width: 100%" /> -->
+                                        <span style="font-style: italic; font-size:12px;">[图片]:</span>
+                                        <span style="font-size: 12px;">#{msg.filename}</span>
+                                    </a>
+                                </div>
+                                <div class="msg-video" v-else-if="msg.ctype == 2">
+                                    <video :src="msg.content" :title="msg.filename" style="max-width: 100%; max-height: 300px; min-width: 200px;" controls>
+                                    </video>
+                                    <br/>
+                                    <a :href="msg.content" target="_blank">
+                                        <span style="font-style: italic; font-size:12px;">[视频]:</span>
+                                        <span style="font-size: 12px;">#{msg.filename}</span>
+                                    </a>
+                                </div>
+                                <div class="msg-text" v-else-if="msg.ctype == 3"><span style="font-style: italic;">[PDF]:</span> <a :href="msg.content" target="_blank">#{msg.filename}</a></div>
+                                <div class="msg-text" v-else><span style="font-style: italic;">[文件]:</span> <a :href="msg.content" target="_blank">#{msg.filename}</a></div>
+                            </div>
+                            <div class="msg-read">#{msg.read ? '已读' : '未读'}</div>
+                        </div>
+                        <div v-if="revokeMessage" class="msg-revoke-edit" @click="handleMessageRevokeEdit">--再次编辑--</div>
+                        <div id="msg-end"></div>
+                    </div>
+                </el-main>
+                <el-footer v-if="openSession && openSession.customer === adminId && openSession.etime == 0" style="height: 136px;">
+                    <div v-if="openSession" id="chat-sender">
+                        <div class="chat-funcs">
+                            <el-button size="mini" :loading="funcs.phrases.loading" @click="handlePhrasesOpen">快捷语</el-button>
+                        </div>
+                        <el-input
+                            class="chat-input"
+                            type="textarea"
+                            :rows="2"
+                            placeholder="请输入内容"
+                            v-model="textMessage"
+                            @change="handleChatSenderChange"
+                        ></el-input>
+                        <el-button class="chat-input-button" size="mini" type="primary" 
+                            :loading="loading.sender"
+                            @click="handleChatMessageSend"
+                        >发送</el-button>
+                    </div>
+                </el-footer>
+                <el-footer v-else style="height: 40px;">
+                    <div class="chat-funcs" style="margin-top: 5px;">
+                        <el-button size="mini" :loading="funcs.phrases.loading" @click="handlePhrasesOpen">快捷语</el-button>
+                    </div>
+                </el-footer>
+            </el-container>
+        </el-container>
+        <div id="customer-aside" style="height: calc(100vh - 94px - 20px - 54px); max-width: 260px; min-width: 260px;" v-show="funcs.phrases.open">
+            <div id="phrase-wrap" style="height: calc(100% - 36px); overflow-y: auto;">
+                <div v-for="item in funcs.phrases.datas" :key="item.id2" class="phrase-item">
+                    <div style="width: 160px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
+                        <el-button class="phrase-draw" v-show="funcs.phrases.sort" size="mini" icon="el-icon-rank" style="width: 28px;height: 28px;text-align: center;padding: 0;font-size: 15px;cursor:move;"></el-button>
+                        <el-tooltip class="item" effect="dark" :content="item.phrase" placement="left-start">
+                            <span style="cursor: pointer;" @click="textMessage = item.phrase">#{item.phrase}</span>
+                        </el-tooltip>
+                    </div>
+                    <div>
+                        <el-button @click="funcs.phrases.editing = item" size="mini" icon="el-icon-edit" circle></el-button>
+                        <el-button @click="handleChatPhraseSend(item.phrase)" :disabled="!(openSession && openSession.customer === adminId && openSession.etime == 0)" size="mini" type="primary" icon="el-icon-s-promotion" circle style="margin-left: 5px;"></el-button>
+                    </div>
+                </div>
+            </div>
+            <div style="align-self: center;">
+                <el-button size="small" @click="funcs.phrases.addDialogVisible = true">新增</el-button>
+                <el-button size="small" @click="handlePhraseSort">排序</el-button>
+            </div>
+        </div>
+     </div>
+     <div v-show="activeTab === 'allSessions'">
+        <div class="args-wrap">
+            <el-form ref="args" :model="allSessionsArgs" label-width="auto" :inline="true">
+                <el-form-item label="账号查询:" style="margin-right:10px">
+                    <el-input size="small" v-model="allSessionsArgs.userid" placeholder="玩家ID" style="width:160px"></el-input>
+                </el-form-item>
+                <el-form-item label="问题类型:" style="margin-right:10px;">
+                    <el-select v-model="allSessionsArgs.questionType" placeholder="请选择">
+                        <el-option :value="0" label="全部"></el-option>
+                        <el-option :value="1" label="充值"></el-option>
+                        <el-option :value="2" label="提现"></el-option>
+                        <el-option :value="3" label="故障或疑问"></el-option>
+                        <el-option :value="4" label="其他"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="解决状态:" style="margin-right: 10px;">
+                    <el-select v-model="allSessionsArgs.resolved" style="width:120px;">
+                        <el-option label="全部" :value="0"></el-option>
+                        <el-option label="未解决" :value="1"></el-option>
+                        <el-option label="已解决" :value="2"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="日期:" style="margin-left:10px;">
+                    <el-date-picker
+                        v-model="allSessionsArgs.timeRange"
+                        value-format="yyyy-MM-dd"
+                        size="small"
+                        style="width:220px"
+                        type="daterange"
+                        range-separator=""
+                        start-placeholder="开始日期"
+                        end-placeholder="结束日期">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item>
+                  <el-button size="small" type="primary" :loading="loading.allSessions" @click="fetchAllSessions">查询</el-button>
+                  <el-button size="small" @click="handleAllSessionsPie">查看饼图</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+        <el-table :data="allSessions" row-key="id" size="small" border  class="go-table"
+            v-loading="loading.allSessions">
+            <el-table-column v-for="c in allSessionsColumns" v-if="!c.hidden" :key="c.prop" :prop="c.prop" :label="c.label"
+                :fixed="c.fixed" :sortable="c.sortable" :min-width="c.minWidth" :sort-method="c.sortMethod" :show-overflow-tooltip="c.showOverflowTooltip">
+                <template slot-scope="scope">
+                    <template v-if="c.prop === 'questionType'">
+                        <el-select :value="scope.row.questionType" placeholder="请选择"
+                            @change="handleAllSessionQuestionTypeChange($event, scope.row.userid, scope.row.sessionId2)"
+                            :disabled="scope.row.etime === 0 || scope.row.customer !== adminId">
+                            <el-option :value="0" label="未分类"></el-option>
+                            <el-option :value="1" label="充值"></el-option>
+                            <el-option :value="2" label="提现"></el-option>
+                            <el-option :value="3" label="故障或疑问"></el-option>
+                            <el-option :value="4" label="其他"></el-option>
+                        </el-select>
+                    </template>
+                    <template v-else-if="c.prop === 'resolved'">
+                        <el-select :value="scope.row.resolved" placeholder="请选择"
+                            @change="handleAllSessionResolvedChange($event, scope.row.userid, scope.row.sessionId2)"
+                            :disabled="scope.row.etime === 0 || scope.row.resolved || scope.row.customer !== adminId">
+                            <el-option :value="false" label="未解决"></el-option>
+                            <el-option :value="true" label="已解决"></el-option>
+                        </el-select>
+                    </template>
+                    <template v-else-if="c.prop === 'remark'">
+                        <el-tooltip class="item" effect="dark" :content="scope.row.remark" placement="top-start">
+                            <div style="width: 160px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
+                                <el-button icon="el-icon-edit" circle size="mini" 
+                                    @click="handleAllSessionEdit(scope.row)"
+                                    :disabled="scope.row.customer !== adminId">
+                                </el-button>
+                                <span>#{scope.row.remark}</span>
+                            </div>
+                        </el-tooltip>
+                    </template>
+                    <template v-else>#{scope.row[c.prop]}</template>
+                </template>
+            </el-table-column>
+        </el-table>
+        <div class="paging-wrap">
+            <el-pagination
+                background
+                layout="total, sizes, prev, pager, next, jumper"
+                :current-page="allSessionsArgs.page"
+                :page-sizes="allSessionsArgs.pageSizes"
+                :page-size="allSessionsArgs.pageSize"
+                :total="allSessionsArgs.total"
+                :hide-on-single-page="true"
+                @size-change="handleAllSessionsSizeChange"
+                @current-change="handleAllSessionsCurrentChange">
+            </el-pagination>
+        </div>
+     </div>
+
+     <div v-if="activeTab === 'avatars'">
+        <el-table :data="avatars.datas" row-key="id" size="small" border  class="go-table"
+                v-loading="loading.avatars">
+            <el-table-column v-for="c in avatarsColumns" v-if="!c.hidden" :key="c.prop" :prop="c.prop" :label="c.label"
+                :fixed="c.fixed" :sortable="c.sortable" :min-width="c.minWidth" :sort-method="c.sortMethod" :show-overflow-tooltip="c.showOverflowTooltip">
+                <template slot-scope="scope">
+                    <template v-if="c.prop === 'userId'">
+                        <a :href="'/admin/statistics2/playerdata?userid=' + scope.row.userId" target="_blank">#{scope.row.userId}</a>
+                    </template>
+                    <template v-else-if="c.prop === 'isAudit'">
+                        <span v-if="scope.row.isAudit === 1" class="text-success bigger-110 green">通过</span>
+                        <span v-else-if="scope.row.isAudit === 2" class="text-warning bigger-110 red">拒绝</span>
+                        <span v-else-if="scope.row.isAudit === 0" class="bigger-110 orange">待审核</span>
+                        <span v-else class="bigger-110">--</span>
+                    </template>
+                    <template v-else-if="c.prop === 'url'">
+                        <el-image
+                            style="width: 42px; height: 42px"
+                            :src="scope.row.url" 
+                            :preview-src-list="[scope.row.url]">
+                        </el-image>
+                    </template>
+                    <template v-else-if="c.prop === 'operate'">
+                        <div v-if="scope.row.isAudit === 0">
+                            <el-button @click="handleAvatarAudit(scope.row.id, 1)" :loading="loading.avatarAudit" size="mini" type="success">通过</el-button>
+                            <el-button @click="handleAvatarAudit(scope.row.id, 2)" :loading="loading.avatarAudit" size="mini" type="danger">拒绝</el-button>
+                        </div>
+                    </template>
+                    <template v-else>#{scope.row[c.prop]}</template>
+                    </template>
+            </el-table-column>
+        </el-table>
+        <div class="paging-wrap">
+            <el-pagination
+            background
+            layout="total, sizes, prev, pager, next, jumper"
+            :current-page="avatars.page"
+            :page-sizes="avatars.pageSizes"
+            :page-size="avatars.pageSize"
+            :total="avatars.total"
+            :hide-on-single-page="true"
+            @size-change="handleAvatarsSizeChange"
+            @current-change="handleAvatarsCurrentChange">
+            </el-pagination>
+        </div>
+     </div>
+
+     <div v-if="activeTab === 'customer'">
+        <span v-if="customerSeats.length === 0">您当前不是客服</span>
+        <div v-else>
+            <el-table :data="customerSeats" row-key="id" size="small" border  class="go-table"
+                v-loading="loading.customer">
+                <el-table-column v-for="c in customerColumns" v-if="!c.hidden" :key="c.prop" :prop="c.prop" :label="c.label"
+                    :fixed="c.fixed" :sortable="c.sortable" :min-width="c.minWidth" :sort-method="c.sortMethod" :show-overflow-tooltip="c.showOverflowTooltip">
+                    <template slot-scope="scope">
+                        <template v-if="c.prop === 'operate'">
+                            <el-switch :value="scope.row.open"
+                                @change="handleCustomerSwitchChange($event, scope.row.id, scope.row.customerName)"
+                                :inactive-text="scope.row.open ? '在线' : '离线'" active-color="#13ce66" inactive-color="#ff4949">
+                            </el-switch>
+                        </template>
+                        <template v-else>#{scope.row[c.prop]}</template>
+                      </template>
+                </el-table-column>
+            </el-table>
+        </div>
+     </div>
+    
+    <el-dialog title="修改消息备注" :visible.sync="allSessionsEditDialogVisible">
+        <el-form label-width="auto">
+            <el-form-item label="备注" :required="true">
+            <el-input
+                type="textarea"
+                :autosize="{ minRows: 2, maxRows: 4}"
+                placeholder="请输入内容"
+                v-model="allSessionsEditing.remark">
+            </el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer" style="text-align: center;">
+            <el-button size="small" @click="allSessionsEditDialogVisible = false">取 消</el-button>
+            <el-button size="small" type="primary" :loading="loading.allSessionEdit" @click="handleAllSessionSubmit">修改</el-button>
+        </div>
+    </el-dialog>
+
+    <el-dialog title="问题类型饼图" :visible.sync="allSessionsPieDialogVisible">
+        <div id="allSessionsPie" style="min-width:500px; height:380px;"></div>
+        <div slot="footer" class="dialog-footer" style="text-align: center;">
+            <el-button size="small" @click="allSessionsPieDialogVisible = false">取 消</el-button>
+        </div>
+    </el-dialog>
+
+    <el-dialog title="新增快捷语" :visible.sync="funcs.phrases.addDialogVisible">
+        <el-form label-width="auto">
+            <el-form-item label="快捷语" :required="true">
+            <el-input
+                type="textarea"
+                :autosize="{ minRows: 4, maxRows: 6}"
+                placeholder="请输入内容"
+                v-model="funcs.phrases.addText">
+            </el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer" style="text-align: center;">
+            <el-button size="small" @click="funcs.phrases.addDialogVisible = false">取 消</el-button>
+            <el-button size="small" type="primary" :loading="funcs.phrases.loading" @click="handlePhrasesAddSubmit">新增</el-button>
+        </div>
+    </el-dialog>
+
+    <el-dialog title="编辑快捷语" :visible.sync="funcs.phrases.editing">
+        <el-form label-width="auto">
+            <el-form-item label="快捷语" :required="true">
+            <el-input
+                type="textarea"
+                :autosize="{ minRows: 4, maxRows: 6}"
+                placeholder="请输入内容"
+                v-if="funcs.phrases.editing"
+                v-model="funcs.phrases.editing.phrase">
+            </el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer" style="text-align: center;">
+            <el-button size="small" @click="funcs.phrases.editing = null">取 消</el-button>
+            <el-button size="small" type="primary" :loading="funcs.phrases.loading" @click="handlePhrasesEditSubmit">修改</el-button>
+        </div>
+    </el-dialog>
+</div>
+<script>
+	new Vue({
+		delimiters: ['#{', '}'],
+		el: '#app',
+		data() {
+			return {
+                activeTab: "messages", // sessions
+                prevActiveTab: "messages", // sessions
+                loading: {
+                    boardcast: false, // 广播请求中
+                    sessions: false, // 加载会话
+                    messages: false, // 加载消息
+                    sender: false, // 发送消息
+                    closeSession: false, // 结束聊天
+                    customer: false, // 用户客服信息
+                    avatars: false, // 头像
+                    avatarAudit: false, // 头像审核
+                    allSessions: false,
+                    allSessionEdit: false,
+                },
+                version: 0,
+                adminId: '',
+                adminName: '',
+                sessionSearch: '',
+                maxMessageId: "",
+                nextSessionId: "",
+                sessions: [],
+                sessionHasMore: false,
+                sessions2: [{
+                    sessionId2: '',
+                    userid: '',
+                    username: '',
+                    customer: '',
+                    customerName: '',
+                    ctime: 0,
+                    etime: 0,
+                    unread: 0,
+                    customerSeat: '',
+                    latestMsg: {
+                        id2: '',
+                        reply: false,
+                        sender: '',
+                        senderName: '',
+                        ctype: 0,
+                        content: '',
+                        read: false,
+                        ctime: '',
+                        filename: '',
+                    },
+                }],
+                openSession: null,
+                messageHasMore: true,
+                minMessageId: '',
+                messages: [],
+                textMessage: '', // 发送消息
+                revokeMessage: null, // 撤回消息
+                boardcastInterval: 0,
+                // allSessions
+                allSessions: [],
+                allSessionsStat: [],
+                allSessionsArgs: {
+                    userid: '',
+                    resolved: 0,
+                    questionType: 0,
+                    timeRange: null,
+                    total: 0,
+                    page: 1,
+                    pageSizes: [20, 40, 50, 100, 200],
+                    pageSize: 20,
+                },
+                allSessionsColumns: [
+                    { prop: "ctime", label: "日期", fixed: false, sortable: false, minWidth: '148px' },
+                    { prop: "username", label: "用户昵称", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "userid", label: "用户id", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "vipLv", label: "vip等级", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "customerName", label: "客服", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "questionType", label: "问题类型", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "resolved", label: "解决状态", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "remark", label: "备注", fixed: false, sortable: false, minWidth: '200px' },
+                ],
+                allSessionsEditDialogVisible: false,
+                allSessionsEditing: {},
+                allSessionsPieDialogVisible: false, // 查看饼图
+                // avatars
+                avatars: {
+                    userid: '',
+                    status: 0,
+                    datas: [],
+                    total: 0,
+                    page: 1,
+                    pageSizes: [20, 40, 50, 100, 200],
+                    pageSize: 20,
+                },
+                avatarsColumns: [
+                    { prop: "userId", label: "用户id", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "nickname", label: "昵称", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "bundleId", label: "渠道", fixed: false, sortable: false, minWidth: '188px' },
+                    { prop: "isAudit", label: "审核状态", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "url", label: "上传头像", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "sCtime", label: "上传时间", fixed: false, sortable: false, minWidth: '148px' },
+                    { prop: "auditor", label: "审核人", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "sATime", label: "审核时间", fixed: false, sortable: false, minWidth: '148px' },
+                    { prop: "operate", label: "操作", fixed: false, sortable: false, minWidth: '160px' },
+                ],
+                // customer
+                customerSeats: [],
+                customerColumns: [
+                    { prop: "customerName", label: "客服名称", fixed: false, sortable: false, minWidth: '138px' },
+                    { prop: "operate", label: "坐席状态", fixed: false, sortable: false, minWidth: '80px' },       
+                ],
+                funcs: {
+                    phrases: {
+                        open: false,
+                        loading: false,
+                        datas: [],
+                        sort: false,
+                        addText: '',
+                        addDialogVisible: false,
+                        editing: null,
+                    },
+                }
+			}
+		},
+		created() {
+			this.fetchSessionHistory();
+            // this.fetchBoardcast();
+		},
+		methods: {
+            handleTabClick(tab) {
+                var activeTab = tab.name;
+                var prevActiveTab = this.prevActiveTab;
+                this.prevActiveTab = tab.name;
+
+                console.log('tab click:', tab.name)
+                if (tab.name === 'messages' || tab.name === 'historys') {
+                    this.nextSessionId = '';
+                    this.maxMessageId = '';
+                    this.sessions = [];
+                    this.resetMessages();
+                    this.fetchSessionHistory();
+                } else {
+                    clearInterval(this.boardcastInterval);
+                }
+
+                // 全部消息
+                if (tab.name === 'allSessions') {
+                    this.allSessionsArgs.page = 1;
+                    this.allSessionsArgs.pageSize = 20;
+                    this.fetchAllSessions();
+                }
+                // 头像
+                if (tab.name === 'avatars') {
+                    this.avatars.page = 1;
+                    this.avatars.pageSize = 20;
+                    this.fetchUploadHeads();
+                }
+                // 个人信息
+                if (tab.name === 'customer') {
+                    this.fetchCustomer();
+                }
+            },
+			fetchSessionHistory() {
+                var self = this.activeTab === 'messages' ? 1 : 0;
+                this.loading.sessions = true;
+				fetchGET(`/admin/message/customer?action=SessionHistory&query=${this.sessionSearch}&self=${self}&sessionId=${this.nextSessionId}&maxMessageId=${this.maxMessageId}`)
+				.then(res => {
+                    this.version = res.data.version;
+                    this.maxMessageId = res.data.maxMessageId;
+                    this.nextSessionId = res.data.nextSessionId;
+                    this.sessions = this.sessions.concat(res.data.sessions || []);
+                    this.adminId = res.data.adminId;
+                    this.adminName = res.data.adminName;
+                    this.sessionHasMore = res.data.sessionHasMore;
+					// console.log('sessions', res);
+                    // 开始轮询
+                    this.fetchBoardcast();
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.loading.sessions = false;
+				});
+			},
+            fetchOpenSessionMessageHistory(first, userid, sessionId) {
+                if (!this.messageHasMore) {
+					this.$message({type: 'warning', message: `no more message`});
+                    return
+                }
+                this.loading.messages = true;
+				fetchGET(`/admin/message/customer?action=MessageHistory&userid=${userid}&sessionId=${sessionId}&minMessageId=${this.minMessageId}`)
+                .then(res => {
+                    this.messageHasMore = res.data.hasMore;
+                    this.minMessageId = res.data.minMessageId;
+                    if (Array.isArray(res.data.messages)) {
+                        this.messages = res.data.messages.concat(this.messages || []);
+                    }
+					// console.log('messages', res);
+                    if (first) {
+                        this.chatScroll2Bottom();
+                    }
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.loading.messages = false;
+				});
+            },
+            // 轮询消息
+            fetchBoardcast() {
+                clearInterval(this.boardcastInterval);
+				this.boardcastInterval = setInterval(() => {
+                    if (this.loading.boardcast || !this.maxMessageId || this.maxMessageId == "0") {
+                        return
+                    }
+                    this.loading.boardcast = true;
+                    fetchGET(`/admin/message/customer?action=Subscribe&id=${this.maxMessageId}&version=${this.version}`)
+                        .then(res => {
+                            this.maxMessageId = res.data.maxId;
+                            if (res.data.refrash) {
+                                console.log("refrash...");
+                                this.resetMessages();
+                                this.nextSessionId = '';
+                                this.maxMessageId = '';
+                                this.sessions = [];
+                                this.fetchSessionHistory();
+                                return
+                            }
+                            if (!res.data.datas) {
+                                return
+                            }
+                            console.log('boardcast: ', res.data.datas);
+                            for (var i = 0; i < res.data.datas.length; i++) {
+                                var data = res.data.datas[i];
+                                switch(data.btype) {
+                                    case 1: // 新session
+                                        this.boardcastNewSession(data.payload);
+                                        break;
+                                    case 2: // 新消息
+                                        this.boardcastNewMessage(data.payload);
+                                        break;
+                                    case 3: // 玩家已读客服消息
+                                        this.boardcastReadReplyMessage(data.payload);
+                                        break;
+                                    case 4: // 客服已读玩家消息
+                                        this.boardcastReadPlayerMessage(data.payload);
+                                        break;
+                                }
+                            }
+                        }).catch(err => {
+                            console.log('boardcast subscribe error: ', err);
+                            if (!(err.msg && err.msg.message === 'Failed to fetch')) {
+                                this.$message({type: 'error', message: `${err.msg}`});
+                            }
+                        }).finally(() => {
+                            this.loading.boardcast = false;
+                        });
+                }, 1000)
+            },
+            boardcastReadReplyMessage(msgs) {
+                if (Array.isArray(this.messages) && Array.isArray(msgs)) {
+                    var messages = this.messages.filter(item => msgs.find(msg => msg === item.id2));
+                    console.log('read reply msg:', messages)
+                    messages.forEach(item => {
+                        item.read = true;
+                    });
+                }
+            },
+            boardcastReadPlayerMessage(msgs) {
+                if (Array.isArray(this.messages) && Array.isArray(msgs)) {
+                    var messages = this.messages.filter(item => msgs.find(msg => msg === item.id2));
+                    console.log('read player msg:', messages)
+                    if (messages.length > 0) {
+                        messages.forEach(item => {
+                            item.read = true;
+                        });
+                        if (this.openSession) {
+                            this.openSession.unread -= messages.length;
+                            this.openSession.unread = Math.max(0, this.openSession.unread);
+                        }
+                    }
+                }
+            },
+            boardcastNewSession(session) {
+                console.log('session: ', session);
+                var otherSessions = this.sessions.filter(se => se.userid !== session.userid);
+                if (this.activeTab === 'historys' || (this.activeTab === 'messages' && session.customer === this.adminId)) {
+                    this.sessions = [session].concat(otherSessions);
+                } else if (this.activeTab === 'messages' && session.customer !== this.adminId) {
+                    this.sessions = otherSessions;
+                }
+                if (this.openSession && this.openSession.userid == session.userid) {
+                    this.openSession = session;
+                }
+                // todo session 排序
+            },
+            boardcastNewMessage(msg) {
+                var session = null;
+                if (this.openSession && this.openSession.userid === msg.userid) {
+                    session = this.openSession;
+                    // 消息查重
+                    var repeat = false;
+                    var checking = Math.max(0, this.messages.length - 100);
+                    for (var i = this.messages.length - 1; i >= checking; i--) {
+                        if (this.messages[i].id2 === msg.id2) {
+                            repeat = true;
+                            break;
+                        }
+                    }
+                    if (!repeat) {
+                        this.messages = this.messages.concat(msg);
+                        this.chatScroll2Bottom();
+                        // 客服已读消息
+                        if (this.openSession.customer === this.adminId) {
+                            fetchGET(`/admin/message/customer?action=ReplyRead&sessionId=${this.openSession.sessionId2}&messageId=${msg.id2}`)
+                            .then(res => {
+                            }).catch(err => {
+                                this.$message({type: 'error', message: `${err.msg}`});
+                            }).finally(() => {});
+                        }
+                    }
+                    console.log('new msg: ', repeat, session)
+                } else {
+                    session = this.sessions.find(se => se.userid === msg.userid);
+                }
+                if (session) {
+                    if (!(session.latestMsg && session.latestMsg.id2 === msg.id2)) {
+                        session.latestMsg = msg;
+                        if (!msg.reply && (!this.openSession || this.openSession.userid != msg.userid)) {
+                            session.unread++;
+                        }
+                    }
+                }
+            },
+            // 点击搜索对话
+            handleSesstionSearch() {
+                this.nextSessionId = '';
+                this.maxMessageId = '';
+                this.sessions = [];
+                this.fetchSessionHistory();
+                this.resetMessages();
+            },
+            // 消息框滚动条到底部
+            chatScroll2Bottom() {
+                setTimeout(() => {
+                    document.getElementById('msg-end').scrollIntoView();
+                }, 100);
+                setTimeout(() => {
+                    document.getElementById('msg-end').scrollIntoView();
+                }, 300);
+            },
+            resetMessages() {
+                this.messageHasMore = true;
+                this.minMessageId = '';
+                this.messages = [];
+                this.openSession = null;
+                this.revokeMessage = null;
+            },
+            handleSessionOpen(session) {
+                // 切换 session
+                if (this.openSession == null || this.openSession.userid !== session.userid) {
+                    this.resetMessages();
+                } else {
+                    return;
+                }
+                this.openSession = session;
+                console.log('open session: ', session);
+                this.fetchOpenSessionMessageHistory(true, session.userid, session.sessionId2);
+            },
+            handleMessageMore() {
+                if (!this.messageHasMore || !this.openSession) {
+                    return
+                }
+                this.fetchOpenSessionMessageHistory(false, this.openSession.userid, this.openSession.sessionId2);
+            },
+            handleChatSenderChange(e, v) {
+                console.log(e, v);
+            },
+            handleChatMessageSend() {
+                if (!this.textMessage) {
+                    this.$message({type: 'warning', message: `发送内容不能为空`});
+                    return
+                }
+                this.loading.sender = true;
+                fetchPOST(`/admin/message/customer?action=Reply`, {
+                    userid: this.openSession.userid,
+                    content: this.textMessage,
+                }).then(res => {
+                    this.messages = this.messages.concat(res.data);
+                    this.textMessage = '';
+                    this.revokeMessage = null;
+                    this.chatScroll2Bottom();
+                }).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.loading.sender = false;
+				});
+            },
+            handleMessageContextMenu(e, msg) {
+                console.log(e, msg);
+                // $('#contextMenu')
+            },
+            // 消息撤回
+            handleReplyMessageRevoke(msg) {
+                this.$confirm(`确认要撤回消息吗`, '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    fetchGET(`/admin/message/customer?action=MessageRevoke&messageId=${msg.id2}`)
+                    .then(res => {
+                        this.messages = this.messages.filter(item => item.id2 != msg.id2);
+                        this.revokeMessage = msg;
+                    }).catch(err => {
+                        this.$message({type: 'error', message: `${err.msg}`});
+                    }).finally(() => {
+                        // this.loading.messages = false;
+                    });
+                }).catch(() => { });
+            },
+            // 消息撤回再次编辑
+            handleMessageRevokeEdit() {
+                if (!this.revokeMessage) {
+                    return
+                }
+                this.textMessage = this.revokeMessage.content;
+                this.revokeMessage = null;
+            },
+            // 结束聊天会话
+            handleChatSessionClose() {
+                this.loading.closeSession = true;
+				fetchGET(`/admin/message/customer?action=CloseSesion&userid=${this.openSession.userid}`)
+                .then(res => {
+                    this.openSession.etime = res.data.etime;
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.loading.closeSession = false;
+				});
+            },
+            // 打开快捷语
+            handlePhrasesOpen() {
+                this.funcs.phrases.open = !this.funcs.phrases.open;
+                if (!this.funcs.phrases.open) {
+                    this.funcs.phrases.datas = [];
+                } else {
+                    this.fetchCustomerPhrases()
+                }
+            },
+            fetchCustomerPhrases() {
+                this.funcs.phrases.loading = true;
+				fetchGET(`/admin/message/customer?action=ListCustomerPhrases`)
+				.then(res => {
+                    this.funcs.phrases.datas = res.data.phrases || [];
+                    this.initPhraseDraw();
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.funcs.phrases.loading = false;
+				});
+            },
+            handlePhrasesAddSubmit() {
+                this.funcs.phrases.loading = true;
+				fetchGET(`/admin/message/customer?action=AddCustomerPhrase&text=${this.funcs.phrases.addText}`)
+				.then(res => {
+                    this.funcs.phrases.addText = '';
+                    this.funcs.phrases.addDialogVisible = false;
+                    this.fetchCustomerPhrases();
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.funcs.phrases.loading = false;
+				});
+            },
+            handlePhrasesEditSubmit() {
+                console.log(this.funcs.phrases.editing)
+                this.funcs.phrases.loading = true;
+				fetchGET(`/admin/message/customer?action=UpdateCustomerPhrase&id=${this.funcs.phrases.editing.id2}&text=${this.funcs.phrases.editing.phrase}`)
+				.then(res => {
+                    this.funcs.phrases.editing = null;
+                    this.fetchCustomerPhrases();
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.funcs.phrases.loading = false;
+				});
+            },
+            handleChatPhraseSend(phrase) {
+                this.textMessage = phrase;
+                this.handleChatMessageSend();
+            },
+            handlePhraseSort() {
+                this.funcs.phrases.sort = !this.funcs.phrases.sort;
+                if (this.funcs.phrases.sort) {
+                    this.initPhraseDraw();
+                }
+            },
+            initPhraseDraw() {
+                Sortable.create(document.getElementById('phrase-wrap'), {
+                    handle: '.phrase-draw',
+                    animation: 150,
+                    onEnd: (e) => {
+                        var {item, newIndex, oldIndex} = e;
+                        if (newIndex === oldIndex) {
+                            return
+                        }
+                        var a = this.funcs.phrases.datas[oldIndex];
+                        this.funcs.phrases.datas.splice(oldIndex, 1);
+                        this.funcs.phrases.datas.splice(newIndex, 0, a);
+                        console.log(this.funcs.phrases);
+
+                        var updates = [];
+                        var item = e.item;
+                        var phrases = this.funcs.phrases.datas;
+                        // 更新旧位置
+                        var old = phrases[oldIndex];
+                        if (phrases[oldIndex-1]) {
+                            updates.push(phrases[oldIndex-1].id2 + '-' + old.id2)
+                        }
+                        if (phrases[oldIndex+1]) {
+                            updates.push(old.id2 + '-' + phrases[oldIndex+1].id2)
+                        } else {
+                            updates.push(old.id2 + '-' + '0')
+                        }
+                        // 更新新位置
+                        var newP = phrases[newIndex];
+                        if (phrases[newIndex-1]) {
+                            updates.push(phrases[newIndex-1].id2 + '-' + newP.id2)
+                        }
+                        if (phrases[newIndex+1]) {
+                            updates.push(newP.id2 + '-' + phrases[newIndex+1].id2)
+                        } else {
+                            updates.push(newP.id2 + '-' + '0')
+                        }
+
+                        console.log('onEnd', updates.join(','));
+                        
+                        this.funcs.phrases.loading = true;
+                        fetchGET(`/admin/message/customer?action=SortCustomerPhrase&sorts=${updates.join(',')}`)
+                        .then(res => {
+                            this.fetchCustomerPhrases();
+                        }).catch(err => {
+                            this.$message({type: 'error', message: `${err.msg}`});
+                        }).finally(() => {
+                            this.funcs.phrases.loading = false;
+                        });
+                    },
+                });
+            },
+            // 获取当前用户客服信息
+            fetchCustomer() {
+                this.loading.customer = true;
+                fetchGET(`/admin/message/customer?action=Customer`)
+                .then(res => {
+                    this.customerSeats = !res.data.customer ? [] : [res.data.customer];
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.loading.customer = false;
+				});
+            },
+            handleCustomerSwitchChange(checked, customer, customerName) {
+                var msg = `${checked ? '在线' : '离线'}[${customerName}]`;
+                this.$confirm(`确认要${msg}吗`, '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    fetchGET(`/admin/message/customer?action=OpenMyCustomerSeat&open=${checked ? 1 : 0}`)
+                        .then(res => {
+                            this.fetchCustomer();
+                        }).catch(err => {
+                            this.$message({ type: 'error', message: `${err.msg}` });
+                        }).finally(() => {});
+                }).catch(() => { });
+            },
+            fetchAllSessions() {
+                if (this.allSessionsArgs.timeRange) {
+                    this.allSessionsArgs.stime = this.allSessionsArgs.timeRange[0];
+                    this.allSessionsArgs.etime = this.allSessionsArgs.timeRange[1];
+                }
+                this.loading.allSessions = true;
+                fetchPOST(`/admin/message/customer?action=AllSessions&page=${this.allSessionsArgs.page}&pageSize=${this.allSessionsArgs.pageSize}`, this.allSessionsArgs)
+				.then(res => {
+                    this.allSessions = res.data.sessions || [];
+                    this.allSessionsStat = res.data.stats || [];
+                    this.allSessionsArgs.total = res.data.total || 0;
+                    this.allSessionsArgs.timeRange = [res.data.stime, res.data.etime];
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.loading.allSessions = false;
+				});
+            },
+            handleAllSessionsSizeChange(pageSize) {
+                this.allSessionsArgs.pageSize = pageSize;
+                this.fetchAllSessions();
+            },
+            handleAllSessionsCurrentChange(page) {
+                this.allSessionsArgs.page = page;
+                this.fetchAllSessions();
+            },
+            handleAllSessionQuestionTypeChange(questionType, userid, sessionId) {
+                this.$confirm(`确认要修改问题类型吗`, '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    // console.log(questionType, userid, sessionId)
+                    
+                    fetchGET(`/admin/message/customer?action=SetSessionQuestionType&userid=${userid}&sessionId=${sessionId}&questionType=${questionType}`)
+                    .then(res => {
+                        this.fetchAllSessions();
+                    }).catch(err => {
+                        this.$message({type: 'error', message: `${err.msg}`});
+                    }).finally(() => {});
+                }).catch(() => { });
+            },
+            handleAllSessionResolvedChange(resolved, userid, sessionId) {
+                console.log(resolved, userid, sessionId)
+                this.$confirm(`确认要修改解决状态吗`, '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    fetchGET(`/admin/message/customer?action=SetSessionResovled&userid=${userid}&sessionId=${sessionId}&resolved=${resolved ? 1 : 0}`)
+                    .then(res => {
+                        this.fetchAllSessions();
+                    }).catch(err => {
+                        this.$message({type: 'error', message: `${err.msg}`});
+                    }).finally(() => {});
+                }).catch(() => { });
+            },
+            handleAllSessionEdit(session) {
+                this.allSessionsEditing = session;
+                this.allSessionsEditDialogVisible = true;
+            },
+            handleAllSessionSubmit() {
+                console.log(this.allSessionsEditing)
+                var {userid, sessionId2, remark} = this.allSessionsEditing;
+                this.loading.allSessionEdit = true;
+                fetchGET(`/admin/message/customer?action=SetSessionRemark&userid=${userid}&sessionId=${sessionId2}&remark=${remark}`)
+                    .then(res => {
+                        this.fetchAllSessions();
+                        this.allSessionsEditDialogVisible = false;
+                    }).catch(err => {
+                        this.$message({type: 'error', message: `${err.msg}`});
+                    }).finally(() => {
+                        this.loading.allSessionEdit = false;
+                    });
+            },
+            handleAllSessionsPie() {
+                var title = '';
+                if (this.allSessionsArgs.userid) {
+                    title = '用户ID: ' + this.allSessionsArgs.userid;
+                } else if (this.allSessionsArgs.timeRange) {
+                    title = this.allSessionsArgs.timeRange[0] + "~" + this.allSessionsArgs.timeRange[1];
+                }
+                this.allSessionsPieDialogVisible = true;
+                var option = {
+                    title: {
+                        text: title,
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left'
+                    },
+                    series: [
+                        {
+                            name: '问题类型',
+                            type: 'pie',
+                            radius: '50%',
+                            data: this.allSessionsStat,
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            }
+                        }
+                    ]
+                };
+                setTimeout(() => {
+                    var chart = echarts.init(document.getElementById('allSessionsPie'));
+                    chart.setOption(option);
+                }, 300);
+            },
+            fetchUploadHeads() {
+                this.loading.avatars = true;
+                fetchGET(`/admin/message/customer?action=Avatars&page=${this.avatars.page}&pageSize=${this.avatars.pageSize}&userid=${this.avatars.userid}&status=${this.avatars.status}`)
+				.then(res => {
+                    this.avatars.datas = res.data.datas || [];
+                    this.avatars.total = res.data.total || 0;
+				}).catch(err => {
+					this.$message({type: 'error', message: `${err.msg}`});
+				}).finally(() => {
+                    this.loading.avatars = false;
+				});
+            },
+            handleAvatarsSizeChange(pageSize) {
+                this.avatars.pageSize = pageSize;
+                this.fetchUploadHeads();
+            },
+            handleAvatarsCurrentChange(page) {
+                this.avatars.page = page;
+                this.fetchUploadHeads();
+            },
+            handleAvatarAudit(id, audit) {
+                this.$confirm(`确认要${audit === 1 ? '通过' : '拒绝'}吗`, '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.loading.avatarAudit = true;
+                    fetchGET(`/admin/message/customer?action=AvatarAudit&id=${id}&audit=${audit}`)
+                    .then(res => {
+                        this.fetchUploadHeads()
+                    }).catch(err => {
+                        this.$message({type: 'error', message: `${err.msg}`});
+                    }).finally(() => {
+                        this.loading.avatarAudit = false;
+                    });
+                }).catch(() => { });
+            },
+
+		}
+	});
+</script>
+<style>
+  #app .el-switch__label.is-active {
+    color: #303133;
+  }
+  
+  #app .el-switch.switch-loading .el-switch__core::before {
+    content: ".....";
+  }
+</style>
+
+<style>
+    .el-header, .el-footer {
+      background-color: #B3C0D1;
+      color: #333;
+      text-align: center;
+      line-height: 60px;
+    }
+    
+    .el-aside {
+      background-color: #D3DCE6;
+      color: #333;
+      text-align: center;
+      line-height: 200px;
+    }
+    
+    .el-main {
+      background-color: #E9EEF3;
+      color: #333;
+      text-align: center;
+      line-height: 160px;
+    }
+    
+    body > .el-container {
+      margin-bottom: 40px;
+    }
+    
+    .el-container:nth-child(5) .el-aside,
+    .el-container:nth-child(6) .el-aside {
+      line-height: 260px;
+    }
+    
+    .el-container:nth-child(7) .el-aside {
+      line-height: 320px;
+    }
+  </style>
+<style>
+    #chat-aside, #chat-header, #chat-main, #chat-sender {
+        text-align: left;
+        line-height: 1.5;
+    }
+    #customer-wrap {
+        display: flex;
+    }
+    #customer-wrap .el-header {
+        padding: 0 10px;
+        background-color: #d3dce6;
+    }
+    #customer-wrap .el-main {
+        padding: 20px 10px;
+        background-color: #f0f2f3;
+    }
+    #customer-wrap .el-footer {
+        padding: 0 10px;
+        background-color: #e9eef3;
+    }
+    #customer-aside {
+        width: 260px;
+        background-color: #e9e9e9;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 10px 5px;
+    }
+    .session-search {
+        padding: 5px 10px 10px 10px;
+    }
+    .session-search .input-with-select .el-input-group__prepend {
+        background-color: #fff;
+    }
+    .session-search-input {
+        /* border-radius: 20px; */
+        /* overflow: hidden; */
+        /* border-top-right-radius: 20px;
+        border-bottom-right-radius: 20px; */
+    }
+    /* .session-search .el-input__inner {
+        border-top-left-radius: 20px;
+        border-bottom-left-radius: 20px;
+    } */
+    .session-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        height: 70px;
+        padding: 9px 5px 5px 5px;
+        cursor: pointer;
+    }
+    .session-wrap-open {
+        background-color: #efefef;
+    }
+    .session-avatar {
+        height: 50px;
+        width: 50px;
+        border-radius: 50%;
+        background-color: #ccc;
+        margin-right: 10px;
+    }
+    .session-avatar img {
+        height: 50px;
+        width: 50px;
+        border-radius: 50%;
+    }
+    .session-msg-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    .session-msg-unread {
+        background-color: red;
+        color: #fff;
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        text-align: center;
+        border-radius: 50%;
+    }
+    .session-msg-unread-gray {
+        background-color: #959595;
+    }
+    .session-msg-unread-end {
+        width: 36px;
+        font-size: 12px;
+        border-radius: 0;
+        color: green;
+        background-color: transparent;
+        font-style: italic;
+    }
+    .session-msg-unread-gray.session-msg-unread-end {
+        color: #635c5c;
+    }
+    #chat-main {
+        display: flex;
+        flex-direction: column;
+    }
+    .msg-wrap {
+        align-self: self-start;
+        margin-top: 5px;
+        display: flex;
+        flex-direction: column;
+        padding-left: 0;
+        padding-right: 20px;
+    }
+    .msg-wrap-reply {
+        align-self: self-end;
+        padding-left: 20px;
+        padding-right: 0;
+    }
+    .msg-attach {
+        color: #5e5757;
+    }
+    .msg-wrap-reply .msg-attach {
+        text-align: right;
+    }
+    .msg-content {
+        align-self: self-start;
+    }
+    .msg-text {
+        display: inline;
+        background-color: #d3dce6;
+        padding: 3px 5px;
+        border-radius: 5px 5px 5px 0;
+        font-size: 15px;
+        word-break: break-word;
+    }
+    .msg-video,.msg-image {
+        background-color: #d3dce6;
+        padding: 3px 5px;
+        border-radius: 5px 5px 5px 0;
+        font-size: 15px;
+        max-width: 40%;
+        min-width: 210px;
+    }
+    .msg-video {
+        max-width: 80%;
+    }
+    .msg-read {
+        font-size: 12px;
+        color: #999999;
+    }
+    .msg-wrap-reply .msg-read {
+        text-align: right;
+    }
+    .msg-wrap-reply .msg-content {
+        align-self: self-end;
+        /* background-color: #a5d9a2; */
+    }
+    .msg-wrap-reply .msg-text {
+        background-color: #c2dceb;
+        border-radius: 5px 5px 0 5px;
+    }
+    .msg-revoke {
+        color: #8181ab;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .msg-revoke-edit {
+        color: #676767;
+        text-align: center;
+        cursor: pointer;
+    }
+    #chat-sender {
+        margin-top: 5px;
+        position: relative;
+    }
+    .chat-funcs {
+        height: 36px;
+        display: flex;
+        justify-content: flex-start;
+        padding-bottom: 5px;
+    }
+    .chat-input .el-textarea__inner {
+        min-height: 80px !important;
+        max-height: 80px !important;
+    }
+    .chat-input-button {
+        position: absolute;
+        right: 20px;
+        bottom: 10px;
+    }
+
+    .phrase-item {
+        display: flex;
+        padding-bottom: 10px;
+        justify-content: space-between;
+    }
+</style>

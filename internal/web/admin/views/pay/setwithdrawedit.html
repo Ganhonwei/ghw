@@ -1,0 +1,67 @@
+
+
+<div class="alert alert-warning alert-dismissible hide" role="alert"></div>
+
+<form class="form-horizontal ajax-form" method="post" action="{{urlfor "PayController.SetWithdrawEdit"}}">
+	<input type="hidden" name="id" value="{{.with.Id}}" />
+    <div class="form-group">
+		<label for="num" class="col-sm-2 control-label">商品名称</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="name" name="name" value="{{.with.Name}}" autocomplete="off" />
+		</div>
+	</div>
+    <div class="form-group">
+		<label for="num" class="col-sm-2 control-label">提现次数限制</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="limit" name="limit" value="{{.with.Limit}}" autocomplete="off" />
+		</div>
+	</div>
+    <div class="form-group">
+		<label for="num" class="col-sm-2 control-label">充值金额限制</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="recharge_limit" name="recharge_limit" value="{{.with.RechargeLimit}}" autocomplete="off" />
+		</div>
+	</div>
+    <!-- <div class="form-group">
+		<label for="num" class="col-sm-2 control-label">流水限制</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="flowing_limit" name="flowing_limit" value="{{.with.FlowingLimit}}">
+		</div>
+	</div> -->
+    <div class="form-group">
+		<label for="num" class="col-sm-2 control-label">消耗彩金</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="cost_diamond" name="cost_diamond" value="{{.with.CostDiamond}}" autocomplete="off" />
+		</div>
+	</div>
+    <div class="form-group">
+		<label for="num" class="col-sm-2 control-label">提现金额</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="get_cash" name="get_cash" value="{{.with.GetCash}}" autocomplete="off" />
+		</div>
+	</div>
+    <div class="form-group">
+		<label for="num" class="col-sm-2 control-label">手续费</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="commission" name="commission" value="{{.with.Commission}}" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="num" class="col-sm-2 control-label">滞单时长警戒值</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="delay_time" name="delay_time" >
+		</div>
+	</div>
+    <div class="form-group">
+		<label for="num" class="col-sm-2 control-label">展示权重</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="sort_id" name="sort_id"  value="{{.with.Index}}" autocomplete="off" />
+		</div>
+	</div>
+	<div class="clearfix form-actions">
+		<div class="col-sm-offset-2 col-sm-10">
+			<button type="submit" class="btn btn-info"><i class="ace-icon fa fa-check bigger-110"></i>提交</button>
+			<a href="{{urlfor "PayController.SetWithdraw"}}" class="btn btn-default"><i class="ace-icon fa fa-reply bigger-110"></i>返回</a>
+		</div>
+	</div>
+</form>

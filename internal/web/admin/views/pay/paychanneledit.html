@@ -1,0 +1,206 @@
+
+<div class="alert alert-warning alert-dismissible hide" role="alert"></div>
+
+<form class="form-horizontal ajax-form" method="post" action="{{urlfor "PayController.PayChannelEdit"}}">
+    <input type="hidden" name="count" value="{{.count}}" />
+    <div class="table-panel paychannel-edit-wrap" table-wrap="200">
+        <table class="table table-striped table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th stickyL>通道名称</th>
+                    <th>支付开关</th>
+                    <th>提现开关</th>
+                    <th>通道类型</th>
+                    <th>代收费率</th>
+                    <th>代付费率</th>
+                    <th>代付单笔额外费用</th>
+                    <th>支持的支付方式</th>
+                    <th>支持的支付app</th>
+                    <th style="min-width:100px">是否需要UTR</th>
+                    <th>代收权重</th>
+                    <th>充值金额最小</th>
+                    <th>充值金额最大</th>
+                    <th>代付权重</th>
+                    <th>提现金额最小</th>
+                    <th>提现金额最大</th>
+                    <th>通道余额</th>
+                </tr>
+            </thead>
+            <tbody> 
+                <p style="color: red; font-size: 15px;">代收固定手续费、实时余额、充值、提现金额范围填写1.00等于100分</p>
+                {{range $k, $v := .channel}}
+                <tr id="row_{{$k}}">
+                    <!--通道名称-->
+                    <td>
+                        <input type="hidden" id="row_{{$k}}_id" name="row_{{$k}}_id" value="{{ $v.Id }}" />
+                        <input type="hidden" id="row_{{$k}}_sortId" name="row_{{$k}}_sortId" value="{{ $v.SortId }}" />
+                        <input style="border: none;" type="text" id="row_{{$k}}_name" name="row_{{$k}}_name" value="{{$v.Name}}" readonly="readonly"/>
+                    </td>
+                    <!--支付开关-->
+                    <td>
+                        <select name="row_{{$k}}_status" id="row_{{$k}}_status" class="input_width">
+                            <option value="1" {{if eq $v.Status 1}}selected{{end}}>开</option>
+                            <option value="0" {{if eq $v.Status 0}}selected{{end}}>关</option>
+                        </select>
+                    </td>
+                    <!--提现开关-->
+                    <td>
+                        <select name="row_{{$k}}_wstatus" id="row_{{$k}}_wstatus"  class="input_width">
+                            <option value="1" {{if eq $v.Wstatus 1}}selected{{end}}>开</option>
+                            <option value="0" {{if eq $v.Wstatus 0}}selected{{end}}>关</option>
+                        </select>
+                    </td>
+                    <!--通道类型-->
+                    <td>
+                        <select name="row_{{$k}}_type" id="row_{{$k}}_type"  class="input_width">
+                            <option value="1" {{if eq $v.Ptype 1}}selected{{end}}>纯原生</option>
+                            <option value="2" {{if eq $v.Ptype 2}}selected{{end}}>纯唤醒</option>
+                            <option value="3" {{if eq $v.Ptype 3}}selected{{end}}>原唤混</option>
+                            <option value="0" {{if eq $v.Ptype 0}}selected{{end}}>未知</option>
+                        </select>
+                    </td>
+                    <!--代收费率-->
+                    <td><input type="text" name="row_{{$k}}_payRate" id="row_{{$k}}_payRate" value="{{$v.PayRate}}" /></td>
+                    <!--代付费率-->
+                    <td><input type="text" name="row_{{$k}}_withdrawRate" id="row_{{$k}}_withdrawRate" value="{{$v.WithdrawRate}}" /></td>
+                    <!--代付单笔额外费用-->
+                    <td><input type="text" name="row_{{$k}}_withdrawFee" id="row_{{$k}}_withdrawFee" value="{{$v.FWithdrawFee}}" /></td>
+                    <!--支持的支付方式-->
+                    <td>
+                        <div class="input-group">
+                            <select key="{{$k}}" class="selectpicker selectPayOptions" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择支付方式">
+                                <option value="1">DirectLaunchTheApp</option>
+                                <option value="2">QRcode</option>
+                                <!-- <option value="3">FillInUTR</option> -->
+                            </select>
+                            <input type="hidden" id="row_{{$k}}_payOptions" name="row_{{$k}}_payOptions" value="{{$v.FPayOptionIds}}" class="form-control" autocomplete="off" />
+                        </div>
+                    </td>
+                    <!--支持的支付app-->
+                    <td>
+                        <div class="input-group">
+                            <select key="{{$k}}" class="selectpicker selectPayApps" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择支付App">
+                                <option value="1">Paytm</option>
+                                <option value="2">PhonePe</option>
+                                <option value="3">Mobikwik</option>
+                                <option value="4">BHIM</option>
+                                <option value="5">GooglePay</option>
+                                <option value="6">Other UPI</option>
+                                <option value="101">Nagad</option>
+                                <option value="102">bkash</option>
+                                <option value="1001">EASYPAISA</option>
+                                <option value="1002">JAZZCASH</option>
+                            </select>
+                            <input type="hidden" id="row_{{$k}}_payApps" name="row_{{$k}}_payApps" value="{{$v.FPayAppIds}}" class="form-control" autocomplete="off" />
+                        </div>
+                    </td>
+                    <!--是否需要UTR-->
+                    <td style="position: relative;">
+                        <select style="position:absolute;z-index:1;left:5px;top:9px;width:88px;" name="row_{{$k}}_utrRequired" id="row_{{$k}}_utrRequired">
+                            <option value="1" {{if $v.UtrRequired}}selected{{end}}>是</option>
+                            <option value="0" {{if not $v.UtrRequired}}selected{{end}}>否</option>
+                        </select>
+                    </td>
+                    <!--代收权重-->
+                    <td><input type="text" name="row_{{$k}}_payWeight" id="row_{{$k}}_payWeight"  value="{{$v.PayWeight}}" /></td>
+                    <!--充值金额最小-->
+                    <td><input type="text" name="row_{{$k}}_payMin" id="row_{{$k}}_payMin" value="{{$v.FPayMin}}" /></td>
+                    <!--充值金额最大-->
+                    <td><input type="text" name="row_{{$k}}_payMax" id="row_{{$k}}_payMax" value="{{$v.FPayMax}}" /></td>
+                    <!--代付权重-->
+                    <td><input type="text" name="row_{{$k}}_withdrawWeight" id="row_{{$k}}_withdrawWeight"  value="{{$v.WithdrawWeight}}" /></td>
+                    <!--提现金额最小-->
+                    <td><input type="text" name="row_{{$k}}_withdrawMin" id="row_{{$k}}_withdrawMin"  value="{{$v.FWithdrawMin}}" /></td>
+                    <!--提现金额最大-->
+                    <td><input type="text" name="row_{{$k}}_withdrawMax" id="row_{{$k}}_withdrawMax"  value="{{$v.FWithdrawMax}}" /></td>
+                    <!--通道余额-->
+                    <td><input type="text"  name="row_{{$k}}_balance" id="row_{{$k}}_balance"  value="{{$v.FBalance}}" /></td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+	<div class="clearfix form-actions" style="padding:10px">
+		<div class="col-sm-offset-2 col-sm-10">
+			<button type="submit" class="btn btn-info"><i class="ace-icon fa fa-check bigger-110"></i>保存</button>
+			<a href="{{urlfor "PayController.PayChannel"}}" class="btn btn-default"><i class="ace-icon fa fa-reply bigger-110"></i>返回</a>
+		</div>
+	</div>
+</form>
+
+<style>
+    .input_width{
+        width: 100% !important;
+    }
+    .paychannel-edit-wrap input[type=text] {
+        max-width: 100px;
+    }
+</style>
+
+<script type="text/javascript">
+
+    $(function () {
+        // 支付方式
+        $("select.selectPayOptions").on("change", function (e) {
+            var target = $(e.target)
+        	var val = target.val();
+        	// console.log('selectPayOptions', target.attr('key'), val);
+            var selectVal = !val ? '' : val.join(',');
+        	$(`#row_${target.attr('key')}_payOptions`).val(selectVal);
+    	});
+        $('select.selectPayOptions').selectpicker({ width: 200 });
+        $('select.selectPayOptions').each(function(_, ele) {
+            var key = $(ele).attr('key')
+            var val = $(`#row_${key}_payOptions`).val()
+            // console.log('payOpt: ', key, val)
+            if (val) {
+                var valNames = [];
+                $.each(val.split(','), function(_, val) {
+                    $(ele).find(`option[value=${val}]`).attr('selected', 'true');
+                    switch (val) {
+                        case "1": valNames.push('DirectLaunchTheApp'); break;
+                        case "2": valNames.push('QRcode'); break;
+                        case "3": valNames.push('FillInUTR'); break;
+                    }
+                });
+                if (valNames.length > 0) {
+                    $(ele).parent().find('.filter-option-inner-inner').text(valNames.join(','));
+                }
+            }
+        });
+
+        // 支付App 
+        $("select.selectPayApps").on("change", function (e) {
+            var target = $(e.target)
+        	var val = target.val()
+        	// console.log('selectPayApps', target.attr('key'), val);
+            var selectVal = !val ? '' : val.join(',');
+        	$(`#row_${target.attr('key')}_payApps`).val(selectVal);
+    	});
+        $('select.selectPayApps').selectpicker({ width: 200 });
+        $('select.selectPayApps').each(function(_, ele) {
+            var key = $(ele).attr('key')
+            var val = $(`#row_${key}_payApps`).val()
+            // console.log('payApp: ', key, val)
+            if (val) {
+                var valNames = [];
+                $.each(val.split(','), function(_, val) {
+                    $(ele).find(`option[value=${val}]`).attr('selected', 'true');
+                    switch (val) {
+                        case "1": valNames.push('Paytm'); break;
+                        case "2": valNames.push('PhonePe'); break;
+                        case "3": valNames.push('Mobikwik'); break;
+                        case "4": valNames.push('BHIM'); break;
+                        case "5": valNames.push('GooglePay'); break;
+                        case "6": valNames.push('Other UPI'); break;
+                    }
+                });
+                if (valNames.length > 0) {
+                    $(ele).parent().find('.filter-option-inner-inner').text(valNames.join(','));
+                }
+            }
+        });
+    });
+
+</script>

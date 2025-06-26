@@ -1,0 +1,807 @@
+<div id="app" class="paychannel">
+    <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+        <el-tab-pane label="满减券汇总" name="coupnStats"></el-tab-pane>
+        <el-tab-pane label="满减券手发" name="coupnHand"></el-tab-pane>
+    </el-tabs>
+
+    <el-form ref="args" :model="args" label-width="auto" :inline="true" v-if="activeTab === 'coupnStats'">
+        <el-form-item label="日期:">
+            <el-date-picker v-model="args.ctimeRange" value-format="yyyy-MM-dd" size="small" style="width:220px"
+                type="daterange" range-separator="" start-placeholder="开始日期" end-placeholder="结束日期">
+            </el-date-picker>
+        </el-form-item>
+        <el-form-item label="渠道别名:">
+            <el-select size="small" v-model="args.aliasIds" placeholder="渠道别名" multiple collapse-tags clearable
+                style="width:200px" class="short-tag">
+                <el-option v-for="c in packageAliases" :key="c.key" :label="c.name" :value="c.key"></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item label="渠道类:">
+            <el-select size="small" v-model="args.classIds" placeholder="渠道类" multiple collapse-tags clearable
+                style="width:160px" class="short-tag">
+                <el-option v-for="c in packageClasses" :key="c.key" :label="c.name" :value="c.key"></el-option>
+            </el-select>
+        </el-form-item>
+
+        <el-form-item label="玩家类型:">
+            <el-select size="small" v-model="args.userTypes" placeholder="玩家类型" multiple collapse-tags clearable
+                style="width:160px" class="short-tag">
+                <el-option v-for="c in userTypes" :key="c.key" :label="c.name" :value="c.key"></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item label="玩家类型:">
+            <el-select size="small" v-model="args.registArea" placeholder="订单状态" style="width:110px">
+                <el-option label="全部" :value="0"></el-option>
+                <el-option label="A类" :value="1"></el-option>
+                <el-option label="B类" :value="2"></el-option>
+                <el-option label="C类" :value="3"></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item>
+            <el-button size="small" type="primary" :loading="loading" @click="onArgsSubmit">查询</el-button>
+            <el-button v-if="isExport" size="small" style="margin-left:0" @click="handleExport">导出</el-button>
+        </el-form-item>
+    </el-form>
+
+    <el-form ref="manualArgs" :model="manualArgs" label-width="auto" :inline="true" v-if="activeTab === 'coupnHand'">
+        <el-form-item label="创建时间:">
+            <el-date-picker v-model="manualArgs.ctimeRange" value-format="yyyy-MM-dd" size="small" style="width:220px"
+                type="daterange" range-separator="" start-placeholder="开始日期" end-placeholder="结束日期">
+            </el-date-picker>
+        </el-form-item>
+        <el-form-item label="发送时间:">
+            <el-date-picker v-model="manualArgs.sendTimeRange" value-format="yyyy-MM-dd" size="small" style="width:220px"
+                type="daterange" range-separator="" start-placeholder="开始日期" end-placeholder="结束日期">
+            </el-date-picker>
+        </el-form-item>
+
+        <el-form-item label="用完时间:">
+            <el-date-picker v-model="manualArgs.useTimeRange" value-format="yyyy-MM-dd" size="small" style="width:220px"
+                type="daterange" range-separator="" start-placeholder="开始日期" end-placeholder="结束日期">
+            </el-date-picker>
+        </el-form-item>
+        <el-form-item label="玩家类型:">
+            <el-select size="small" v-model="manualArgs.classifyType" :multiple="true" placeholder="玩家类型" @change="onClassifyTypeChange" style="width:110px">
+                <el-option label="全部" :value=-1></el-option>
+                <el-option label="新手" :value=0></el-option>
+                <el-option label="平民" :value=1></el-option>
+                <el-option label="普R" :value=2></el-option>
+                <el-option label="小R" :value=3></el-option>
+                <el-option label="中R" :value=4></el-option> 
+                <el-option label="大R" :value=5></el-option>
+                <el-option label="超大R" :value=6></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item label="账号类型:">
+            <el-select size="small" v-model="manualArgs.registArea" :multiple="true" placeholder="账号类型" @change="onRegistAreaChange" style="width:110px">
+                <el-option label="全部" :value=-1></el-option>
+                <el-option label="A类" :value=0></el-option>
+                <el-option label="B类" :value=1></el-option>
+                <el-option label="C类" :value=2></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item>
+            <el-button size="small" type="success" :loading="loading" @click="handleAddCoupon">新建</el-button>
+        </el-form-item>
+        <el-form-item>
+            <el-button size="small" type="primary" :loading="loading" @click="onArgsSubmit">查询</el-button>
+            <el-button v-if="isExport" size="small" style="margin-left:0" @click="handleExport">导出</el-button>
+        </el-form-item>
+    </el-form>
+
+    <template v-if="activeTab === 'coupnStats'">
+        满减券汇总
+        <div class="table-wrap">
+            <!-- header-contextmenu	 -->
+            <el-table :data="coupnStats" row-key="sdate" size="small" border v-loading="loading"
+                :max-height="layout.tableHeight" class="go-table">
+                <el-table-column v-for="c in coupnStatsColumns" v-if="!c.hidden" :key="c.prop" :prop="c.prop"
+                    :label="c.label" :fixed="c.fixed" :sortable="c.sortable" :sort-orders="c.sortOrders"
+                    :min-width="c.minWidth" :class-name="c.prop === '-' ? 'gray-column' : ''">
+
+                    <template slot="header" slot-scope="scope">
+                        <template v-if="scope.column.property === '-'">
+                        </template>
+                        <template v-else><span>#{scope.column.label}</span></template>
+                    </template>
+
+                    <template slot-scope="scope">
+                        <template v-if="c.prop === '-'">
+                        </template>
+                        <template v-else>#{scope.row[c.prop]}</template>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+    </template>
+    <template v-else-if="activeTab === 'coupnHand'">
+        满减券手发
+        <div class="table-wrap">
+            <!-- header-contextmenu	 -->
+            <el-table :data="coupnHand" row-key="couponId" size="small" border v-loading="loading"
+                :max-height="layout.tableHeight" class="go-table">
+                <el-table-column v-for="c in manualCouponsColumns" v-if="!c.hidden" :key="c.prop" :prop="c.prop"
+                    :label="c.label" :fixed="c.fixed" :sortable="c.sortable" :sort-orders="c.sortOrders"
+                    :min-width="c.minWidth" :class-name="c.prop === '-' ? 'gray-column' : ''">
+
+                    <template slot="header" slot-scope="scope">
+                        <template v-if="scope.column.property === '-'">
+                        </template>
+                        <template v-else><span>#{scope.column.label}</span></template>
+                    </template>
+
+                    <template slot-scope="scope">
+                        <template v-if="c.prop === 'sendSwitch'">
+                            <el-switch :value="scope.row.sendSwitch"
+                            @change="handCouponSwitch($event, scope.row)"
+                            active-color="#13ce66" inactive-color="#ff4949">
+                            </el-switch>
+                        </template>
+    
+                        <template v-else-if="c.prop === 'action'">
+                            <el-button size="mini" @click="handleCouponEdit(scope.row)">编辑</el-button>
+                        </template>
+
+                        <template v-else>#{scope.row[c.prop]}</template>
+                    </template>
+                    
+                </el-table-column>
+            </el-table>
+        </div>
+    </template>
+
+    <!-- 新建优惠券弹窗 -->
+    <el-dialog title="新建优惠券" :visible.sync="dialogVisible" width="50%">
+        <el-form :model="couponForm" :rules="couponRules" ref="couponForm" label-width="120px">
+            <el-form-item label="最低充值要求(元)" prop="minRecharge">
+                <el-input-number v-model="couponForm.minRecharge" :min="0" :precision="2"></el-input-number>
+                <span class="unit">元</span>
+            </el-form-item>
+            <el-form-item label="减免金额(元)" prop="derateAmounts">
+                <el-input-number v-model="couponForm.derateAmounts" :min="0" :precision="2"></el-input-number>
+                <span class="unit">元</span>
+            </el-form-item>
+            <el-form-item label="有效时长(小时)" prop="validHours">
+                <el-input-number v-model="couponForm.validHours" :min="1"></el-input-number>
+                <span class="unit">小时</span>
+            </el-form-item>
+            <el-form-item label="人均张数" prop="count">
+                <el-input-number v-model="couponForm.count" :min="1"></el-input-number>
+            </el-form-item>
+            <el-form-item label="玩家单均价范围（元）" required>
+                <el-input-number v-model="couponForm.payAvgMin" :min="-1" :precision="2"></el-input-number>
+                <span>—</span>
+                <el-input-number v-model="couponForm.payAvgMax" :min="-1" :precision="2"></el-input-number>
+                <span class="unit">元</span>
+            </el-form-item>
+            <el-form-item label="玩家盈利比范围（%）" required>
+                <el-input-number v-model="couponForm.profitRateMin" :min="-1" :precision="2"></el-input-number>
+                <span>—</span>
+                <el-input-number v-model="couponForm.profitRateMax" :min="-1" :precision="2"></el-input-number>
+                <span class="unit">%</span>
+            </el-form-item>
+            <el-form-item label="玩家类型(不选是全部)" prop="classifyType">
+                <el-select v-model="couponForm.classifyType" :multiple="true" placeholder="请选择玩家类型">
+                    <el-option label="零充" :value=1></el-option>
+                    <el-option label="普R" :value=2></el-option>
+                    <el-option label="小R" :value=3></el-option>
+                    <el-option label="中R" :value=4></el-option>
+                    <el-option label="大R" :value=5></el-option>
+                    <el-option label="超大R" :value=6></el-option> 
+                </el-select>
+            </el-form-item>
+            <el-form-item label="账号类型(不选是全部)" prop="ra">
+                <el-select v-model="couponForm.ra" :multiple="true" placeholder="请选择账号类型">
+                    <el-option label="A类" :value=0></el-option>
+                    <el-option label="B类" :value=1></el-option>
+                    <el-option label="C类" :value=2></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="其他玩家标签" prop="tag">
+                <el-select v-model="couponForm.tag" placeholder="请选择标签">
+                    <el-option label="无" :value=0></el-option>
+                    <el-option label="自定义" :value=1></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="用户id(,分隔)" prop="userIds" v-if="couponForm.tag === 1">
+                <el-input v-model="couponForm.userIds" placeholder="请输入用户id"></el-input>
+                <el-upload
+                    ref="excelUpload"
+                    action="#"
+                    :auto-upload="false"
+                    :limit="1"
+                    accept=".xls,.xlsx"
+                    :file-list="fileList"
+                    :on-change="handleFileChange"
+                    :before-upload="beforeUpload"
+                    :http-request="customUploadByAdd"
+                >
+                    <!-- <el-button size="small" type="primary">选择Excel文件</el-button> -->
+                    <el-button slot="trigger" size="small" type="primary" :loading="uploadLoading">选择Excel文件</el-button>
+                    <span slot="tip" class="el-upload__tip" style="margin-left: 10px;">仅支持 .xls/.xlsx 格式，大小不超过10MB</span>
+                </el-upload>
+            </el-form-item>
+            <el-form-item label="发送时间" prop="sendTime" >
+                <el-date-picker
+                    v-model="couponForm.sendTime"
+                    value-format="yyyy-MM-dd HH:mm:ss"
+                    type="datetime"
+                    placeholder="选择发送时间">
+                </el-date-picker>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="submitCouponForm" :loading="submitLoading">确 定</el-button>
+        </div>
+    </el-dialog>
+
+    <!-- 编辑优惠券弹窗 -->
+    <el-dialog title="编辑优惠券" :visible.sync="editDialogVisible" width="50%">
+        <el-form :model="editCoupon" label-width="100px">
+            <el-form-item label="最低充值要求(元)" prop="minRecharge">
+                <el-input-number v-model="editCoupon.minRecharge" :min="0" :precision="2"></el-input-number>
+                <span class="unit">元</span>
+            </el-form-item>
+             <el-form-item label="减免金额(元)" prop="discount">
+                <el-input-number v-model="editCoupon.discount" :min="0" :precision="2"></el-input-number>
+                <span class="unit">元</span>
+            </el-form-item>
+            <el-form-item label="有效时长(小时)" prop="validityTime">
+                <el-input-number v-model="editCoupon.validityTime" :min="1"></el-input-number>
+                <span class="unit">小时</span>
+            </el-form-item>
+            <el-form-item label="人均张数" prop="num">
+                <el-input-number v-model="editCoupon.num" :min="1"></el-input-number>
+            </el-form-item>
+            <el-form-item label="玩家单均价范围（元）" required>
+                <el-input-number v-model="editCoupon.orderAvgRange[0]" :min="-1" :precision="2"></el-input-number>
+                <span>—</span>
+                <el-input-number v-model="editCoupon.orderAvgRange[1]" :min="-1" :precision="2"></el-input-number>
+                <span class="unit">元</span>
+            </el-form-item>
+            <el-form-item label="玩家盈利比范围（%）" required>
+                <el-input-number v-model="editCoupon.profitabilityRatio[0]" :min="-1" :precision="2"></el-input-number>
+                <span>—</span>
+                <el-input-number v-model="editCoupon.profitabilityRatio[1]" :min="-1" :precision="2"></el-input-number>
+                <span class="unit">%</span>
+            </el-form-item>
+            <el-form-item label="玩家类型" prop="recharClassify">
+                <el-select v-model="editCoupon.recharClassify" :multiple="true" placeholder="请选择玩家类型">
+                    <el-option label="新手" :value=0></el-option>
+                    <el-option label="平民" :value=1></el-option>
+                    <el-option label="普R" :value=2></el-option>
+                    <el-option label="小R" :value=3></el-option>
+                    <el-option label="中R" :value=4></el-option>
+                    <el-option label="大R" :value=5></el-option>
+                    <el-option label="超大R" :value=6></el-option> 
+                </el-select>
+            </el-form-item>
+            <el-form-item label="账号类型" prop="acctType">
+                <el-select v-model="editCoupon.acctType" :multiple="true" placeholder="请选择账号类型">
+                    <el-option label="A类" :value=0></el-option>
+                    <el-option label="B类" :value=1></el-option>
+                    <el-option label="C类" :value=2></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="其他玩家标签" prop="userTag">
+                <el-select v-model="editCoupon.Tag" placeholder="请选择标签">
+                    <el-option label="无" :value=0></el-option>
+                    <el-option label="自定义" :value=1></el-option>
+                </el-select>
+            </el-form-item> 
+             <el-form-item label="用户id(,分隔)" prop="userIds" v-if="editCoupon.Tag === 1">
+                <el-input v-model="editCoupon.userIdStr" placeholder="请输入用户id" style="width: 60%"></el-input>
+                <el-upload
+                    ref="excelUpload"
+                    action="#"
+                    :auto-upload="false"
+                    :limit="1"
+                    accept=".xls,.xlsx"
+                    :file-list="fileList"
+                    :on-change="handleFileChange"
+                    :before-upload="beforeUpload"
+                    :http-request="customUploadByEdit"
+                >
+                    <el-button slot="trigger" size="small" type="primary" :loading="uploadLoading">选择Excel文件</el-button>
+                    <span slot="tip" class="el-upload__tip" style="margin-left: 10px;">仅支持 .xls/.xlsx 格式，大小不超过10MB</span>
+                </el-upload>
+            </el-form-item>
+            <el-form-item label="发送时间" prop="sendTime">
+                <el-date-picker
+                    v-model="editCoupon.sendTimeStr"
+                    value-format="yyyy-MM-dd HH:mm:ss"
+                    type="datetime"
+                    placeholder="选择发送时间">
+                </el-date-picker>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="editDialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="saveCouponEdit" :loading="submitLoading">确 定</el-button>
+        </div>
+    </el-dialog>
+</div>
+
+<script>
+    // 创建 Vue 实例
+    new Vue({
+        delimiters: ['#{', '}'],
+        el: '#app',
+        data() {
+            return {
+                activeTab: "coupnStats",
+                loading: false,
+                args: {
+                    ctimeRange: null,
+                    aliasIds: null,
+                    classIds: null,
+                    userTypes: null,
+                    registArea: 0,
+                },
+                manualArgs: {
+                    ctimeRange: null,
+                    sendTimeRange: null,
+                    useTimeRange: null,
+                    classifyType: [-1],
+                    registArea: [-1],
+                },
+                layout: {
+                    tableHeight: 600,
+                },
+                userTypes: [],
+                packageAliases: [],
+                packageClasses: [],
+                isOperation: false,
+                isExport: false,
+                version: "",
+                today: "",
+                coupnStatsColumns: [
+                    { prop: "sdate", label: "日期", fixed: "left", sortable: false, minWidth: '100px' },
+                    { prop: "giveCoupons", label: "当日发放总张数", fixed: false, sortable: false, },
+                    { prop: "minRecharge", label: "当日发放总最低要求金额", fixed: false, sortable: false, },
+                    { prop: "derateAmounts", label: "当日发放总减免金额", fixed: false, sortable: false, },
+                    { prop: "useCouponOrders", label: "当日用券支付总张数", fixed: false, sortable: false, },
+                    { prop: "useCouponOrderAmounts", label: "当日用券支付总金额", fixed: false, sortable: false, },
+                    { prop: "useCouponDerateAmounts", label: "当日用券减免总金额", fixed: false, sortable: false, },
+                    { prop: "useRate", label: "总发券使用率", fixed: false, sortable: false, },
+                    { prop: "currentUseRate", label: "当日总发当日即用率", fixed: false, sortable: false, },
+                    { prop: "-", label: "-", fixed: false, sortable: false, },
+                    { prop: "autoGiveCoupons", label: "当日自动发放总张数", fixed: false, sortable: false, },
+                    { prop: "autoMinRecharge", label: "当日自动发放总最低要求金额", fixed: false, sortable: false, },
+                    { prop: "autoDerateAmounts", label: "当日自动发放总减免金额", fixed: false, sortable: false, },
+                    { prop: "autoUseCouponOrders", label: "当日用自动券支付总张数", fixed: false, sortable: false, },
+                    { prop: "autoUseCouponOrderAmounts", label: "当日用自发券支付总金额", fixed: false, sortable: false, },
+                    { prop: "autoUseCouponDerateAmounts", label: "当日用自发券减免总金额", fixed: false, sortable: false, },
+                    { prop: "autoUseRate", label: "自发券使用率", fixed: false, sortable: false, },
+                    { prop: "autoCurrentUseRate", label: "当日自发当日即用率", fixed: false, sortable: false, },
+                    { prop: "-", label: "-", fixed: false, sortable: false, },
+                    { prop: "handGiveCoupons", label: "当日手动发放总张数", fixed: false, sortable: false, },
+                    { prop: "handMinRecharge", label: "当日手动发放总最低要求金额", fixed: false, sortable: false, },
+                    { prop: "handDerateAmounts", label: "当日手动发放总减免金额", fixed: false, sortable: false, },
+                    { prop: "handUseCouponOrders", label: "当日用手发券支付总张数", fixed: false, sortable: false, },
+                    { prop: "handUseCouponOrderAmounts", label: "当日用手发券支付总金额", fixed: false, sortable: false, },
+                    { prop: "handUseCouponDerateAmounts", label: "当日用手发券减免总金额", fixed: false, sortable: false, },
+                    { prop: "handUseRate", label: "手发券使用率", fixed: false, sortable: false, },
+                    { prop: "handCurrentUseRate", label: "当日手发当日即用率", fixed: false, sortable: false, },
+                ],
+                coupnStats: [],
+                manualCouponsColumns: [
+                    { prop: "sendSwitch", label: "开关", fixed: "left", sortable: false, },
+                    { prop: "id", label: "券ID", fixed: false, sortable: false, },
+                    { prop: "minRecharge", label: "最低充值要求（元）", fixed: false, sortable: false, },
+                    { prop: "discount", label: "减免金额（元）", fixed: false, sortable: false, },
+                    { prop: "giveRatio", label: "赠送比例", fixed: false, sortable: false, },
+                    { prop: "validityTime", label: "有效时长（小时）", fixed: false, sortable: false, },
+                    { prop: "num", label: "人均张数", fixed: false, sortable: false, },
+                    { prop: "payAvg", label: "玩家单均价范围（元）", fixed: false, sortable: false, },
+                    { prop: "profitabilityStr", label: "玩家盈利比范围（百分比）", fixed: false, sortable: false, },
+                    { prop: "recharClassifyStr", label: "玩家类型", fixed: false, sortable: false, },
+                    { prop: "acctTypeStr", label: "账号类型", fixed: false, sortable: false, },
+                    { prop: "userTagStr", label: "其他玩家标签", fixed: false, sortable: false, },
+                    { prop: "sendTimeStr", label: "发送时间", fixed: false, sortable: false, minWidth: '150px',},
+                    { prop: "usedTimeStr", label: "用完时间", fixed: false, sortable: false, minWidth: '150px',},
+                    { prop: "ctimeStr", label: "创建时间", fixed: false, sortable: false, minWidth: '150px',},
+                    { prop: "sendCount", label: "送达张数", fixed: false, sortable: false, },
+                    { prop: "sendUserCount", label: "送达人数", fixed: false, sortable: false, },
+                    { prop: "seeCount", label: "看到张数", fixed: false, sortable: false, },
+                    { prop: "seeUserCount", label: "看到人数", fixed: false, sortable: false, },
+                    { prop: "usedCount", label: "已使用张数", fixed: false, sortable: false, },
+                    { prop: "usedUserCount", label: "已使用人数", fixed: false, sortable: false, },
+                    { prop: "usedRatio", label: "送达张数使用率", fixed: false, sortable: false, },
+                    { prop: "usedUserRatio", label: "送达人数使用率", fixed: false, sortable: false, },
+                    { prop: "seeRatio", label: "看到张数使用率", fixed: false, sortable: false, },
+                    { prop: "seeUserRatio", label: "看到人数使用率", fixed: false, sortable: false, },
+                    { prop: "action", label: "操作", fixed: false, sortable: false, },
+                    // 编辑用的
+                    { prop: "derateAmounts", label: "减免金额", fixed: false, sortable: false, hidden: true},
+
+                ],
+                coupnHand: [],
+                dialogVisible: false,
+                submitLoading: false,
+                couponForm: {
+                    minRecharge: 0,
+                    derateAmounts: 0,
+                    giveRate: 0,
+                    validHours: 24,
+                    count: 1,
+                    classifyType: [],
+                    ra: [],
+                    sendTime: null,
+                    payAvgMin: 0,
+                    payAvgMax: 0,
+                    profitRateMin: 0,
+                    profitRateMax: 0,
+                    userIds: "",
+                },
+                couponRules: {
+                    payAvgMin: [
+                        { required: true, message: '请输入最小单均价', trigger: 'blur' }
+                    ],
+                    payAvgMax: [
+                        { required: true, message: '请输入最大单均价', trigger: 'blur' }
+                    ],
+                    profitRateMin: [
+                        { required: true, message: '请输入最小盈利比', trigger: 'blur' }
+                    ],
+                    profitRateMax: [
+                        { required: true, message: '请输入最大盈利比', trigger: 'blur' }
+                    ],
+                    minRecharge: [
+                        { required: true, message: '请输入最低充值要求', trigger: 'blur' }
+                    ],
+                    derateAmounts: [
+                        { required: true, message: '请输入减免金额', trigger: 'blur' }
+                    ],
+                    giveRate: [
+                        { required: true, message: '请输入赠送比例', trigger: 'blur' }
+                    ],
+                    validHours: [
+                        { required: true, message: '请输入有效时长', trigger: 'blur' }
+                    ],
+                    count: [
+                        { required: true, message: '请输入人均张数', trigger: 'blur' }
+                    ],
+                    sendTime: [
+                        { required: true, message: '请选择发送时间', trigger: 'change' }
+                    ]
+                },
+                fileList: [],       // 已选文件列表
+                uploadLoading: false, // 加载状态
+                editDialogVisible: false, // 控制弹窗显示
+                editCoupon: {
+                    orderAvgRange: [0, 0],
+                    profitabilityRatio: [0, 0],
+                    recharClassify: [],
+                    acctType: [],
+                    userTag: [],
+                    sendTime: new Date(),
+                },
+            }
+        },
+        created() {
+            calcInnerRestHeight(200, height => this.layout.tableHeight = height);
+            this.fetchAside();
+        },
+        methods: {
+            handleTabClick(tab) {
+                console.log('tab click:', tab.name)
+                if (tab.name === 'coupnStats') {
+
+                }
+            },
+            fetchDatas() {
+                if (this.activeTab === 'coupnStats') {
+                    this.fetchCoupnStats();
+                } else if (this.activeTab === 'coupnHand') {
+                    this.fetchCoupnHand();
+                }
+            },
+            fetchAside() {
+                fetchGET('/admin/activity/usercoupon?action=Aside')
+                    .then(res => {
+                        this.userTypes = res.data.userTypes || [];
+                        this.packageAliases = res.data.packageAliases || [];
+                        this.packageClasses = res.data.packageClasses || [];
+                        this.isOperation = res.data.isOperation;
+                        this.isExport = res.data.isExport;
+                        this.version = res.data.version;
+                        this.etime = res.data.etime;
+                        this.stime = res.data.stime;
+                        this.args.ctimeRange = [this.stime, this.etime];
+                        this.isExport = res.data.isExport;
+                        this.fetchDatas();
+                    }).catch(err => {
+                        this.$message({ type: 'error', message: `${err.msg}` });
+                    });
+            },
+            fetchCoupnStatsArgs() {
+                var args = {
+                    aliasIds: this.args.aliasIds,
+                    channelClasses: this.args.channelClasses,
+                    userTypes: this.args.userTypes,
+                    registArea: this.args.registArea,
+                };
+                if (this.args.ctimeRange) {
+                    args.ctimeS = this.args.ctimeRange[0];
+                    args.ctimeE = this.args.ctimeRange[1];
+                }
+                console.log(this.args.ctimeRange, args);
+                return args;
+            },
+            fetchCoupnStats() {
+                this.loading = true;
+                var args = this.fetchCoupnStatsArgs();
+                fetchPOST(`/admin/activity/usercoupon?action=CoupnStats`, args)
+                    .then(res => {
+                        this.coupnStats = res.data || [];
+                    }).catch(err => {
+                        this.$message({ type: 'error', message: `${err.msg}` });
+                    }).finally(() => this.loading = false);
+            },
+            fetchCoupnHand() {
+                this.loading = true;
+                var args = this.fetchCoupnHandArgs();
+                fetchPOST(`/admin/activity/usercoupon?action=CoupnHand`, args)
+                    .then(res => {
+                        this.coupnHand = res.data || [];
+                    }).catch(err => {
+                        this.$message({ type: 'error', message: `${err.msg}` });
+                    }).finally(() => this.loading = false);
+            },
+            fetchCoupnHandArgs() {
+                var args = {
+                    userTypes: this.manualArgs.classifyType,
+                    registArea: this.manualArgs.registArea,
+                };
+                if (this.manualArgs.classifyType.length == 1 && this.manualArgs.classifyType[0] === -1) {
+                    args.userTypes = [];
+                } else {
+                    args.userTypes = this.manualArgs.classifyType;
+                }
+                if (this.manualArgs.registArea.length == 1 && this.manualArgs.registArea[0] === -1) {
+                    args.registArea = [];
+                } else {
+                    args.registArea = this.manualArgs.registArea;
+                }
+                if (this.manualArgs.ctimeRange) {
+                    args.ctimeS = this.manualArgs.ctimeRange[0];
+                    args.ctimeE = this.manualArgs.ctimeRange[1];
+                }
+                if (this.manualArgs.sendTimeRange) {
+                    args.stimeS = this.manualArgs.sendTimeRange[0];
+                    args.stimeE = this.manualArgs.sendTimeRange[1];
+                }
+                if (this.manualArgs.useTimeRange) {
+                    args.utimeS = this.manualArgs.useTimeRange[0];
+                    args.utimeE = this.manualArgs.useTimeRange[1];
+                }
+                return args;
+            },
+            onArgsSubmit() {
+                this.fetchDatas();
+            },
+            handleExport() {
+                if (this.activeTab === 'coupnStats') {
+                    var args = this.fetchCoupnStatsArgs();
+                    fetchDownloadFile(`/admin/activity/usercouponexport?action=CoupnStats`, args)
+                    .then(() => {
+                        this.$message({type: 'success', message: '导出成功'});
+                    })
+                    .catch(err => this.$message({type: 'error', message: `${err.msg}`}))
+                }
+            },
+            handleAddCoupon() {
+                this.dialogVisible = true;
+            },
+            submitCouponForm() {
+                this.$refs.couponForm.validate((valid) => {
+                    if (valid) {
+                        this.submitLoading = true;
+                        // const formData = {
+                        //     ...this.couponForm,
+                        //     sendTime: this.couponForm.sendTime.getTime()
+                        // };
+                        // this.couponForm.sendTime = this.couponForm.sendTime.getTime();
+                        
+                        fetchPOST('/admin/activity/usercoupon?action=AddCoupon', this.couponForm)
+                            .then(res => {
+                                this.$message.success('创建成功');
+                                this.dialogVisible = false;
+                                this.fetchCoupnHand();
+                                this.couponForm= {
+                                    minRecharge: 0,
+                                    derateAmounts: 0,
+                                    giveRate: 0,
+                                    validHours: 24,
+                                    count: 1,
+                                    classifyType: [],
+                                    ra: [],
+                                    sendTime: null,
+                                    payAvgMin: 0,
+                                    payAvgMax: 0,
+                                    profitRateMin: 0,
+                                    profitRateMax: 0,
+                                    userIds: "",
+                                }
+                            })
+                            .catch(err => {
+                                this.$message.error(err.msg || '创建失败');
+                            })
+                            .finally(() => {
+                                this.submitLoading = false;
+                            });
+                    }
+                });
+            },
+            onClassifyTypeChange(val) {
+                if (val.length > 1 && val[val.length - 1] === -1) {
+                    // 只保留“全部”
+                    this.manualArgs.classifyType = [-1];
+                } else {
+                    // 只要选了其他，移除“全部”
+                    this.manualArgs.classifyType = val.filter(v => v !== -1);
+                }
+            },
+            onRegistAreaChange(val) {
+                if (val.length > 1 && val[val.length - 1] === -1) {
+                    // 只保留“全部”
+                    this.manualArgs.registArea = [-1];
+                } else {
+                    // 只要选了其他，移除“全部”
+                    this.manualArgs.registArea = val.filter(v => v !== -1);
+                }
+            },
+            // 文件选择变化回调
+            handleFileChange(file, fileList) {
+                this.fileList = fileList.slice(-1); // 保留最新文件
+                console.log(this.fileList);
+                // 触发上传
+                if (this.fileList.length === 0) {
+                    this.$message.warning('请先选择文件');
+                    return;
+                }
+                this.$refs.excelUpload.submit(); // 触发自定义上传
+            },
+            // 上传前校验（类型+大小）
+            beforeUpload(file) {
+                const validTypes = [
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                ];
+                const isExcel = validTypes.includes(file.type);
+                const isUnder10M = file.size / 1024 / 1024 < 10;
+
+                if (!isExcel) {
+                    this.$message.error('仅支持Excel文件格式');
+                    return false;
+                }
+                if (!isUnder10M) {
+                    this.$message.error('文件大小超过10MB限制');
+                    return false;
+                }
+                return true;
+            },
+            // 自定义上传逻辑
+            customUploadByAdd(options) {
+                this.customUpload(options, 1);
+            },
+            customUploadByEdit(options) {
+                this.customUpload(options, 2);
+            },
+            customUpload(options, type) {
+                const formData = new FormData();
+                formData.append('file', options.file);
+                // 显示加载状态
+                this.uploadLoading = true;
+                fetchFormData(`/admin/activity/usercoupon?action=CoupnHandUsersUpload`, formData)
+                    .then(res => {
+                        options.onSuccess(res.data);
+                        this.$message.success('上传成功');
+                        console.log('CoupnHandUsersUpload: ', res.data);
+                        if (type === 1) {
+                            this.couponForm.userIds = res.data.join(',');
+                        } else {
+                            this.editCoupon.userIdStr = res.data.join(',');
+                        }
+                    })
+                    .catch(err => {
+                        options.onError(err);
+                        this.$message({type: 'error', message: `${err.msg}`});
+                    })
+                    .finally(() => {
+                        this.uploadLoading = false;
+                        this.fileList = []; // 清空文件列表
+                    });
+            },
+            handCouponSwitch(checked, row) {
+                var msg = `${checked ? '开启' : '关闭'}${'优惠券'}${row.id}`;
+                this.$confirm(`确认要${msg}吗`, '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+                }).then(() => {
+                this.switchLoading = true;
+                fetchGET(`/admin/activity/usercoupon?action=EditSwitch&couponId=${row.id}&open=${checked}`)
+                    .then(res => {
+                    // this.fetchDatas();
+                    row.sendSwitch = checked;
+                    }).catch(err => {
+                    this.$message({ type: 'error', message: `${err.msg}` });
+                    }).finally(() => this.switchLoading = false);
+                }).catch(() => { });
+            },
+            handleCouponEdit(row) {
+                this.editCoupon = { ...row }; // 拷贝当前行数据
+                // this.editCoupon.profitabilityRatio[0] = row.profitabilityRatio[0] / 100;
+                // this.editCoupon.profitabilityRatio[1] = row.profitabilityRatio[1] / 100;
+                this.editDialogVisible = true;
+            },
+            saveCouponEdit() {
+                // this.$confirm(`确认要修改${this.editCoupon.id}吗`, '提示', {
+                // confirmButtonText: '确定',
+                // cancelButtonText: '取消',
+                // type: 'warning'
+                // }).then(() => {
+                // this.editDialogLoading = true;
+                // fetchGET(`/admin/activity/usercoupon?action=EditCoupon`, this.editCoupon)
+                //     .then(res => {
+                //     this.fetchDatas();
+                //     }).catch(err => {
+                //     this.$message({ type: 'error', message: `${err.msg}` });
+                //     }).finally(() => this.editDialogLoading = false);
+                // }).catch(() => { });
+                // this.editDialogVisible = false;
+                this.editDialogLoading = true;
+                fetchPOST(`/admin/activity/usercoupon?action=EditCoupon`, this.editCoupon)
+                    .then(res => {
+                    this.fetchDatas();
+                    this.editDialogVisible = false;
+                    }).catch(err => {
+                    this.$message({ type: 'error', message: `${err.msg}` });
+                    }).finally(() => this.editDialogLoading = false);
+                
+            },
+        },
+    });
+
+    // 发送 FormData 请求
+    function fetchFormData(url, formData) {
+        return new Promise((resolve, reject) => {
+            fetch(url, {
+                method: 'POST',
+                body: formData // 请求体
+            })
+                .then(r => {
+                    if (!r.ok) {
+                        throw new Error(`${r.status} ${r.statusText}`);
+                    }
+                    return r.json();
+                })
+                .then(res => {
+                    if (res.code !== 200) {
+                        return reject(res);
+                    }
+                    resolve(res);
+                })
+                .catch(error => {
+                    // console.error('fetchPOST Error:', error); // 处理错误
+                    reject({ msg: error });
+                });
+        })
+    }
+</script>
+
+<style>
+    .gray-column{
+        background-color: #dbdbdb !important;
+    }
+    .unit {
+        margin-left: 10px;
+        color: #666;
+    }
+    .el-upload__input {
+        display: none !important;
+    }
+</style>

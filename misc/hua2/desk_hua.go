@@ -1,0 +1,2499 @@
+package main
+
+import (
+	"fmt"
+	"goserver/gen/pb"
+	"goserver/pkg/data"
+	"goserver/pkg/data/mq"
+	"goserver/pkg/game/algo"
+	"goserver/pkg/game/config"
+	"goserver/pkg/game/event"
+	"goserver/pkg/game/handler"
+	"goserver/pkg/glog"
+	"goserver/pkg/table"
+	"goserver/pkg/utils"
+	"math"
+	"strconv"
+	"time"
+)
+
+// 进入私人房间响应消息
+func (t *Desk) privEnterMsg(userid string) *pb.JHEnterRoomRsp {
+	msg := new(pb.JHEnterRoomRsp)
+	//房间数据
+	msg.Roominfo = handler.PackJHCoinRoom(t.DeskData)
+	msg.Roominfo.State = t.state
+	msg.Roominfo.CurRound = t.DeskGame.Round
+	if t.IsGaming() && t.DeskGame.Round < t.DeskData.Round {
+		msg.Roominfo.CurRound++ // 前端展示当前局数+1
+	}
+	//坐下玩家信息
+	msg.Userinfo = t.coinSeatBetsMsg(userid)
+	//位置下注信息
+	msg.Betsinfo = t.coinBetsMsg()
+	//投票信息
+	msg.Voteinfo = t.voteInfoMsg()
+	msg.Gameid = t.Game.Id
+	msg.Gmode = t.Gmode
+
+	// 房间暂停状态原因
+	if t.state == int32(pb.STATE_PAUSE) {
+		msg.Roominfo.StatePauseReaon = int32(t.reason)
+	}
+
+	if t.DeskAct != nil {
+		msg.Actseat = t.DeskAct.ActSeat
+		msg.Actstate = t.DeskAct.ActState
+		msg.Ante = uint32(t.DeskAct.ActAnte)
+		msg.Pot = t.DeskGame.BetNum
+		msg.Roominfo.Dealer = t.getSeatid(t.DeskData.Cid)
+		msg.Timer = int32(BetTime - t.timer)
+		msg.Totaltimer = BetTime
+
+		if t.timer > BetTime {
+			msg.Timer = int32(ChargeInGameTime - t.timer)
+			msg.Totaltimer = ChargeInGameTime - 120
+		}
+
+		if t.state == int32(pb.STATE_CHARGE) {
+			msg.Timer = int32(ChargeInGameTime - t.timer)
+			msg.Totaltimer = ChargeInGameTime
+			msg.RechargeTime = int64(ChargeInGameTime-t.timer) + utils.LocalTime().Unix()
+			amount, give := t.getRechargeAmount(t.DeskAct.ActSeat)
+			msg.Amount, msg.GiveAmount = int32(amount), int32(give)
+			msg.ChargingSeats = t.chargingSeats
+		}
+	}
+
+	return msg
+}
+
+// 投票信息
+func (t *Desk) voteInfoMsg() (msg *pb.JHRoomVote) {
+	msg = new(pb.JHRoomVote)
+	if t.DeskPriv != nil {
+		msg.Seat = t.DeskPriv.VoteSeat
+	}
+	if msg.Seat == 0 {
+		return
+	}
+	msg.Votes = t.DeskPriv.Votes
+	for k, v := range t.seats {
+		if v.Vote == 1 {
+			msg.Agree = append(msg.Agree, k)
+		} else if v.Vote == 2 {
+			msg.Disagree = append(msg.Disagree, k)
+		}
+	}
+	msg.Dismiss = t.dismissOnRoundOver
+	if t.dismissOnRoundOver {
+		msg.DismissCountdown = 10 - t.dismissDelaySeconds
+	}
+	return
+}
+
+//.
+
+//'投票
+
+func (t *Desk) checkVote() pb.ErrCode {
+	if t.isFree() {
+		return pb.OperateError
+	}
+	//if t.state > int32(pb.STATE_READY) {
+	//	return pb.RunningNotVote
+	//}
+	if t.DeskPriv == nil {
+		return pb.OperateError
+	}
+	return pb.OK
+}
+
+// 发起投票
+func (t *Desk) launchVote(userid string, vote uint32) (msg *pb.JHLaunchVoteRsp) {
+	msg = new(pb.JHLaunchVoteRsp)
+	errcode := t.checkVote()
+	if errcode != pb.OK {
+		msg.Error = errcode
+		return
+	}
+	if t.DeskPriv.VoteSeat != 0 {
+		msg.Error = pb.VotingCantLaunchVote
+		return
+	}
+	// 投票间隔60s
+	if t.DeskPriv.VoteStartTime > utils.Timestamp()-60 {
+		msg.Error = pb.VoteIntervalWait
+		return
+	}
+	// 已投票通过回合结束解散
+	if t.dismissOnRoundOver {
+		msg.Error = pb.LeaveDismiss
+		return
+	}
+	// 只能发起3次投票
+	if t.DeskPriv.LaunchVoteTimes >= 3 {
+		msg.Error = pb.NotTimes
+		return
+	}
+	seat := t.getSeatid(userid)
+	if v, ok := t.seats[seat]; ok {
+		v.Vote = vote //投票
+	}
+	//发起投票者
+	t.DeskPriv.VoteSeat = seat
+	t.DeskPriv.Votes = []uint32{vote}
+	t.DeskPriv.LaunchVoteTimes++
+	//超时设置(10秒)
+	glog.Debugf("VoteTime: %d, %d, %s", seat, vote, userid)
+	t.DeskPriv.VoteStartTime = utils.Timestamp()
+	t.DeskPriv.VoteTime = utils.Timestamp() + 10
+
+	msg.Seat = seat
+	t.broadcast(msg)
+	t.pushVote(seat, vote)
+	t.dismiss(false)
+	return
+}
+
+// 投票超时
+func (t *Desk) voteTimeout() {
+	errcode := t.checkVote()
+	if errcode != pb.OK {
+		return
+	}
+	// 未发起投票或投票结束
+	if t.DeskPriv.VoteSeat == 0 || t.DeskPriv.VoteTime == 0 {
+		return
+	}
+	var now = utils.Timestamp()
+	if now >= t.DeskPriv.VoteTime {
+		t.dismiss(true)
+	}
+}
+
+// 投票
+func (t *Desk) privVote(userid string, vote uint32) (msg *pb.JHVoteRsp) {
+	msg = new(pb.JHVoteRsp)
+	errcode := t.checkVote()
+	if errcode != pb.OK {
+		msg.Error = errcode
+		return
+	}
+	if t.DeskPriv.VoteSeat == 0 {
+		msg.Error = pb.NotVoteTime
+		return
+	}
+	seat := t.getSeatid(userid)
+	if v, ok := t.seats[seat]; ok {
+		v.Vote = vote //投票
+		t.DeskPriv.Votes = append(t.DeskPriv.Votes, vote)
+	}
+	t.pushVote(seat, vote)
+	t.dismiss(false)
+	return
+}
+
+// 广播投票消息
+func (t *Desk) pushVote(seat, vote uint32) {
+	msg := &pb.JHVoteRsp{
+		Seat: seat,
+		Vote: vote,
+	}
+	msg.Agree, msg.Disagree, msg.Votes = t.voteStat()
+	t.broadcast(msg)
+}
+
+// 广播投票消息
+func (t *Desk) pushVoteResult(vote uint32) {
+	msg := &pb.JHVoteResultNtf{Vote: vote}
+	msg.Agree, msg.Disagree, msg.Votes = t.voteStat()
+	t.broadcast(msg)
+}
+
+// 统计投票
+func (t *Desk) voteStat() (agree []uint32, disagree []uint32, votes []uint32) {
+	votes = t.DeskPriv.Votes
+	for k, v := range t.seats {
+		if v.Vote == 1 {
+			agree = append(agree, k)
+		} else if v.Vote == 2 { // 没投的算否
+			disagree = append(disagree, k)
+		}
+	}
+	return
+}
+
+// 投票解散,agree >= unagree
+func (t *Desk) dismiss(force bool) {
+	var agree = 0
+	var unagree = 0
+	var voted = 0
+	for _, v := range t.seats {
+		if v.Vote == 1 {
+			agree++
+		} else {
+			unagree++
+		}
+		if v.Vote != 0 {
+			voted++
+		}
+	}
+	//一半以上通过即可
+	if agree > unagree {
+		//0解散,1不解散
+		t.pushVoteResult(0)
+		//待回合结束等10s停止服务
+		// msg1 := new(pb.ServeStop)
+		// t.selfPid.Tell(msg1)
+		// 标记回合结束解散
+		t.dismissOnRoundOver = true
+		t.dismissDelaySeconds = 0
+		t.DeskPriv.VoteTime = 0
+	} else if force || voted == len(t.seats) {
+		//结束投票
+		t.pushVoteResult(1)
+		//重置
+		for _, v := range t.seats {
+			v.Vote = 0
+		}
+		//发起投票者
+		t.DeskPriv.VoteSeat = 0
+		t.DeskPriv.VoteTime = 0
+	}
+}
+
+const (
+	PAUSE_REASON_0 = iota
+	PAUSE_REASON_1 //普通比牌动画
+	PAUSE_REASON_2 //最后一人下注动画（达到底池上限）、达到20局
+	PAUSE_REASON_3 //全部比牌动画
+	PAUSE_REASON_4 //结算动画
+)
+
+// 暂停游戏
+func (t *Desk) pauseGame(reason int, time int, arg interface{}) {
+	t.state = int32(pb.STATE_PAUSE)
+	t.timer = 0
+	t.pauseTime = time
+	t.reason = reason
+	t.pauseArg = arg
+}
+
+// 恢复游戏
+func (t *Desk) resumeGame(reason int) {
+	switch reason {
+	case PAUSE_REASON_1:
+		if biSeat, ok := t.pauseArg.(uint32); ok {
+			// 发起sideshow比牌座位号
+			t.DeskAct.ActSeat = biSeat
+		}
+		t.setNextActSeat()
+	case PAUSE_REASON_2:
+		t.allBi()
+	case PAUSE_REASON_3:
+		winner := t.pauseArg.(uint32)
+		t.pauseArg = nil
+		t.gameOver(winner)
+	case PAUSE_REASON_4:
+		t.state = int32(pb.STATE_READY) //设置房间状态
+		t.pushState()
+		// 踢出玩家
+		t.limitOver()
+		switch t.Rtype {
+		case int32(pb.ROOM_TYPE1):
+			// 回合结束踢出离线超时玩家
+			t.kickPrivOfflineTimeout()
+
+			// 回合结束解散牌桌
+			if t.dismissOnRoundOver {
+				t.pushPrivSettle()
+				return
+			}
+
+			if t.DeskGame.Round < uint32(t.DeskData.Round) {
+				// 检测携带分满足最低准入
+				// 真金模式，一局游戏结束，检测携带分不足触发局内充值
+				if t.Gmode == 0 {
+					var chargings []uint32
+					for userId, role := range t.roles {
+						if role.User.GetScore() < int64(t.Game.Min_Access) {
+							seatId := t.getSeatid(userId)
+							chargings = append(chargings, seatId)
+						}
+					}
+					// 需要充值的玩家
+					if len(chargings) > 0 {
+						t.chargeInGameBegin(chargings...)
+						return
+					}
+				}
+				if len(t.seats) < 2 {
+					// 人数不够下一轮,结算
+					glog.Info("desk user just %d, not start next round %d/%d", len(t.seats), t.DeskGame.Round, t.DeskData.Round)
+					t.pushPrivSettle()
+				} else {
+					// 对战自动开始下一轮
+					t.gameStart()
+				}
+
+			} else {
+				t.pushPrivSettle()
+				glog.Infof("game round over: %v, %v", t.DeskGame.Round, t.DeskData.Round)
+			}
+		default:
+			// 真实玩家换桌
+			t.mutexChangeDesk()
+		}
+	}
+}
+
+// ' 超时处理
+func (t *Desk) coinTimeout() {
+	t.checkPubOver2()
+	// t.checkPubOver()
+	switch t.state {
+	case int32(pb.STATE_READY):
+		t.kickFakeSeat()
+		var num int = t.roleNum()
+		if num < 2 { //大于等于2人时才计时
+			return
+		}
+		t.checkRealUser() // 检测真人玩家够不够，够了人机就退出去, 让真人在里面玩
+		if t.timer == ReadyTime {
+			//准备超时,不等待全部准备
+			//t.readyTimeout()
+			t.timer = 0
+			t.gameStart() //开始牌局
+		} else {
+			t.timer++
+		}
+		return
+	case int32(pb.STATE_DEALING):
+		// var num int = t.readyNum()   //游戏人数
+		// var num2 int = t.ready2Num() //播放完发牌动画人数
+		// if num2 >= num {
+		// 	return
+		// }
+		if t.timer == DealingTime {
+			t.timer = 0
+			t.state = int32(pb.STATE_BET) //切换状态为下注状态
+			t.pushState()
+			t.initAct()
+		} else {
+			t.timer++
+		}
+	case int32(pb.STATE_BET):
+		if t.timer == BetTime {
+			t.timer = 0
+			t.betTimeout()
+		} else if t.timer == WaitTooLongTime {
+			t.WaitTooLong(t.DeskAct.ActSeat)
+			t.timer++
+		} else if t.timer >= ChargeInGameTime {
+			t.timer = 0
+			t.betTimeout()
+		} else {
+			t.timer++
+		}
+	case int32(pb.STATE_PAUSE):
+		if t.timer == t.pauseTime {
+			reason := t.reason
+			t.timer = 0
+			t.reason = 0
+			t.pauseTime = 0
+			t.state = int32(pb.STATE_BET)
+			t.resumeGame(reason)
+		} else {
+			t.timer++
+		}
+	case int32(pb.STATE_CHARGE):
+		if len(t.chargingSeats) > 0 && t.isRobot(t.chargingSeats[0]) {
+			// 机器人假装充值
+			if t.timer >= t.robotChargingTime {
+				t.timer = 0
+				userid := t.getUserid(t.chargingSeats[0])
+				glog.Infof("robot chargeInGame finish: %s", userid)
+				t.chargeInGameFinish(userid)
+			} else {
+				t.timer++
+			}
+
+		} else {
+			// 玩家正常局内充值
+			if t.timer == ChargeInGameTime {
+				t.timer = 0
+				t.chargeTimeout()
+			} else {
+				t.timer++
+			}
+		}
+	}
+
+	// if t.timer == BetTime {
+	// 	switch t.state {
+	// 	case int32(pb.STATE_DEALER):
+	// 		//抢庄超时,打庄
+	// 		t.dealerHandler()
+	// 	case int32(pb.STATE_BET):
+	// 		//下注超时
+	// 		t.betTimeout()
+	// 	default:
+	// 		t.timer = 0
+	// 	}
+	// } else {
+	// 	t.timer++
+	// }
+}
+
+// .等待太久广播
+func (t *Desk) WaitTooLong(seat uint32) {
+	msg := new(pb.JHCoinWaitTooLongNtf)
+	msg.Seat = seat
+	t.broadcast(msg)
+}
+
+// ' 超时处理
+func (t *Desk) privTimeout() {
+	// t.checkPubOver2()
+	t.voteTimeout()
+	t.kickPrivOfflineTimeout()
+	t.againTimeout() // 再来一局超时检测
+	t.settleExitTimeout()
+
+	switch t.state {
+	case int32(pb.STATE_FREE):
+		fallthrough
+	case int32(pb.STATE_READY):
+		if t.dismissOnRoundOver {
+			if t.dismissDelaySeconds == 0 {
+				// 通知10s后解散
+				msg := &pb.DeskDismissNtf{Delay: 10}
+				t.broadcast(msg)
+			}
+			// 回合结束10s后解散
+			if t.dismissDelaySeconds >= 10 {
+				glog.Infof("dismiss desk: %v", t.DeskData.Rid)
+				t.dismissOnRoundOver = false
+				t.dismissDelaySeconds = 0
+				msg1 := new(pb.ServeStop)
+				t.selfPid.Tell(msg1)
+			} else {
+				t.dismissDelaySeconds++
+			}
+		}
+
+		//私人房x秒后未开局强制解散
+		if t.DeskGame.Round == 0 && t.checkExpire() {
+			//关闭房间
+			glog.Infof("Desk expired: %v, %v", t.state, t.seats)
+			t.gameStop()
+		}
+	case int32(pb.STATE_BET):
+		if t.timer == BetTime {
+			t.timer = 0
+			t.betTimeout()
+		} else if t.timer == WaitTooLongTime {
+			t.WaitTooLong(t.DeskAct.ActSeat)
+			t.timer++
+		} else if t.timer >= ChargeInGameTime {
+			t.timer = 0
+			t.betTimeout()
+		} else {
+			t.timer++
+		}
+	case int32(pb.STATE_PAUSE):
+		if t.timer == t.pauseTime {
+			reason := t.reason
+			t.timer = 0
+			t.reason = 0
+			t.pauseTime = 0
+			t.state = int32(pb.STATE_BET)
+			t.resumeGame(reason)
+		} else {
+			t.timer++
+		}
+		return
+	case int32(pb.STATE_CHARGE):
+		if t.timer == ChargeInGameTime {
+			t.timer = 0
+			t.chargeTimeout()
+		} else {
+			t.timer++
+		}
+	}
+	// if t.timer == BetTime {
+	// 	switch t.state {
+	// 	case int32(pb.STATE_DEALER):
+	// 		//抢庄超时,打庄
+	// 		t.dealerHandler()
+	// 	case int32(pb.STATE_BET):
+	// 		//下注超时
+	// 		t.betTimeout()
+	// 	default:
+	// 		t.timer = 0
+	// 	}
+	// } else {
+	// 	t.timer++
+	// }
+}
+
+// 获取库存ID
+func (t *Desk) getStockGameId() (string, bool) {
+	if t.DeskType == int32(pb.DESK_TYPE_NEWBIEW) { //新手模式走新手库存
+		return "1808", false
+	} else {
+		return t.Game.Id, true
+	}
+}
+
+func (t *Desk) getGiveStockGameId() string {
+	return "1809"
+}
+
+// 更新赠送金库存
+func (t *Desk) _changeGiveStock(cash_give int64) {
+	if cash_give == 0 {
+		return
+	}
+	msg := &pb.ChangeStock{}
+	msg.GameId = t.getGiveStockGameId()
+	msg.Gtype = int32(pb.HUA2)
+	msg.CashStock = cash_give
+
+	res := t.reqRoom(msg)
+	if _, ok := res.(*pb.ChangedStock); !ok {
+		glog.Errorf("change stock failed: %#v", res)
+	}
+}
+
+// 更新库存
+func (t *Desk) _changeStock(cash_stock, bonus_stock, cash_ming, bonus_ming, cash_an, bonus_an int64) {
+	//更新房间库存、税收
+	msg := &pb.ChangeStock{}
+	msg.GameId, msg.Real = t.getStockGameId()
+	msg.Gtype = int32(pb.HUA2)
+	msg.CashStock = cash_stock
+	msg.BonusStock = bonus_stock
+	msg.CashMingTax = cash_ming
+	msg.BonusMingTax = bonus_ming
+	msg.CashAnTax = cash_an
+	msg.BonusAnTax = bonus_an
+
+	res := t.reqRoom(msg)
+	if _, ok := res.(*pb.ChangedStock); !ok {
+		glog.Errorf("change stock failed: %#v", res)
+	}
+}
+
+// 处理点控
+func (t *Desk) handlePointControl(role *data.DeskRole, tpdetail *data.TPDetail) {
+	if t.DeskType != int32(pb.DESK_TYPE_POINTCONTROL) {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	if !role.PCSwitch || role.PCScore == 0 {
+		return
+	}
+
+	diff := tpdetail.AfterCash - tpdetail.BeforeCash
+	if diff == 0 {
+		return
+	}
+	role.PCScoreComplete += diff
+
+	if role.PCScore > 0 { //控赢
+		if role.PCScoreComplete >= role.PCScore {
+			role.PCSwitch = false
+			role.PCFactor = 0
+			role.PCScoreComplete = 0
+			role.PCScore = 0
+			t.DeskType = int32(pb.DESK_TYPE_NORMAL)
+		}
+	} else if role.PCScore < 0 { //控输
+		if role.PCScoreComplete <= role.PCScore {
+			role.PCSwitch = false
+			role.PCFactor = 0
+			role.PCScoreComplete = 0
+			role.PCScore = 0
+			t.DeskType = int32(pb.DESK_TYPE_NORMAL)
+		}
+	}
+	t.sendPointControl(role.Userid)
+}
+
+// 检查赠送彩金
+func (t *Desk) CheckGiveDiamond(seateid uint32, score int64) (score_deduction int64) {
+	if t.DeskType == int32(pb.DESK_TYPE_NEWBIEW) { //新手模式不检查赠送彩金
+		return
+	}
+	userid := t.getUserid(seateid)
+	role := t.getRole(userid)
+	if role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	if score >= 0 {
+		return
+	}
+
+	var incre int64
+	old := role.GiveDiamond
+	new := role.GiveDiamond + score
+	if new < 0 {
+		new = 0
+	}
+	incre = new - old
+	score_deduction = incre
+
+	role.GiveDiamond += incre //修改本地数据
+
+	//同步变化
+	msg := &pb.GiveAndOutCash{
+		Userid: userid,
+		GameId: t.GameId,
+		Desc:   fmt.Sprintf("房间%s", t.Rid),
+	}
+	if role.Offline {
+		t.rolePid.Tell(msg)
+	} else {
+		t.send2userid(userid, msg)
+	}
+
+	return
+}
+
+// 检查可提现彩金
+func (t *Desk) CheckOutDiamond(seatid uint32, score_final int64) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+
+	var incre int64
+	if score_final > 0 { //赢
+		old := role.OutDiamond               //旧可提彩金
+		new := role.OutDiamond + score_final //新可提彩金
+		if new > role.Diamond {              //可提彩金大于携带彩金
+			new = role.Diamond //可提彩金不能超过携带彩金
+		}
+		incre = new - old //可提彩金增量
+	} else if score_final < 0 { //输
+		old := role.OutDiamond
+		new := role.OutDiamond
+		if role.OutDiamond > role.Diamond { //可提彩金不能超过携带彩金
+			new = role.Diamond
+		}
+		incre = new - old //可提彩金增量
+	}
+
+	role.OutDiamond += incre //修改本地可提彩金数据
+
+	//同步变化
+	msg := &pb.GiveAndOutCash{
+		Userid: userid,
+		GameId: t.GameId,
+		Desc:   fmt.Sprintf("房间%s", t.Rid),
+	}
+	msg.Out = incre
+	if role.Offline {
+		t.rolePid.Tell(msg)
+	} else {
+		t.send2userid(userid, msg)
+	}
+}
+
+func (t *Desk) flowWater(userid string, score int64) {
+	if score == 0 {
+		return
+	}
+	// 事件
+	bean := &event.ShopPotFlowEvent{
+		Score: score,
+	}
+	t.eventPost(userid, event.POT_FLOW, bean) // 商城打码量
+}
+
+// 输
+func (t *Desk) Lose(seatid uint32) {
+	userid := t.getUserid(seatid)
+	status := t.getStatus(seatid)
+	role := t.getRole(userid)
+	seat := t.getSeat(seatid)
+	if status == nil || role == nil || seat == nil {
+		return
+	}
+	if status.Alive {
+		return
+	}
+
+	score := -status.ActNum //输赢
+	var score_final int64   //最终输赢
+	//非人机计算库存
+	if !role.Robot {
+		score_deduction := t.CheckGiveDiamond(seatid, score)
+		score_final, status.Stock = t.calcStockAndTax(score, role.Ratio, 0)
+		status.Stock.CashGive = -score_deduction
+		status.Stock.Robot = role.Robot
+	} else {
+		score_final = score
+	}
+	t.score[seatid] = score_final
+
+	if !t.isPrivFunRoom() {
+		t.shareAmount(userid, score_final)
+	}
+	t.RecordDetail(seatid, status.ActNum, score_final, status.Stock)
+	t.EventPost(seatid, false)
+	t.GameTime(seatid)
+
+	//结算数据
+	over := &pb.JHCoinOver{
+		Seat:  seatid,
+		Score: score_final,
+	}
+	over.Bets = seat.Bet
+	over.Value = seat.Power
+	over.Cards = seat.Cards
+	over.Coin = role.GetCoin()
+	over.Nickname = role.GetNickname()
+	over.Photo = role.GetPhoto()
+	if status.Pack || status.Lose { //弃牌不亮、sideshow输的不亮
+		over.Show = false
+	} else {
+		over.Show = true
+	}
+	t.over[seatid] = over
+
+	// 对战房
+	if t.isPrivRoom() {
+		t.PrivLoses[userid]++
+		t.PrivScore[userid] += score_final
+		// 娱乐模式只加娱乐分
+		if t.isPrivFunRoom() {
+			t.huaRecord(seatid, score_final)
+			return
+		}
+	} else {
+		// 剧充玩家输分增加库存
+		if role.TpUserChargeInGameStory > 0 {
+			msg := &pb.ChangeTpStoryChargeLoss{
+				GameId:     t.DeskData.Game.Id,
+				Userid:     userid,
+				ChargeLoss: -score_final,
+				DetailId:   t.DeskGame.GameId,
+			}
+			t.roomPid.Tell(msg)
+		}
+	}
+
+	t.CheckOutDiamond(seatid, score_final)
+	t.huaRecord(seatid, score_final)
+	t.roundIncrease(seatid)
+	t.freeCheck(seatid, score_final)
+	t.SetTpUserTotalWinOrLoseAmount(seatid, score_final)
+	t.ReduceTpUserStoryCD(seatid)
+	t.flowWater(userid, score_final)
+}
+
+// 赢
+func (t *Desk) Win(seatid uint32) {
+	userid := t.getUserid(seatid)
+	status := t.getStatus(seatid)
+	role := t.getRole(userid)
+	seat := t.getSeat(seatid)
+	if status == nil || role == nil || seat == nil {
+		return
+	}
+	// if !status.Alive {
+	// 	return
+	// }
+	score := t.DeskGame.BetNum //赢总投注
+
+	var score_final int64 //最终输赢
+	//非人机计算库存
+	// if !role.Robot {
+	score -= status.ActNum //先扣除下注额
+	score_final, status.Stock = t.calcStockAndTax(score, role.Ratio)
+	score_final += status.ActNum //再返还下注额
+	status.Stock.Robot = role.Robot
+	// } else {
+	// score_final = score
+	// }
+	t.score[seatid] = score_final
+
+	if t.isPrivFunRoom() {
+		// 私人房娱乐模式只加娱乐分
+		t.sendFraction(userid, score_final, int32(pb.LOG_TYPE45))
+	} else {
+		t.shareAmount(userid, score_final)
+		t.sendCurrency(userid, score_final, int32(pb.LOG_TYPE131), fmt.Sprintf("tp2 %s房间赢分", t.DeskData.Rid)) //加钱
+	}
+	t.RecordDetail(seatid, status.ActNum, score_final, status.Stock)
+	t.EventPost(seatid, true)
+	t.GameTime(seatid)
+
+	//结算数据
+	over := &pb.JHCoinOver{
+		Seat:  seatid,
+		Score: score_final,
+	}
+	over.Bets = seat.Bet
+	over.Value = seat.Power
+	over.Cards = seat.Cards
+	over.Coin = role.GetCoin()
+	over.Nickname = role.GetNickname()
+	over.Photo = role.GetPhoto()
+	if status.Pack || status.Lose { //弃牌不亮、sideshow输的不亮
+		over.Show = false
+	} else {
+		over.Show = true
+	}
+	t.over[seatid] = over
+
+	// 剧充玩家赢分减少库存
+	if !t.isPrivFunRoom() && role.TpUserChargeInGameStory > 0 {
+		msg := &pb.ChangeTpStoryChargeLoss{
+			GameId:     t.DeskData.Game.Id,
+			Userid:     userid,
+			ChargeLoss: -(score_final - seat.Bet),
+			DetailId:   t.DeskGame.GameId,
+		}
+		t.roomPid.Tell(msg)
+	}
+
+	// 对战房
+	if t.isPrivRoom() {
+		t.PrivWins[userid]++
+		t.PrivScore[userid] += (score_final - status.ActNum)
+
+		// 娱乐模式只加娱乐分
+		if t.isPrivFunRoom() {
+			t.huaRecord(seatid, score_final)
+			return
+		}
+	}
+
+	outDiamond := score_final - status.ActNum
+	if t.Rtype == int32(pb.ROOM_TYPE1) {
+		//私人房只加5%的可提现金
+		outDiamond = int64(math.Round(float64(outDiamond) * 0.05))
+	}
+	t.CheckOutDiamond(seatid, outDiamond)
+	t.huaRecord(seatid, score_final)
+	t.roundIncrease(seatid)
+	if ok := t.newbieCheck(seatid); !ok {
+		t.freeCheck(seatid, score_final-status.ActNum)
+	}
+	t.SetTpUserTotalWinOrLoseAmount(seatid, score_final)
+	t.ReduceTpUserStoryCD(seatid)
+	t.flowWater(userid, score_final)
+}
+
+// 设置用户模式
+func (t *Desk) SetTpUserModel(role *data.DeskRole, model int32) {
+	if role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	role.TpUserModel = model
+	msg := &pb.TpUserModelSync{Model: model}
+	t.send2userid(role.Userid, msg)
+}
+
+// 设置用户阶段
+func (t *Desk) SetTpUserStage(role *data.DeskRole, stage int32) {
+	if role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	if role.TpUserStage == stage {
+		return
+	}
+	role.TpUserStage = stage
+	role.TpUserStageHistory = append(role.TpUserStageHistory, stage)
+	msg := &pb.TpUserStageChangeSync{Stage: stage}
+	t.send2userid(role.Userid, msg)
+}
+
+// 设置用户输赢额
+func (t *Desk) SetTpUserWinOrLoseAmount(role *data.DeskRole, amount int64) {
+	if role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	role.TpUserWinOrLoseAmount = amount
+	msg := &pb.TpWinOrLoseAmountSync{Amount: amount}
+	t.send2userid(role.Userid, msg)
+}
+
+// 设置用户变化修正值
+func (t *Desk) SetTpUserChangeCorrectionValue(role *data.DeskRole, value int64) {
+	if role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	role.TpUserChangeCorrectionValue = value
+	msg := &pb.TpUserChangeCorrectionValueSync{Value: value}
+	t.send2userid(role.Userid, msg)
+}
+
+// 增加累计输赢额
+func (t *Desk) SetTpUserTotalWinOrLoseAmount(seatid uint32, score_final int64) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	role.TpUserTotalWinOrLoseAmount += score_final
+	msg := &pb.TpUserTotalWinOrLoseAmountSync{Amount: score_final}
+	t.send2userid(userid, msg)
+}
+
+// 增加局内充值触发数
+func (t *Desk) SetTpUserChargeInGameNumOfTrigger(seatid uint32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	role.TpUserChargeInGameNumOfTrigger++
+	msg := &pb.TpUserChargeInGameNumOfTriggerSync{}
+	t.send2userid(userid, msg)
+}
+
+// 增加局内充值成功数
+func (t *Desk) SetTpUserChargeInGameNumOfSuccess(seatid uint32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	role.TpUserChargeInGameNumOfSuccess++
+	msg := &pb.TpUserChargeInGameNumOfSuccessSync{}
+	t.send2userid(userid, msg)
+}
+
+// 增加剧情局内充值成功数
+func (t *Desk) SetTpUserChargeInGameStory(seatid uint32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	role.TpUserChargeInGameStory++
+	msg := &pb.TpUserChargeInGameStorySync{}
+	t.send2userid(userid, msg)
+}
+
+// 设置用户为剧情剧plus用户
+func (t *Desk) SetTpUserStoryPlus(seatid uint32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	if role.TpUserStoryPlus {
+		return
+	}
+	role.TpUserStoryPlus = true
+	msg := &pb.TpUserStoryPlusSync{}
+	t.send2userid(userid, msg)
+}
+
+// 玩家变正常状态检测
+func (t *Desk) CheckTpUserModel(seatid uint32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	if role.TpUserModel != 2 { //非正常变正常
+		t.SetTpUserModel(role, 2)
+	}
+}
+
+// 增加局数
+func (t *Desk) roundIncrease(seatid uint32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	if seatid != t.GetOnlyOneSeatId() {
+		return
+	}
+	if role.TpUserModel != 0 { //新手保护模式下才增加局数
+		return
+	}
+
+	role.TpUserRound++
+	msg := &pb.TpUserRoundSync{}
+	t.send2userid(userid, msg)
+}
+
+// 增加跟牌率触发数
+func (t *Desk) SetTpUserFollowRateTrigger(seatid uint32, cardType int32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+
+	if role.TpUserFollowRateTrigger == nil {
+		role.TpUserFollowRateTrigger = make(map[int32]int32)
+	}
+
+	if _, ok := role.TpUserFollowRateTrigger[cardType]; !ok {
+		role.TpUserFollowRateTrigger[cardType] = 1
+	} else {
+		role.TpUserFollowRateTrigger[cardType]++
+	}
+	msg := &pb.TpUserFollowRateTriggerSync{CardType: cardType}
+	t.send2userid(userid, msg)
+}
+
+// 增加跟牌率成功数
+func (t *Desk) SetTpUserFollowRateSuccess(seatid uint32, cardType int32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+
+	if role.TpUserFollowRateSuccess == nil {
+		role.TpUserFollowRateSuccess = make(map[int32]int32)
+	}
+
+	if _, ok := role.TpUserFollowRateSuccess[cardType]; !ok {
+		role.TpUserFollowRateSuccess[cardType] = 1
+	} else {
+		role.TpUserFollowRateSuccess[cardType]++
+	}
+	msg := &pb.TpUserFollowRateSuccessSync{CardType: cardType}
+	t.send2userid(userid, msg)
+}
+
+// 设置剧情CD
+func (t *Desk) SetTpUserStoryCD(seatid uint32, id int32, cd int32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+
+	if role.TpUserStoryCD == nil {
+		role.TpUserStoryCD = make(map[int32]int32)
+	}
+	role.TpUserStoryCD[id] = cd
+	msg := &pb.TpUserStoryCDSync{Id: id, Cd: cd}
+	t.send2userid(userid, msg)
+}
+
+// 减少剧情CD
+func (t *Desk) ReduceTpUserStoryCD(seatid uint32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	if role.TpUserStoryCD == nil {
+		role.TpUserStoryCD = make(map[int32]int32)
+	}
+	for k, v := range role.TpUserStoryCD {
+		if v >= 0 {
+			role.TpUserStoryCD[k]--
+		}
+	}
+	msg := &pb.TpUserStoryCDReduce{}
+	t.send2userid(userid, msg)
+}
+
+// 剧情是否CD
+func (t *Desk) IsStoryCD(seatid uint32, id int32) bool {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return true
+	}
+	if role.Robot {
+		return true
+	}
+	if role.TpUserStoryCD == nil {
+		return false
+	}
+	if v, ok := role.TpUserStoryCD[id]; ok && v > 0 {
+		return true
+	}
+	return false
+}
+
+// 控制策略历史
+func (t *Desk) SetTpUserControlStrategyHistory(seatid uint32, id int32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	role.TpUserControlStrategyHistory = append(role.TpUserControlStrategyHistory, id)
+	msg := &pb.TpUserControlStrategyHistorySync{Id: id}
+	t.send2userid(userid, msg)
+}
+
+// 控制策略今日触发数
+func (t *Desk) SetTpUserTodayControlStrategyNum(seatid uint32, id int32) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	if role.TpUserTodayControlStrategyNum == nil {
+		role.TpUserTodayControlStrategyNum = make(map[int32]int32)
+	}
+
+	if _, ok := role.TpUserTodayControlStrategyNum[id]; !ok {
+		role.TpUserTodayControlStrategyNum[id] = 1
+	} else {
+		role.TpUserTodayControlStrategyNum[id]++
+	}
+	msg := &pb.TpUserTodayControlStrategyNumSync{Id: id}
+	t.send2userid(userid, msg)
+}
+
+// 新手保护模式检测
+func (t *Desk) newbieCheck(seatid uint32) bool {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return false
+	}
+	if role.Robot {
+		return false
+	}
+	// if seatid != t.GetOnlyOneSeatId() {
+	// 	return false
+	// }
+
+	if role.TpUserModel != 0 { //必须是新手保护模式
+		return false
+	}
+
+	conf := table.GetTables().Tp2CommonConfigTable.Get()
+	if role.GetScore() >= int64(conf.GrowthValueExceed) { //新手模式变为免费模式
+		t.SetTpUserModel(role, 1)
+		stage := table.GetTables().Tp2FreeModelTable.GetDataList()[0].Stage
+		t.SetTpUserStage(role, stage)
+		t.SetTpUserChangeCorrectionValue(role, role.GetScore()-int64(conf.GrowthValueExceed)) //多赢的部分
+		t.SetTpUserWinOrLoseAmount(role, 0)
+		return true
+	}
+	return false
+}
+
+// 免费模式检测
+func (t *Desk) freeCheck(seatid uint32, score_final int64) {
+	userid := t.getUserid(seatid)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.TpUserModel != 1 { //必须是免费模式
+		return
+	}
+	if role.Robot {
+		return
+	}
+	// if t.GetOnlyOneSeatId() != seatid {
+	// 	return
+	// }
+
+	stage := role.TpUserStage
+	conf := table.GetTables().Tp2FreeModelTable.Get(stage)
+	if conf == nil {
+		t.SetTpUserModel(role, 2)
+		return
+	}
+
+	a := role.TpUserWinOrLoseAmount + score_final //当前累计输赢额
+	t.SetTpUserWinOrLoseAmount(role, a)
+
+	if conf.WinOrLose < 0 && a < 0 { //输阶段
+		b := int64(conf.WinOrLose) - role.TpUserChangeCorrectionValue //修正值
+		diff := a - b
+
+		if diff <= 0 {
+			conf1 := table.GetTables().Tp2FreeModelTable.Get(stage + 1)
+			if conf1 == nil {
+				t.SetTpUserModel(role, 2)
+			} else {
+				t.SetTpUserStage(role, conf1.Stage)
+				t.SetTpUserChangeCorrectionValue(role, diff)
+				t.SetTpUserWinOrLoseAmount(role, 0)
+			}
+		}
+	} else if conf.WinOrLose > 0 && a > 0 { //赢阶段
+		b := int64(conf.WinOrLose) - role.TpUserChangeCorrectionValue //修正值
+		diff := a - b
+
+		if diff >= 0 {
+			conf1 := table.GetTables().Tp2FreeModelTable.Get(stage + 1)
+			if conf1 == nil {
+				t.SetTpUserModel(role, 2)
+			} else {
+				t.SetTpUserStage(role, conf1.Stage)
+				t.SetTpUserChangeCorrectionValue(role, diff)
+				t.SetTpUserWinOrLoseAmount(role, 0)
+			}
+		}
+	}
+
+}
+
+// 记录详情
+func (t *Desk) RecordDetail(seat uint32, act_num, score_final int64, stock *data.ActStock) {
+	userid := t.getUserid(seat)
+	role := t.getRole(userid)
+	if role == nil {
+		return
+	}
+	tpdetail := t.detail.FindTPDetail(seat)
+	if tpdetail == nil {
+		return
+	}
+
+	//牌型
+	tpdetail.Cards = t.getHandCards(seat)
+
+	//总投注、底注
+	tpdetail.Bet = act_num                   //总投注
+	tpdetail.Bottom = int64(t.DeskData.Ante) //底注
+
+	//库存
+	if stock != nil {
+		tpdetail.CashStock = stock.CashStock
+		tpdetail.BonusStock = stock.BonusStock
+		tpdetail.CashMingTax = stock.CashMing
+		tpdetail.BonusMingTax = stock.BonusMing
+		tpdetail.CashAnTax = stock.CashAn
+		tpdetail.BonusAnTax = stock.BonusAn
+	}
+
+	//结算
+	tpdetail.Score = score_final
+
+	//账变后分数、彩金、奖励金
+	tpdetail.AfterScore = role.GetScore()
+	tpdetail.AfterCash = role.GetDiamond()
+	tpdetail.AfterBonus = role.GetCoin()
+
+	//处理点控
+	t.handlePointControl(role, tpdetail)
+}
+
+func (t *Desk) EventPost(seat uint32, win bool) {
+	userid := t.getUserid(seat)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+	e := &event.GameRecordEvent{
+		Gtype: uint32(pb.HUA2),
+		Win:   win,
+	}
+	cards := t.getHandCards(seat)
+	typ := algo.HuaType(cards)
+	hands := &event.PokerHandsEvent{
+		GameType: int(pb.HUA2),
+		Win:      win,
+		PX:       typ,
+	}
+	t.eventPost(userid, event.PLAY_TASK, e)
+	// t.eventPost(userid, event.WIN_TASK, e)
+	t.eventPost(userid, event.POKER_HANDS, hands)
+}
+
+func (t *Desk) GameTime(seat uint32) {
+	userid := t.getUserid(seat)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+
+	gameTime := time.Now().Unix() - t.detail.BeginTime
+
+	role.TotalGameTime += uint64(gameTime)
+	msg := &pb.LogGameTime{
+		Userid: userid,
+		Gtype:  int32(pb.HUA2),
+		Time:   gameTime,
+	}
+	t.loggerPid.Tell(msg)
+	t.send2userid(userid, msg)
+
+	if role.LastChargeTime != 0 {
+		role.TpUserGameTime += (msg.Time)
+		msg2 := &pb.TpUserGameTimeSync{Time: gameTime}
+		t.send2userid(userid, msg2)
+	}
+}
+
+func (t *Desk) changeStock() {
+	var cash_stock, bonus_stock, cash_ming, bonus_ming, cash_an, bonus_an int64
+	var cash_give int64
+	for _, v := range t.ActSeats {
+		if v.Stock == nil {
+			continue
+		}
+		if v.Stock.Robot { //跳过机器人
+			continue
+		}
+		cash_stock += v.Stock.CashStock
+		bonus_stock += v.Stock.BonusStock
+		cash_ming += v.Stock.CashMing
+		bonus_ming += v.Stock.BonusMing
+		cash_an += v.Stock.CashAn
+		bonus_an += v.Stock.BonusAn
+		cash_give += v.Stock.CashGive
+	}
+	t._changeStock(cash_stock, bonus_stock, cash_ming, bonus_ming, cash_an, bonus_an)
+	t._changeGiveStock(cash_give)
+}
+
+// '结束游戏
+func (t *Desk) gameOver(winner uint32) {
+	t.timer = 0
+	t.state = int32(pb.STATE_OVER)
+	t.pushState() //广播状态
+
+	//详情记录
+	t.detail.EndTime = time.Now().Unix()       //详情记录结束时间
+	t.detail.ChangeCardType = t.changeCardType //换牌类型(开局换，局中换)
+	t.detail.ControlType = t.controlType       //控制方式(当前赢分，玩家系数)
+	t.detail.WinScore = t.winScore             //当前赢分(开局换)
+	t.detail.PlayerFactor = t.playerFactor     //玩家系数(开局换)
+	t.detail.WinScore1 = t.winScore1           //当局赢分(局中换)
+	t.detail.WinScore2 = t.winScore2           //当前赢分(局中换)
+	t.detail.ChargeMoney = t.chargeMoney       //充值金额(开局、局中)
+	t.detail.IsStrategy = t.isStrategy         //是否是策略局
+	t.detail.StrategyType = t.strategyType     //策略局类型
+	t.detail.IsCharge = t.isCharge             //是否充值
+
+	t.Win(winner)
+
+	// show := t.ShowCard(winner)
+	// t.detail.NonDirty = t.GetNonDirtySeat() //没有污染的人机座位
+	// if show {
+	// 	showCards := map[uint32][]uint32{}
+	// 	for _, v := range t.detail.NonDirty {
+	// 		seat := t.getSeat(v)
+	// 		showCards[v] = seat.ShowCards
+	// 	}
+	// 	showCardsData, _ := json.Marshal(showCards)
+	// 	t.detail.ShowCards = string(showCardsData)
+	// }
+
+	// t.StrategyShowCard()
+
+	//结算消息
+	switch t.DeskData.Rtype {
+	case int32(pb.ROOM_TYPE0): //自由
+		//结算消息
+		msg := t.resCoinOver(t.score)
+
+		msg.Winner = winner
+		msg.Wincoin = uint64(t.score[winner])
+
+		t.broadcast(msg)
+		//修改库存
+		t.changeStock()
+		//保存详情
+		t.saveDetail()
+		//冤家牌记录
+		t.addHedgeRecord(false)
+		//记录
+		// t.saveRecord(score)
+		//结束连庄处理
+		// t.dealerOver()
+		//重置状态
+		t.gameOverInit()
+		//踢出机器人
+		t.KickRobot()
+		//踢出不足坐下玩家或超额玩家
+		// t.limitOver()
+		//踢除离线玩家
+		t.kickOffline()
+		//清除离开数据
+		t.clearLeave()
+	case int32(pb.ROOM_TYPE1): //私人
+		// 对局数加1
+		t.DeskGame.Round++
+		//结算消息
+		msg := t.resOver(t.score)
+		msg.Winner = winner
+		msg.Wincoin = uint64(t.score[winner])
+		t.broadcast(msg)
+		//保存详情
+		t.saveDetail()
+
+		//记录
+		if !t.DeskData.Pub {
+			t.saveRecord(t.score)
+		}
+		//结束连庄处理
+		// t.dealerOver()
+		//重置状态
+		t.gameOverInit()
+
+		//踢出不足坐下玩家或超额玩家
+		// t.limitOver()
+		//踢除离线玩家
+		// t.kickOffline()
+		//关闭房间
+		//t.gameStop()
+	case int32(pb.ROOM_TYPE2): //百人
+	}
+}
+
+// 输赢记录
+func (t *Desk) huaRecord(seat uint32, num int64) {
+	userid := t.getUserid(seat)
+	role := t.getRole(userid)
+	if userid == "" || role == nil {
+		return
+	}
+	if role.Robot {
+		return
+	}
+
+	role.TpUserTodayGameRound++
+	msg2 := &pb.TpUserTodayGameRoundSync{}
+	t.send2userid(userid, msg2)
+
+	role.Round++
+
+	var bet int64 = 0
+	if v, ok := t.seats[seat]; ok {
+		bet = v.Bet
+	}
+	msg := &pb.FreeSetRecord{Gtype: int32(pb.HUA2), Score: num, Bet: bet}
+	if num > 0 { //赢
+		msg.Rtype = 1
+	} else if num < 0 { //输
+		msg.Rtype = -1
+	} else { //平
+		msg.Rtype = 0
+	}
+	msg.GameTime = utils.BsonNow().Unix() - t.detail.BeginTime
+	t.send2userid(userid, msg)
+
+	// 打码上报
+	if err = mq.NatsPublish(mq.TopicGameBets, &pb.PublishGameBets{
+		UserPid:    role.Pid,
+		Userid:     role.Userid,
+		Gtype:      int32(pb.HUA2),
+		Ts:         time.Now().Unix(),
+		Bets:       bet,
+		Robot:      role.Robot,
+		Username:   role.Nickname,
+		Photo:      role.Photo,
+		RegistArea: int32(role.RegistArea),
+		VipLv:      int32(role.Vip.Lv),
+		SuperId:    role.ShareSuperior,
+		WaterId:    t.GameId,
+		Score:      utils.CaseElse(num <= 0, num, num-bet),
+	}); err != nil {
+		glog.Error("publish user hua2 bets error", err)
+	}
+
+	// 打码量日志
+	log := handler.GameFlowWaterLog(bet, int(pb.HUA2), 0, len(role.RechargeTarge), userid)
+	t.loggerPid.Tell(log)
+
+	//判断底注
+	if role.Diamond >= int64(t.Ante)*300 {
+		return
+	}
+
+	if t.Game.TP.Strategy300Switch == 0 {
+		return
+	}
+
+	if t.DeskType != int32(pb.DESK_TYPE_NORMAL) { //正常桌才累计局数
+		return
+	}
+	// if t.Game.TP.Strategy100Switch == 0 && t.Game.TP.Strategy200Switch == 0 {
+	// 	return
+	// }
+
+	// 增加累计局数
+	role.IncreTPTotalRound()
+	//同步数据
+	msg1 := &pb.TPTotalRound{}
+	t.send2userid(userid, msg1)
+
+	role.BetRecord = append(role.BetRecord, bet)
+	if len(role.BetRecord) > 200 {
+		role.BetRecord = role.BetRecord[len(role.BetRecord)-200:]
+	}
+
+}
+
+// .
+func (t *Desk) checkMin(role *data.DeskRole) bool {
+	return role.GetScore() >= int64(t.Game.Kick_Score)
+}
+
+func (t *Desk) checkMax(role *data.DeskRole) bool {
+	if t.Game.Max_Access == -1 {
+		return true
+	}
+	return role.GetScore() <= int64(t.Game.Max_Access)
+}
+
+func (t *Desk) checkBlackList(role *data.DeskRole) bool {
+	return role.Status != 3
+}
+
+func (t *Desk) checkPointControl(role *data.DeskRole) bool {
+	if t.DeskType == int32(pb.DESK_TYPE_POINTCONTROL) { //跳过点控桌子
+		return true
+	}
+	if role.Robot { //跳过机器人
+		return true
+	}
+	if role.PCSwitch { //如果点控了玩家，需要踢出
+		return false
+	} else {
+		return true
+	}
+}
+
+func (t *Desk) checkNewbie(role *data.DeskRole) bool {
+	if t.DeskType != int32(pb.DESK_TYPE_NEWBIEW) { //跳过非新手桌子
+		return true
+	}
+	if role.Robot { //跳过人机
+		return true
+	}
+	if role.State == 2 { //新手桌子上的玩家状态变为非新手，需要踢出
+		return false
+	} else {
+		return true
+	}
+}
+
+func (t *Desk) check105(role *data.DeskRole) bool {
+	// if role.Kick105Flag {
+	// 	return true
+	// }
+	// if role.OutDiamond >= 105*100 && role.Money == 0 {
+	// 	return false
+	// } else {
+	// 	return true
+	// }
+	return true
+}
+
+// 200 改成 100
+func (t *Desk) check200(role *data.DeskRole) bool {
+	// if role.Kick200Flag {
+	// 	return true
+	// }
+	// if role.OutDiamond >= 100*100 && role.Money == 0 {
+	// 	return false
+	// } else {
+	// 	return true
+	// }
+	return true
+}
+
+func (t *Desk) checkGameTime(role *data.DeskRole) bool {
+	if role.State == 3 {
+		return true
+	}
+	if role.TotalGameTime >= 120*60 && role.Money == 0 {
+		return false
+	} else {
+		return true
+	}
+}
+
+func (t *Desk) checkTimeout(role *data.DeskRole) bool {
+	if role.TimeoutCount >= 2 {
+		return false
+	} else {
+		return true
+	}
+}
+
+func (t *Desk) checkCloseServer() bool {
+	if t.closeServer {
+		return false
+	} else {
+		return true
+	}
+
+}
+
+// 清除离开数据
+func (t *Desk) clearLeave() {
+	msg := new(pb.ClearLeave)
+	msg.Roomid = t.Rid
+	nodePid.Tell(msg)
+}
+
+// 如果桌子没有玩家，踢出机器人
+func (t *Desk) KickRobot() {
+	r, _ := t.roleCountNum()
+	if r != 0 { //存在真人跳过
+		return
+	}
+
+	for k, v := range t.roles {
+		if !v.Robot { //跳过非机器人
+			continue
+		}
+		errcode := pb.OK
+		t.notifyGateUserLeft(v.Userid, errcode, 0)
+		t.userLeaveDesk(k)
+	}
+}
+
+// '踢出不足坐下玩家或超额玩家
+func (t *Desk) limitOver() {
+	switch t.DeskData.Rtype {
+	case int32(pb.ROOM_TYPE0): //自由
+	case int32(pb.ROOM_TYPE1): //私人
+		// 私人房会触发局内充值
+		// if !t.DeskData.Pub {
+		return
+		// }
+	case int32(pb.ROOM_TYPE2): //百人
+		return
+	}
+	for k, v := range t.roles {
+		// score := v.User.GetScore()
+		//if t.DeskData.Maximum == 0 {
+		//	if coin >= t.DeskData.Minimum {
+		//		continue
+		//	}
+		//} else {
+		//	if coin >= t.DeskData.Minimum &&
+		//		coin < t.DeskData.Maximum {
+		//		continue
+		//	}
+		//}
+		if v.Robot {
+			continue
+		}
+
+		if t.checkMin(v) &&
+			t.checkMax(v) &&
+			// t.checkBlackList(v) &&
+			t.checkPointControl(v) &&
+			t.checkNewbie(v) &&
+			// t.check105(v) &&
+			// t.check200(v) &&
+			t.checkGameTime(v) &&
+			t.checkTimeout(v) &&
+			t.checkCloseServer() {
+			continue
+		}
+		errcode := t.leave(k)
+		if errcode != pb.OK {
+			continue
+		}
+
+		var err pb.ErrCode
+		if !t.checkMin(v) {
+			err = pb.NotEnoughCoin
+		} else if !t.checkMax(v) {
+			err = pb.TooManyCoin
+		} else if !t.checkPointControl(v) {
+			err = pb.PointControlKick
+		} else if !t.checkNewbie(v) {
+			err = pb.NewbieKick
+		} else if !t.checkGameTime(v) {
+			err = pb.KickGameTime
+		} else if !t.checkTimeout(v) {
+			err = pb.KickTimeout
+		} else if !t.checkCloseServer() {
+			err = pb.KickCloseServer
+		}
+
+		t.notifyGateUserLeft(v.Userid, errcode, int32(err))
+		//离开状态消息
+		t.userLeaveDesk(k, err)
+	}
+}
+
+// 踢除离线玩家
+func (t *Desk) kickOffline() {
+	switch t.DeskData.Rtype {
+	case int32(pb.ROOM_TYPE0), //自由
+		int32(pb.ROOM_TYPE1), //私人
+		int32(pb.ROOM_TYPE2): //百人
+		for k, v := range t.roles {
+			if !v.Offline {
+				continue
+			}
+			errcode := t.leave(k)
+			if errcode != pb.OK {
+				continue
+			}
+			//离开状态消息
+			t.userLeaveDesk(k)
+		}
+	}
+}
+
+// 离线重连超时玩家踢出
+func (t *Desk) kickPrivOfflineTimeout() {
+	now := utils.Timestamp()
+	for userid, role := range t.roles {
+		if role.Offline && now > role.PrivOfflineTimeout {
+			errcode := t.privLeaveCheck(userid)
+			if errcode != pb.OK && errcode != pb.LeaveEarly {
+				// 牌局未开始,房主离线超时了解散房间
+				if !t.IsGaming() &&
+					userid == t.DeskData.Cid &&
+					t.DeskGame.Round == 0 &&
+					t.DeskPriv.AgainRound == 0 {
+					//停止服务
+					msg1 := new(pb.ServeStop)
+					t.selfPid.Tell(msg1)
+					return
+				}
+				continue
+			}
+			//离开状态消息
+			//玩家离开牌桌
+			t.notifyNodeLeaveEarly(t.Rid, userid, pb.OK)
+			t.notifyGateUserLeft(userid, pb.OK, int32(pb.PrivOfflineTimeout))
+			//清除数据
+			t.userLeaveDesk(userid, pb.PrivOfflineTimeout)
+		}
+	}
+}
+
+// pub房间人数为0时解散
+func (t *Desk) checkPubOver() {
+	// switch t.DeskData.Rtype {
+	// case int32(pb.ROOM_TYPE1): //私人
+	// 	if !t.DeskData.Pub {
+	// 		//return
+	// 	}
+	// default:
+	// 	//return
+	// }
+	if len(t.roles) != 0 {
+		return
+	}
+	// g := config.GetGame(t.DeskData.Unique)
+	// if g.Id == t.DeskData.Unique {
+	// 	return //配置房间不关闭
+	// }
+	//停止服务
+	msg1 := new(pb.ServeStop)
+	t.selfPid.Tell(msg1)
+}
+
+func (t *Desk) checkPubOver2() {
+	switch t.state {
+	case int32(pb.STATE_READY):
+		t.closeTime++
+		if t.closeTime == 10 {
+			t.closeTime = 0
+			// t.checkPubOver()
+			t.KickRobot()
+		}
+	default:
+		t.closeTime = 0
+	}
+}
+
+func (t *Desk) checkRealUser() {
+	r, _ := t.roleCountNum()
+	if r >= 2 {
+		removeAll := false
+		if ReadyTime == t.timer {
+			removeAll = true // 时间到了直接把所有人机移出去
+		}
+		// 有超过2个真实玩家,踢出人机
+		for k, v := range t.roles {
+			if !v.Robot {
+				continue
+			}
+			errcode := pb.OK
+			t.notifyGateUserLeft(k, errcode, 0)
+			t.userLeaveDesk(k)
+			if removeAll {
+				continue
+			}
+			break
+		}
+	}
+}
+
+// 移除多余的假位置
+func (t *Desk) kickFakeSeat() {
+	robotNum := t.robotNum
+	size := len(t.FakeSeats)
+	if robotNum >= size {
+		return
+	}
+	removeAll := false
+	if t.timer == ReadyTime {
+		// 没坐人的去不移除
+		removeAll = true
+	}
+	if !removeAll && !utils.RandWan(5000) {
+		// 单个退出为概率性
+		return
+	}
+	remove := make([]uint32, 0)
+	for k := range t.FakeSeats {
+		if _, ok := t.seats[k]; !ok {
+			remove = append(remove, k)
+			if removeAll {
+				continue
+			}
+			break
+		}
+	}
+	if len(remove) <= 0 {
+		return
+	}
+	for _, v := range remove {
+		delete(t.FakeSeats, v)
+		// 通知
+		ntf := &pb.CloseIdleSeatNtf{
+			Seat:   v,
+			Gtype:  t.Gtype,
+			Roomid: t.Rid,
+		}
+		t.broadcast5(ntf)
+	}
+}
+
+//.
+
+// '结束连庄处理,赢家当庄
+func (t *Desk) dealerOver() {
+	t.DeskGame.DealerSeat = t.DeskAct.ActSeat
+	if val, ok := t.seats[t.DeskGame.DealerSeat]; ok {
+		t.DeskGame.Dealer = val.Userid
+	}
+}
+
+//.
+
+// '结束游戏
+// 是否过期
+func (t *Desk) checkExpire() bool {
+	var now = utils.Timestamp()
+	if now > int64(t.DeskData.Expire) {
+		glog.Debugf("game stop expire -> %d, %d",
+			t.DeskData.Expire, now)
+		return true
+	}
+	return false
+}
+
+// 是否结束游戏
+func (t *Desk) checkOver() bool {
+	if t.DeskData.Round == t.DeskGame.Round {
+		glog.Debugf("game stop round -> %d, %d",
+			t.DeskGame.Round, t.DeskData.Round)
+		return true
+	}
+	return t.checkExpire()
+}
+
+// 结束牌局
+func (t *Desk) gameStop() {
+	if !t.checkOver() {
+		return
+	}
+	if t.DeskData.Pub { //大厅房间不解散
+		//return
+	}
+	//停止服务
+	msg1 := new(pb.ServeStop)
+	t.selfPid.Tell(msg1)
+}
+
+// 返还钻石
+func (t *Desk) backCost() {
+	//已经打过的房间不返还
+	if t.DeskPriv == nil ||
+		t.DeskGame.Round != 0 {
+		return
+	}
+	//已经开始游戏不返还
+	if t.state != int32(pb.STATE_FREE) &&
+		t.state != int32(pb.STATE_READY) {
+		glog.Errorf("game start priv room cost not back: %d", t.state)
+		return
+	}
+	if t.DeskData.Cost <= 0 {
+		return
+	}
+	// if game not start update ratio
+	if r, ok := t.roles[t.DeskData.Cid]; ok {
+		r.Ratio = r.GetRatio()
+		if r.GetScore() == 0 { // 避免没钱时加到赠送金
+			r.Ratio = 1
+		}
+	}
+	//A
+	if t.DeskData.Payment != 1 {
+		t.sendCurrency(t.DeskData.Cid,
+			int64(t.DeskData.Cost), int32(pb.LOG_TYPE3), "TP娱乐对战房解散返还")
+		return
+	}
+	//AA
+	for k := range t.roles {
+		t.sendCurrency(k, int64(t.DeskData.Cost), int32(pb.LOG_TYPE3), "TP娱乐对战房解散返还")
+	}
+}
+
+//.
+
+// '个人记录
+func (t *Desk) setRecord(score map[uint32]int64) {
+	for k, v := range score {
+		user := t.getUserBySeat(k)
+		if user == nil {
+			continue
+		}
+		pid := t.getPid(user.GetUserid())
+		if pid == nil {
+			continue
+		}
+		msg := new(pb.SetRecord)
+		if v > 0 {
+			msg.Rtype = 1
+		} else if v < 0 {
+			msg.Rtype = -1
+		} else {
+			msg.Rtype = 0
+		}
+		//更新游戏内数据
+		user.SetRecord(msg.Rtype)
+		//更新节点数据
+		pid.Tell(msg)
+	}
+}
+
+// 库存、明税、暗税按比例拆分为彩金、奖励金
+func (t *Desk) calcStockAndTax(score int64, ratio float64, options ...int64) (int64, *data.ActStock) {
+	score_final, stock, ming, an := t._calcStockAndTax(score, options...)
+	//库存拆分
+	cash_stock := int64(math.Round(ratio * float64(stock)))
+	bonus_stock := stock - cash_stock
+	//明税拆分
+	cash_ming := int64(math.Round(ratio * float64(ming)))
+	bonus_ming := ming - cash_ming
+	//暗税拆分
+	cash_an := int64(math.Round(ratio * float64(an)))
+	bonus_an := an - cash_an
+
+	return score_final, &data.ActStock{
+		CashStock:  cash_stock,
+		BonusStock: bonus_stock,
+		CashMing:   cash_ming,
+		BonusMing:  bonus_ming,
+		CashAn:     cash_an,
+		BonusAn:    bonus_an,
+	}
+}
+
+// 计算单个玩家库存、明税、暗税
+// 输入：score-输赢分
+// 输出：score1-最终输赢分 stock-库存变动 ming-明税 an-暗税
+// 明税：赢才有
+// 暗税：输赢都有
+func (t *Desk) _calcStockAndTax(score int64, options ...int64) (score1, stock, ming, an int64) {
+	if score == 0 {
+		return
+	}
+	ming_tax := t.Game.TP.MingTax
+	an_tax := t.Game.TP.AnTax
+
+	if score > 0 { //赢分
+		if ming_tax != 0 { //明税只对赢有效
+			ming = int64(math.Round(float64(score) * float64(ming_tax) / float64(10000))) //明税
+		}
+		score1 = score - ming //最终赢分
+		stock = -score1       //减库存初始值
+
+		if an_tax != 0 { //计算暗税
+			an = int64(math.Round(float64(score1) * float64(an_tax) / float64(10000))) //暗税
+		}
+
+		stock -= an //赢分库存多减暗税
+	} else { //输分
+		var score_deduction int64
+		if len(options) != 0 {
+			score_deduction = options[0]
+		}
+		score1 = score                   //最终输分
+		stock = -score + score_deduction //加库存初始值
+		if an_tax != 0 {
+			an = int64(math.Round(float64(-score1) * float64(an_tax) / float64(10000))) //暗税
+		}
+
+		stock -= an //输分库存少加暗税
+	}
+	return
+}
+
+//.
+
+// '结算
+// func (t *Desk) jiesuan2(ltype int32, score map[uint32]int64) {
+// 	for k, v := range score {
+// 		userid := t.getUserid(k)
+// 		//抽水
+// 		// v = t.drawcoin(userid, v)
+// 		switch t.DeskData.Rtype {
+// 		case int32(pb.ROOM_TYPE0): //自由
+// 			if v > 0 {
+// 				t.sendCurrency(userid, v, ltype, fmt.Sprintf("tp%s房间赢分", t.DeskData.Rid))
+// 			}
+// 		case int32(pb.ROOM_TYPE1): //私人
+// 			if v > 0 {
+// 				t.sendCoin(userid, v, ltype)
+// 			}
+// 			t.DeskPriv.PrivScore[userid] += v
+// 		}
+// 	}
+// }
+
+// 抽水
+func (t *Desk) drawcoin(userid string, val int64) int64 {
+	// if val <= 0 {
+	// 	return val
+	// }
+	// var num int64 = handler.DrawCoin(t.DeskData.Rtype, t.DeskData.Mode, val)
+	// switch t.DeskData.Rtype {
+	// case int32(pb.ROOM_TYPE0), //自由
+	// 	int32(pb.ROOM_TYPE1): //私人
+	// 	//反佣和收益消息,抽成日志记录 val - num
+	// 	msg2 := handler.AgentProfitNumMsg(userid, t.DeskData.Gtype, num)
+	// 	t.send3userid(userid, msg2)
+	// case int32(pb.ROOM_TYPE2): //百人
+	// 	//反佣和收益消息,抽成日志记录 val - num
+	// 	msg2 := handler.AgentProfitNumMsg(userid, t.DeskData.Gtype, num)
+	// 	t.send3userid(userid, msg2)
+	// }
+	// return val - num
+	return 0
+}
+
+// 开始前扣除抽水
+func (t *Desk) drawfee() {
+	// switch t.DeskData.Rtype {
+	// case int32(pb.ROOM_TYPE0), //自由
+	// 	int32(pb.ROOM_TYPE1): //私人
+
+	// case int32(pb.ROOM_TYPE2): //百人
+	// 	return
+	// }
+	// if t.state != int32(pb.STATE_READY) {
+	// 	return
+	// }
+	// //计算反佣和收益
+	// var num int64 = handler.DrawFee(t.DeskData.Mode, t.DeskData.Ante)
+	// for k, v := range t.seats {
+	// 	if !v.Ready {
+	// 		continue
+	// 	}
+	// 	if num <= 0 {
+	// 		continue
+	// 	}
+	// 	t.sendCoin(v.Userid, (-1 * num), int32(pb.LOG_TYPE48))
+	// 	//抽水消息广播
+	// 	msg := &pb.JHPushDrawCoinNtf{
+	// 		Rtype:  uint32(pb.LOG_TYPE48),
+	// 		Userid: v.Userid,
+	// 		Seat:   k,
+	// 		Coin:   (-1 * num),
+	// 	}
+	// 	t.broadcast(msg)
+	// 	//反佣和收益消息
+	// 	msg2 := handler.AgentProfitNumMsg(v.Userid, t.DeskData.Gtype, num)
+	// 	t.send3userid(v.Userid, msg2)
+	// }
+}
+
+// 保存详情
+func (t *Desk) saveDetail() {
+	detail, err := json.Marshal(t.detail)
+	if err != nil {
+		glog.Errorf("save detail error %#v", t.detail)
+		return
+	}
+	msg := &pb.Detail{}
+	msg.Data = detail
+	t.loggerPid.Tell(msg)
+}
+
+// 日志记录
+func (t *Desk) saveRecord(score map[uint32]int64) {
+	msg := new(pb.RoundRecord)
+	msg.Roomid = t.DeskData.Rid
+	msg.Round = t.DeskData.Round
+	msg.Dealer = t.DeskGame.Dealer
+	for k, v := range score {
+		if val, ok := t.seats[k]; ok {
+			msg2 := &pb.RoundRoleRecord{
+				Userid: val.Userid,
+				Cards:  val.Cards,
+				Value:  val.Power,
+				Bets:   val.Bet,
+				Score:  v,
+			}
+			if val2, ok2 := t.roles[val.Userid]; ok2 {
+				msg2.Rest = val2.User.GetCoin()
+			}
+			msg.Roles = append(msg.Roles, msg2)
+		}
+	}
+	t.loggerPid.Tell(msg)
+	for k := range score {
+		user := t.getUserBySeat(k)
+		if user == nil {
+			continue
+		}
+		msg1 := new(pb.RoleRecord)
+		msg1.Roomid = t.DeskData.Rid
+		msg1.Gtype = t.DeskData.Gtype
+		msg1.Userid = user.GetUserid()
+		msg1.Nickname = user.GetNickname()
+		msg1.Photo = user.GetPhoto()
+		msg1.Rest = user.GetCoin()
+		if t.DeskPriv != nil {
+			msg1.Score = t.DeskPriv.PrivScore[user.GetUserid()]
+			msg1.Joins = t.DeskPriv.Joins[user.GetUserid()]
+		}
+		t.loggerPid.Tell(msg1)
+	}
+}
+
+// 强执换桌
+func (t *Desk) mutexChangeDesk() {
+	r, _ := t.roleCountNumNoWatch()
+	if r < 2 {
+		return
+	}
+	for _, s := range t.seats {
+		if s.Watch {
+			continue
+		}
+		if role, ok := t.roles[s.Userid]; ok {
+			if role.Robot {
+				continue
+			}
+			if r <= 1 {
+				break
+			}
+			r--
+			ntf := &pb.MutexChangeDeskNtf{
+				Userid: role.Userid,
+				Gtype:  t.Gtype,
+				Roomid: t.Rid,
+			}
+			t.send2userid(role.Userid, ntf)
+		}
+	}
+}
+
+// 推送私人房结算通知
+func (t *Desk) pushPrivSettle() {
+	if t.Rtype != int32(pb.ROOM_TYPE1) {
+		return
+	}
+
+	t.settleExitTime = utils.Timestamp() + PrivSettleExitDelay
+	// 推送结算页
+	ntf := &pb.PrivSettleNtf{
+		Code:           t.Code,
+		Gtype:          t.Gtype,
+		Time:           time.Unix(int64(t.Ctime), 0).Format(utils.FORMAT2),
+		ExitTime:       PrivSettleExitDelay,
+		RoundMinAccess: int64(t.DeskData.Game.Min_Access),
+	}
+
+	for userid, player := range t.DeskPriv.PrivPlayer {
+		fraction := t.PrivScore[userid]
+		var again bool
+		switch t.Gmode {
+		case 0:
+			if role, ok := t.roles[userid]; ok {
+				again = role.GetScore() >= int64(t.DeskData.Game.Min_Access)
+			}
+		case 1:
+			again = true
+			if role, ok := t.roles[userid]; ok {
+				fraction = role.GetFraction() - int64(config.GetPvpRoom().TpFunInitScore)
+			}
+		}
+		vipLv, _ := strconv.Atoi(player[2])
+		ntf.Settles = append(ntf.Settles, &pb.PrivSettle{
+			Userid:   userid,
+			Nickname: player[0],
+			Photo:    player[1],
+			VipLv:    int32(vipLv),
+			Fraction: fraction,
+			Wins:     t.PrivWins[userid],
+			Loses:    t.PrivLoses[userid],
+			Again:    again,
+		})
+	}
+	t.broadcast(ntf)
+}
+
+// 发起再来一局投票
+func (t *Desk) launchAgain(userid string) (msg *pb.PrivLaunchAgainRsp) {
+	var again uint32 = 1
+	msg = new(pb.PrivLaunchAgainRsp)
+	// 已有结果
+	if t.DeskPriv.Again != 0 {
+		msg.Error = pb.OperateError
+		return
+	}
+	if t.DeskPriv.AgainSeat != 0 {
+		// 已发起，直接投票
+		t.privAgain(userid, again)
+		return
+	}
+
+	seat := t.getSeatid(userid)
+	// 发起者
+	t.DeskPriv.AgainSeat = seat
+	//超时设置(10秒)
+	glog.Debugf("againTime: %d, %d, %s", seat, again, userid)
+	t.DeskPriv.AgainTime = utils.Timestamp() + 10
+	msg.Seat = seat
+	msg.Userid = userid
+	t.broadcast(msg)
+	t.DeskPriv.AgainVotes = make([]uint32, 0)
+	t.privAgain(userid, again)
+	return
+}
+
+// 投票
+func (t *Desk) privAgain(userid string, again uint32) (msg *pb.PrivAgainRsp) {
+	msg = new(pb.PrivAgainRsp)
+	errcode := t.checkAgain()
+	if errcode != pb.OK {
+		msg.Error = errcode
+		return
+	}
+	// 已有结果
+	if t.DeskPriv.Again != 0 {
+		return
+	}
+	seat := t.getSeatid(userid)
+	if v, ok := t.seats[seat]; ok {
+		v.Again = again //是否再来一局
+		t.DeskPriv.AgainVotes = append(t.DeskPriv.AgainVotes, again)
+	}
+	t.pushAgain(seat, again)
+	t.againResult(false)
+	return
+}
+
+func (t *Desk) checkAgain() pb.ErrCode {
+	if t.DeskPriv == nil {
+		return pb.OperateError
+	}
+	if t.DeskPriv.Again != 0 {
+		// 已有结果
+		return pb.OperateError
+	}
+	if t.DeskPriv.AgainSeat == 0 {
+		return pb.NotVoteTime
+	}
+	return pb.OK
+}
+
+// 广播再来一句消息
+func (t *Desk) pushAgain(seat, again uint32) {
+	msg := &pb.PrivAgainRsp{
+		Seat:   seat,
+		Userid: t.getUserid(seat),
+		Again:  again,
+	}
+	msg.Agree, msg.Disagree, msg.Votes = t.againStat()
+	t.broadcast(msg)
+}
+
+// 统计再来一局投票
+func (t *Desk) againStat() (agree []uint32, disagree []uint32, votes []uint32) {
+	votes = t.DeskPriv.AgainVotes
+	for k, v := range t.seats {
+		if v.Again == 1 {
+			agree = append(agree, k)
+		} else if v.Again == 2 || t.DeskPriv.Again == 2 { // 已有结果没投的算否
+			disagree = append(disagree, k)
+		}
+	}
+	return
+}
+
+// 再来一局结果统计
+func (t *Desk) againResult(force bool) {
+	var agree, unagree, unvote int
+	for _, v := range t.seats {
+		if v.Again == 1 {
+			agree++
+		} else if v.Again == 2 {
+			unagree++
+		} else {
+			unvote++
+		}
+	}
+	if unagree > 0 || force { // 投票超时
+		t.DeskPriv.Again = 2
+		//结束投票
+		t.pushAgainResult(1)
+
+		// 解散房间
+		// msg1 := new(pb.ServeStop)
+		// t.selfPid.Tell(msg1)
+
+	} else if unvote == 0 {
+		t.DeskPriv.Again = 1
+		// 全票通过开启下一局
+		t.pushAgainResult(0)
+
+		// 人数不够,不开下一句,等待解散
+		if len(t.seats) < 2 {
+			return
+		}
+		//重置
+		for _, v := range t.seats {
+			v.Again = 0
+		}
+		t.DeskPriv.AgainSeat = 0
+		t.DeskPriv.AgainTime = 0
+		t.DeskPriv.Again = 0
+		t.settleExitTime = 0 // 不在结算页解散了
+
+		// 私人房娱乐模式，扣房主房费
+		if t.isPrivFunRoom() && t.DeskData.Cost > 0 {
+			if _, ok := t.roles[t.DeskData.Cid]; ok {
+				t.sendCurrency(t.DeskData.Cid, -1*int64(t.DeskData.Cost), int32(pb.LOG_TYPE2), fmt.Sprintf("TP娱乐对战房%s再来一局", t.DeskData.Rid))
+			}
+		}
+		// 再次开始游戏
+		t.InitDesk()
+		t.DeskData.Ctime = uint32(utils.Timestamp())
+		t.DeskData.Expire = utils.Timestamp() + int64(config.GetPvpRoom().GameStartWait)
+		t.AgainRound++
+		t.gameStart()
+	}
+}
+
+// 广播再来一句投票消息
+func (t *Desk) pushAgainResult(again uint32) {
+	msg := &pb.PrivAgainResultNtf{Again: again}
+	msg.Agree, msg.Disagree, msg.Votes = t.againStat()
+	t.broadcast(msg)
+}
+
+// 再来一局超时检测
+func (t *Desk) againTimeout() {
+	errcode := t.checkAgain()
+	if errcode != pb.OK {
+		return
+	}
+	glog.Info("desk again vote timeout.")
+	var now = utils.Timestamp()
+	if now >= t.DeskPriv.AgainTime {
+		t.againResult(true)
+	}
+}
+
+// 结算页再来一句不通过超时退出
+func (t *Desk) settleExitTimeout() {
+	if t.settleExitTime <= 0 {
+		return
+	}
+	var now = utils.Timestamp()
+	if now > t.settleExitTime {
+		t.settleExitTime = 0
+
+		// 解散房间
+		msg1 := new(pb.ServeStop)
+		t.selfPid.Tell(msg1)
+	}
+}
+
+//.
+
+// vim: set foldmethod=marker foldmarker=//',//.:

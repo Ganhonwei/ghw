@@ -1,0 +1,326 @@
+							
+<div class="row">
+	<div class="col-xs-12">
+	
+	<div class="tabbable">
+		<ul class="nav nav-tabs" id="list-tab">
+			<li {{if eq .typeId 0}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.Retained" "typeId" 0 "class_id" .classId "alias_id" .aliasId "start_date" .startDate "end_date" .endDate "utype_id" .usertypeId}}">用户留存</a>
+			</li>
+			<li {{if eq .typeId 1}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.Retained" "typeId" 1 "class_id" .classId "alias_id" .aliasId "start_date" .startDate "end_date" .endDate "utype_id" .usertypeId}}">付费用户</a>
+			</li>
+            <li {{if eq .typeId 2}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.Retained" "typeId" 2 "class_id" .classId "alias_id" .aliasId "start_date" .startDate "end_date" .endDate "utype_id" .usertypeId}}">复充留存</a>
+			</li>
+            <li {{if eq .typeId 3}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.Retained" "typeId" 3 "class_id" .classId "alias_id" .aliasId "start_date" .startDate "end_date" .endDate "utype_id" .usertypeId}}">付费后留存</a>
+			</li>
+            <li {{if eq .typeId 4}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.Retained" "typeId" 4 "class_id" .classId "alias_id" .aliasId "start_date" .startDate "end_date" .endDate "utype_id" .usertypeId}}">复充后留存</a>
+			</li>
+            <li {{if eq .typeId 5}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.Retained" "typeId" 5 "class_id" .classId "alias_id" .aliasId "start_date" .startDate "end_date" .endDate "utype_id" .usertypeId}}">R留存</a>
+			</li>
+		</ul>
+	
+		<div class="tab-content">
+		
+		<div class="row">
+			<div class="col-xs-12">
+				<form class="form-inline" method="post" action="{{urlfor "StatisticsController.Retained"}}">
+				<input type="hidden" name="typeId" value="{{.typeId}}" />
+                <div class="input-group table_filtrate">
+                    渠道类:
+                    <div class="input-group input-group-sm" id="class_div">
+                        <select id="selectClass" class="selectpicker" multiple data-live-search="true"
+                            data-width="100px" style="width: 100px !important;" title="请选择渠道类">
+                            {{range $k,$v := .packageClassAll}}
+                            <option value="{{$v.Key}}" {{if eq $.classId $v.Key}}selected{{end}}>{{$v.Name}}
+                            </option>
+                            {{end}}
+                        </select>
+                        <input type="hidden" id="class_id" name="class_id" value="{{.classId}}"
+                            class="form-control" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="input-group table_filtrate">
+                    渠道别名:
+                    <!-- <div class="input-group input-group-sm">
+                        <select name="alias_id">
+                            {{range $k,$v := .packageAliasList}}
+                            <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                            {{end}}
+                        </select>
+                    </div> -->
+                    <div class="input-group input-group-sm" id="alias_div">
+                        <select id="selectAlias" class="selectpicker" multiple data-live-search="true" data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                            {{range $k,$v := .packageAliasList}}
+                            <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                            {{end}}
+                        </select>
+                        <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}" class="form-control" autocomplete="off" />
+                    </div>
+                </div>
+                <!-- <div class="input-group table_filtrate">
+					查询:
+					<div class="input-group input-group-sm">
+						<input type="text" id="alias_name" name="alias_name" value="{{.aliasName}}" class="form-control"
+							placeholder="请输入渠道别名" autocomplete="off" />
+						<span class="input-group-addon">
+							<i class="ace-icon fa fa-users"></i>
+						</span>
+					</div>
+				</div> -->
+                <div class="input-group table_filtrate">
+                    时间:
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    至
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                </div>
+                {{if eq .typeId 5}}
+                <div class="input-group table_filtrate">
+                    用户类型:
+                    <div class="input-group input-group-sm" id="utype_id_div">
+                        <select id="sutype_id" class="selectpicker" multiple style="width: 80px;" data-live-search="true">
+                            {{range $k,$v := .usertype}}
+                                {{range $k2,$v2 := $v}}
+                                <option value="{{$k2}}" >{{$v2}}</option>
+                                {{end}}
+                            {{end}}
+                        </select>
+                        <input type="hidden" id="utype_id" name="utype_id" value="{{.usertypeId}}"
+                            class="form-control" autocomplete="off" />
+                    </div>
+                </div>
+                {{end}}
+
+					<div class="input-group input-group-sm">
+						<button type="submit" class="btn">查询</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="space-4"></div>
+
+		<div class="table-panel"  table-wrap="330">
+			<table class="table table-striped table-bordered table-hover">
+				<thead>
+                    <tr>
+                        <th stickyL>时间</th>
+                        <th>渠道类</th>
+                        <th>渠道别名</th>
+                        <th>注册人数</th>
+                        {{if eq .typeId 1}}
+                        <th>累计付费人数</th>
+                        <th>累计付费率</th>
+                        {{else if eq .typeId 2}}
+                        <th>累计付费人数</th>
+                        <th>累计付费率</th>
+                        <th>累计复充人数</th>
+                        <th>累计复充/付费</th>
+                        {{else if eq .typeId 3}}
+                        <th>当日成为付费用户的人数</th>
+                        {{else if eq .typeId 4}}
+                        <th>当日成为复充用户的人数</th>
+                        {{else if eq .typeId 5}}
+                        <th>累计R人数</th>
+                        <th>累计R占比</th>
+                        {{end}}
+                        <th>1日留存</th>
+                        <th>2日留存</th>
+                        <th>3日留存</th>
+                        <th>4日留存</th>
+                        <th>5日留存</th>
+                        <th>6日留存</th>
+                        <th>7日留存</th>
+                        <th>15日留存</th>
+                        <th>30日留存</th>
+                        <th>40日留存</th>
+                        <th>50日留存</th>
+                        <th>60日留存</th>
+                        <th>90日留存</th>
+                    </tr>
+				</thead>
+				<tbody>
+					{{range $k, $v := .list}}
+                    <tr>
+                        <td>{{$v.SDate}}</td>
+                        <td>{{$v.ChannelClass}}</td>
+                        <td>{{$v.Channel1}}</td>
+                        <td>{{$v.RegistCount}}</td>
+                        {{if eq $.typeId 1}}
+                        <td>{{$v.PayCount}}</td>
+                        <td>{{$v.PayRate}}</td>
+                        {{else if eq $.typeId 2}}
+                        <td>{{$v.PayCount}}</td>
+                        <td>{{$v.PayRate}}</td>
+                        <td>{{$v.RepayCount}}</td>
+                        <td>{{$v.RepayRate}}</td>
+                        {{else if eq $.typeId 3}}
+                        <td>{{$v.BePayCount}}</td>
+                        {{else if eq $.typeId 4}}
+                        <td>{{$v.BeRepayCount}}</td>
+                        {{else if eq $.typeId 5}}
+                        <td>{{$v.BeRCount}}</td>
+                        <td>{{$v.BeRRate}}</td>
+                        {{end}}
+                        <td>{{$v.Day1Rate}}</td>
+                        <td>{{$v.Day2Rate}}</td>
+                        <td>{{$v.Day3Rate}}</td>
+                        <td>{{$v.Day4Rate}}</td>
+                        <td>{{$v.Day5Rate}}</td>
+                        <td>{{$v.Day6Rate}}</td>
+                        <td>{{$v.Day7Rate}}</td>
+                        <td>{{$v.Day15Rate}}</td>
+                        <td>{{$v.Day30Rate}}</td>
+                        <td>{{$v.Day40Rate}}</td>
+                        <td>{{$v.Day50Rate}}</td>
+                        <td>{{$v.Day60Rate}}</td>
+                        <td>{{$v.Day90Rate}}</td>
+                    </tr>
+                    {{end}}
+					{{if eq .count 0}}
+					<tr>
+						<td colspan="20">暂无记录...</td>
+					</tr>
+				    {{end}}
+				</tbody>
+			</table>
+		</div>
+		</div>
+	</div>
+	</div>
+</div>
+<script>
+    $(function () {
+        $("#selectPackage").on("change",function () {
+            var selectVal = $("#selectPackage").val()
+            console.log(selectVal)
+            $("#package_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change",function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias："+selectVal)
+            $("#alias_id").val(selectVal)
+        });
+
+        // 渠道类
+        $("#selectClass").on("change", function () {
+            var selectVal = $("#selectClass").val()
+            console.log("selectClass" + selectVal)
+            $("#class_id").val(selectVal)
+        });
+
+        var packVal =  $("#package_id").val()
+        if (packVal){
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+        // 渠道别名
+        var aliasVal =  $("#alias_id").val()
+        if (aliasVal){
+            var arr1= aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null){
+                console.log("arr1:"+arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function(index, value) {
+                    if (value == "0"){
+                        arr1[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr1[index] = "其他"; 
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+
+        // 渠道类
+        var classVal = $("#class_id").val()
+        if (classVal) {
+            var arr1 = classVal.split(",");
+            $('#selectClass').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr2:" + arr1)
+                $("#selectClass").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#class_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectClass').selectpicker({ width: 200 });
+        }
+        
+        // 用户类型
+        $("#sutype_id").on("change", function () {
+            var selectVal = $("#sutype_id").val()
+            console.log("sutype_id：" + selectVal)
+            $("#utype_id").val(selectVal)
+        });
+        
+        // 用户类型
+        var utype_id = $("#utype_id").val()
+        if (!utype_id) {
+            utype_id = "0";
+        }
+        $('#sutype_id').selectpicker({ width: 120 });
+        console.log('utype_id', utype_id)
+        var utypeids = utype_id.split(",");
+        var utypes = {0: "全部", 10: "新手", 1: "平民", 2: "普R",3: "小R",4: "中R",5: "大R",6: "超大R"};
+        var utypeNames = [];
+        for (let i = 0; i < utypeids.length; i++) {
+            var utypeid = utypeids[i];
+            $(`#sutype_id option[value=${utypeid}]`).attr("selected", true);
+
+            var name = utypes[utypeid];
+            utypeNames.push(name);
+        }
+        var str = utypeNames.join(", ");
+        $('#utype_id_div .filter-option-inner-inner').html(str)
+
+    });
+    
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

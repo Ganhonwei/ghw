@@ -1,0 +1,369 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <div class="tabbable">
+            <ul class="nav nav-tabs" id="list-tab">
+                <li {{if eq .tabid 0}}class="active" {{end}}>
+                    <a href="{{urlfor "StatisticsController.PointList" "tabid" 0}}">行为分析</a>
+                </li>
+                <li {{if eq .tabid 1}}class="active" {{end}}>
+                    <a href="{{urlfor "StatisticsController.PointList" "tabid" 1}}">局数分析</a>
+                </li>
+                <li {{if eq .tabid 2}}class="active" {{end}}>
+                    <a href="{{urlfor "StatisticsController.PointList" "tabid" 2}}">时间分析</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <form class="form-inline" method="post" action="{{urlfor "StatisticsController.PointList"}}">
+                            <input type="hidden" name="tabid" value="{{.tabid}}" />
+                            <div class="input-group table_filtrate">
+                                渠道:
+                                <div class="input-group" id="package_div">
+                                    <select id="selectPackage" class="selectpicker" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择渠道">
+                                        {{range $k,$v := .packageList}}
+                                        <option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="package_id" name="package_id" value="{{.packageId}}" class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                渠道别名:
+                                <div class="input-group input-group-sm" id="alias_div">
+                                    <select id="selectAlias" class="selectpicker" multiple data-live-search="true" data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                        {{range $k,$v := .packageAliasList}}
+                                        <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}" class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                博主账号:
+                                <div class="input-group input-group-sm" id="account_div">
+                                    <select id="selectAccount" class="selectpicker" multiple data-live-search="true" data-width="100px" style="width: 100px !important;" title="请选择博主账号">
+                                        {{range $k,$v := .accountList}}
+                                        <option value="{{$v.Key}}" {{if eq $.accountId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="account_id" name="account_id" value="{{.accountId}}" class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                时间:
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="start_date" name="start_date" value="{{.startDate}}"
+                                        class="form-control" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                                至
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="end_date" name="end_date" value="{{.endDate}}"
+                                        class="form-control" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="input-group input-group-sm">
+                                <button type="submit" class="btn">查询</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="space-4"></div>
+
+                <div class="table-panel">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            {{if eq .tabid 1}}
+                            <tr>
+                                <th>时间</th>
+                                <th>渠道</th>
+                                <th>渠道别名</th>
+                                <th>总注册</th>
+                                <th>0局</th>
+                                <th>0局比</th>
+                                <th>1局</th>
+                                <th>1局比</th>
+                                <th>2局</th>
+                                <th>2局比</th>
+                                <th>3局</th>
+                                <th>3局比</th>
+                                <th>4局</th>
+                                <th>4局比</th>
+                                <th>5局</th>
+                                <th>5局占比</th>
+                                <th>6-10局</th>
+                                <th>6-10局比</th>
+                                <th>11-20局</th>
+                                <th>11-20局比</th>
+                                <th>21-30局</th>
+                                <th>21-30局比</th>
+                                <th>31局以上</th>
+                                <th>31局以上比</th>
+                            </tr>
+                            {{else if eq .tabid 2}}
+                            <tr>
+                                <th>时间</th>
+                                <th>渠道</th>
+                                <th>渠道别名</th>
+                                <th>总注册</th>
+                                <th>≤1分钟</th>
+                                <th>≤1分钟比</th>
+                                <th>2-5分钟</th>
+                                <th>2-5分钟比</th>
+                                <th>6-10分钟</th>
+                                <th>6-10分钟比</th>
+                                <th>11-20分钟</th>
+                                <th>11-20分钟比</th>
+                                <th>21-30分钟</th>
+                                <th>21-30分钟比</th>
+                                <th>≥31分钟</th>
+                                <th>≥31分钟比</th>
+                            </tr>
+                            {{else}}
+                            <tr>
+                                <th>时间</th>
+                                <th>渠道</th>
+                                <th>渠道别名</th>
+                                <th>总注册</th>
+                                <th>游客注册</th>
+                                <th>游客占比</th>
+                                <th>手机注册</th>
+                                <th>手机占比</th>
+                                <!-- <th>引导绑手机</th> -->
+                                <th>引导领金币</th>
+                                <th>引导领金币占比</th>
+                                <th>玩第一局TP</th>
+                                <th>玩第一局TP占比</th>
+                                <th>玩第二局TP</th>
+                                <th>玩第二局TP占比</th>
+                                <th>手动退出TP</th>
+                                <th>手动退出TP占比</th>
+                                <th>105-200人数</th>
+                                <th>105-200人数占比</th>
+                                <th>≥200人数</th>
+                                <th>≥200人数占比</th>
+                                {{if $.isOperation }}
+                                <!-- <th>游戏图表数据</th> -->
+                                {{end}}
+                            </tr>
+                            {{end}}
+                        </thead>
+                        <tbody>
+                            {{if eq .tabid 1}}
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <td>{{date $v.SDate "Y-m-d"}}</td>
+                                <td>
+                                    {{if eq $v.Channel ""}}
+                                    <span>全部</span>
+                                    {{else}}    
+                                    {{ $v.Channel}}
+                                    {{end}}
+                                </td>
+                                <td>{{$v.Channel1}}</td>
+                                <td>{{$v.TotalRegister}}</td>
+                                <td>{{$v.GNumber}}</td>
+                                <td>{{printf "%.2f" $v.GNumberRatio}}%</td>
+                                <td>{{$v.GNumber1}}</td>
+                                <td>{{printf "%.2f" $v.GNumberRatio1}}%</td>
+                                <td>{{$v.GNumber2}}</td>
+                                <td>{{printf "%.2f" $v.GNumberRatio2}}%</td>
+                                <td>{{$v.GNumber3}}</td>
+                                <td>{{printf "%.2f" $v.GNumberRatio3}}%</td>
+                                <td>{{$v.GNumber4}}</td>
+                                <td>{{printf "%.2f" $v.GNumberRatio4}}%</td>
+                                <td>{{$v.GNumber5}}</td>
+                                <td>{{printf "%.2f" $v.GNumberRatio5}}%</td>
+                                <td>{{$v.GNumber6}}</td>
+                                <td>{{printf "%.2f" $v.GNumberRatio6}}%</td>
+                                <td>{{$v.GNumber11}}</td>
+                                <td>{{printf "%.2f" $v.GNumberRatio11}}%</td>
+                                <td>{{$v.GNumber21}}</td>
+                                <td>{{printf "%.2f" $v.GNumberRatio21}}%</td>
+                                <td>{{$v.GNumber31}}</td>
+                                <td>{{printf "%.2f" $v.GNumberRatio31}}%</td>
+                            </tr>
+                            {{end}}
+                            {{else if eq .tabid 2}}
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <td>{{date $v.SDate "Y-m-d"}}</td>
+                                <td>
+                                    {{if eq $v.Channel ""}}
+                                    <span>全部</span>
+                                    {{else}}    
+                                    {{ $v.Channel}}
+                                    {{end}}
+                                </td>
+                                <td>{{$v.Channel1}}</td>
+                                <td>{{$v.TotalRegister}}</td>
+                                <td>{{$v.Playtime1}}</td>
+                                <td>{{printf "%.2f" $v.PlaytimeRatio1}}%</td>
+                                <td>{{$v.Playtime2}}</td>
+                                <td>{{printf "%.2f" $v.PlaytimeRatio2}}%</td>
+                                <td>{{$v.Playtime6}}</td>
+                                <td>{{printf "%.2f" $v.PlaytimeRatio6}}%</td>
+                                <td>{{$v.Playtime11}}</td>
+                                <td>{{printf "%.2f" $v.PlaytimeRatio11}}%</td>
+                                <td>{{$v.Playtime21}}</td>
+                                <td>{{printf "%.2f" $v.PlaytimeRatio21}}%</td>
+                                <td>{{$v.Playtime31}}</td>
+                                <td>{{printf "%.2f" $v.PlaytimeRatio31}}%</td>
+                            </tr>
+                            {{end}}
+                            {{else}}
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <td>{{date $v.SDate "Y-m-d"}}</td>
+                                <td>
+                                    {{if eq $v.Channel ""}}
+                                    <span>全部</span>
+                                    {{else}}    
+                                    {{ $v.Channel}}
+                                    {{end}}
+                                </td>
+                                <td>{{$v.Channel1}}</td>
+                                <td>{{$v.TotalRegister}}</td>
+                                <td>{{$v.TotalTourist}}</td>
+                                <td>{{printf "%.2f" $v.TotalTouristRatio}}%</td>
+                                <td>{{$v.TotalMobile}}</td>
+                                <td>{{printf "%.2f" $v.TotalMobileRatio}}%</td>
+                                <!-- <td>{{$v.GuidanceBinding}}</td> -->
+                                <td>{{$v.GuidanceGetGold}}</td>
+                                <td>{{printf "%.2f" $v.GuidanceGetGoldRatio}}%</td>
+                                <td>{{$v.TPNumber1}}</td>
+                                <td>{{printf "%.2f" $v.TPNumber1Ratio}}%</td>
+                                <td>{{$v.TPNumber2}}</td>
+                                <td>{{printf "%.2f" $v.TPNumber2Ratio}}%</td>
+                                <td>{{$v.TPExitManually}}</td>
+                                <td>{{printf "%.2f" $v.TPExitManuallyRatio}}%</td>
+                                <td>{{$v.Gold100}}</td>
+                                <td>{{printf "%.2f" $v.Gold100Ratio}}%</td>
+                                <td>{{$v.Gold200}}</td>
+                                <td>{{printf "%.2f" $v.Gold200Ratio}}%</td>
+                                {{if $.isOperation }}
+                                <!-- <td>
+                                    <a href="{{urlfor "StatisticsController.GameCharts" "id" $v.Date "channel" $v.Channel}}">查看</a>
+                                </td> -->
+                                {{end}}
+                            </tr>
+                            {{end}}
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="row-page">
+                        {{if gt .count 20}}
+                        {{str2html .pageBar}}
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $("#selectPackage").on("change",function () {
+            var selectVal = $("#selectPackage").val()
+            console.log(selectVal)
+            $("#package_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change",function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias："+selectVal)
+            $("#alias_id").val(selectVal)
+        });
+        // 博主账号
+        $("#selectAccount").on("change",function () {
+            var selectVal = $("#selectAccount").val()
+            console.log("selectAccount"+selectVal)
+            $("#account_id").val(selectVal)
+        });
+        var packVal =  $("#package_id").val()
+        if (packVal != ""){
+            
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+        // 渠道别名
+        var aliasVal =  $("#alias_id").val()
+        if (aliasVal != ""){
+            var arr1= aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null){
+                // console.log("arr1:"+arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function(index, value) {
+                    if (value == "0"){
+                        arr1[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr1[index] = "其他"; 
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+
+         // 博主账号
+         var accountVal =  $("#account_id").val()
+        if (accountVal != ""){
+            var arr1= accountVal.split(",");
+            $('#selectAccount').selectpicker({ width: 200 });
+            if (arr1 != null){
+                // console.log("arr1:"+arr1)
+                $("#selectAccount").val(arr1)
+                $.each(arr1, function(index, value) {
+                    if (value == "0"){
+                        arr1[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr1[index] = "其他"; 
+                    }
+                });
+                var str = arr1.join(",");
+                $('#account_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectAccount').selectpicker({ width: 200 });
+        }
+    });
+    
+</script>

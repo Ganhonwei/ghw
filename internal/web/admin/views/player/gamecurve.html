@@ -1,0 +1,168 @@
+<div class="space-4"></div>
+<div class="row">
+	<div class="col-xs-12">
+		<form class="form-inline" method="post" action="{{urlfor "PlayerController.GameCurve"}}">
+			<input type="hidden" name="status" value="{{.status}}" />
+			<div class="input-group table_filtrate">
+				查询:
+				<div class="input-group input-group-sm">
+					<input type="text" id="id" name="id" value="{{.id}}" class="form-control" placeholder=""
+						autocomplete="off" />
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-users"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				时间:
+				<div class="input-group input-group-sm">
+					<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control"
+						autocomplete="off" />
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+				至
+				<div class="input-group input-group-sm">
+					<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control"
+						autocomplete="off" />
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group input-group-sm">
+				<button type="submit" class="btn">查询</button>
+			</div>
+		</form>
+		<div class="space-4"></div>
+		<div class="row" style="width: 90%">
+            <div class="col-xs-12 center">
+          
+              <!-- <canvas id="online" width="100" height="120"></canvas> -->
+              <canvas id="info"></canvas>
+              <script src="../../assets/js/Chart.js"></script>
+              
+              <script>
+                var ctx = document.getElementById('info').getContext('2d');
+                var timelabel = {{.TimedLabel}}; // 日期
+                var Game1 = {{.TP}}; // TP
+                var Game2 = {{.Rummy}}; // Rummy
+                var Game3 = {{.LHD}}; // LHD
+                var Game4 = {{.UP}}; // 7Updown
+                var Game5 = {{.AK47}}; // Ak47
+                var Game6 = {{.Joker}}; //Joker
+                var Game7 = {{.Crash}}; // Crash
+                var Game8 = {{.AB}}; // AB
+                var Game9 = {{.CP}}; // 彩票
+                var Game10 = {{.FJ}}; // 飞机
+                var Game11 = {{.RB}}; // 红黑大战
+                var Game12 = {{.RummyTwo}}; // RM双人
+                var Game13 = {{.TpTwo}}; // TP2
+                var chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels:timelabel,
+                        datasets: [{
+                            label: 'TP',
+                            data: Game1,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(0, 123, 255, 1)',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: 'RUMMY',
+                            data: Game2,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: 'LHD',
+                            data: Game3,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(252, 186, 3, 1)',
+                            borderWidth: 1
+                        },{
+                            label: '7UPDOWN',
+                            data: Game4,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgb(20, 252, 3,1)',
+                            borderWidth: 1
+                        },{
+                            label: 'AK47',
+                            data: Game5,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgb(115, 3, 252,1)',
+                            borderWidth: 1
+                        },{
+                            label: 'JOKER',
+                            data: Game6,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(252, 3, 144, 1)',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: 'CRASH',
+                            data: Game7,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(118, 38, 21 )',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: 'ANDARBAHAR',
+                            data: Game8,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(195, 235, 52 )',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: '彩票',
+                            data: Game9,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(52, 235, 192 )',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: '飞机',
+                            data: Game10,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	131,139,131 )',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: '红黑大战',
+                            data: Game11,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(0,104,139 )',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: 'Rummy双人',
+                            data: Game12,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(176,196,222 )',
+                            borderWidth: 1
+                        },{
+                            label: 'TP2',
+                            data: Game13,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	47, 79, 79 )',
+                            borderWidth: 1
+                        }
+                      ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            </script>
+            </div>
+          </div>
+	</div>
+</div>

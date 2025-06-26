@@ -1,0 +1,36 @@
+<div class="row">
+    <div class="col-xs-12">
+        <form class="form-inline" method="post" action="{{urlfor "Statistics2Controller.GameState"}}">
+            <input type="hidden" name="status" value="{{.status}}" />
+            <div class="input-group input-group-sm">
+                <button type="submit" class="btn">刷新</button>
+            </div>
+        </form>
+        <div class="space-4"></div>
+        <div class="table-panel">
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>位置</th>
+                        <th>在线人数</th>
+                        <th>付费玩家在线</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $k, $v := .list}}
+                    <tr>
+                       <td>{{$v.GameName}}</td>
+                       <td>{{$v.Number}}</td>
+                       <td>{{$v.PayNumber}}</td>
+                    </tr>
+                    {{end}}
+                    {{if eq .count 0}}
+                    <tr>
+                        <td colspan="20">暂无记录...</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

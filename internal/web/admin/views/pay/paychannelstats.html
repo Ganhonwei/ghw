@@ -1,0 +1,544 @@
+<div class="row">
+    <div class="col-xs-12">
+        <div class="tabbable">
+            <ul class="nav nav-tabs" id="list-tab">
+                <li {{if eq .typeId 0}}class="active" {{end}}>
+                    <a href="{{urlfor "PayController.PayChannelStats" "typeId" 0}}">收付汇总</a>
+                </li>
+                <li {{if eq .typeId 1}}class="active" {{end}}>
+                    <a href="{{urlfor "PayController.PayChannelStats" "typeId" 1}}">成功率走势图</a>
+                </li>
+                <li {{if eq .typeId 2}}class="active" {{end}}>
+                    <a href="{{urlfor "PayController.PayChannelStats" "typeId" 2}}">提现汇总</a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="space-4"></div>
+
+        <div class="tab-content">
+            <div class="row">
+                <div class="col-xs-12">
+                    <form class="form-inline" method="post" action="{{urlfor "PayController.PayChannelStats"}}">
+                        <input type="hidden" name="typeId" value="{{.typeId}}" />
+                        <input type="hidden" name="status" value="{{.status}}" />
+                        {{if ne .typeId 2}}
+                        <div class="input-group table_filtrate" id="channel_div">
+                            支付渠道:
+                            <div class="input-group input-group-sm">
+                                <select id="selectChannel" class="selectpicker" multiple data-live-search="true"
+                                    data-width="100px" style="width: 100px !important;" title="请选择支付渠道">
+                                    {{range $k,$v := .channelList}}
+                                    <option id="channel_{{$v.Id}}" value="{{$v.Id}}" {{if eq $.channelId $v.Id}}selected{{end}}>{{$v.Name}}</option>
+                                    {{end}}
+                                </select>
+                                <input type="hidden" id="channel_id" name="channel_id" value="{{.channelId}}"
+                                    class="form-control" autocomplete="off" />
+                            </div>
+                        </div>
+                        {{end}}
+                        <div class="input-group table_filtrate">
+                            时间:
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control"
+                                    autocomplete="off" />
+                                <span class="input-group-addon">
+                                    <i class="ace-icon fa fa-calendar"></i>
+                                </span>
+                            </div>
+                            至
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control"
+                                    autocomplete="off" />
+                                <span class="input-group-addon">
+                                    <i class="ace-icon fa fa-calendar"></i>
+                                </span>
+                            </div>
+                        </div>
+                        {{if ne .typeId 2}}
+                        <div class="input-group table_filtrate">
+                            渠道类:
+                            <div class="input-group input-group-sm" id="class_div">
+                                <select id="selectClass" class="selectpicker" multiple data-live-search="true"
+                                    data-width="100px" style="width: 100px !important;" title="请选择渠道类">
+                                    {{range $k,$v := .packageClassAll}}
+                                    <option value="{{$v.Key}}" {{if eq $.classId $v.Key}}selected{{end}}>{{$v.Name}}
+                                    </option>
+                                    {{end}}
+                                </select>
+                                <input type="hidden" id="class_id" name="class_id" value="{{.classId}}"
+                                    class="form-control" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="input-group table_filtrate">
+                            渠道别名:
+                            <div class="input-group input-group-sm" id="alias_div">
+                                <select id="selectAlias" class="selectpicker" multiple data-live-search="true"
+                                    data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                    {{range $k,$v := .packageAliasList}}
+                                    <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}
+                                    </option>
+                                    {{end}}
+                                </select>
+                                <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}"
+                                    class="form-control" autocomplete="off" />
+                            </div>
+                        </div>
+                        {{end}}
+                        {{if eq .typeId 2}}
+                        <div class="input-group table_filtrate">
+                            提现金额:
+                            <div class="input-group input-group-sm">
+                                <input type="number" id="money_statr" min="0" name="money_statr" value="{{.money_statr}}" class="form-control number-input" autocomplete="off"/>
+                            </div>
+                            -
+                            <div class="input-group input-group-sm">
+                                <input type="number" id="money_end" min="0" name="money_end" value="{{.money_end}}" class="form-control number-input" autocomplete="off"/>
+                            </div>
+                        </div>
+                        {{end}}
+                        <div class="input-group input-group-sm">
+                            <button type="submit" class="btn">查询</button>
+                            <a href="{{urlfor "PayController.PayChannelStatsExport" "start_date" .startDate "end_date" .endDate "channel_id" .channelId "typeId" .typeId "alias_id" .aliasId "class_id" .classId "money_statr" .money_statr "money_end" .money_end}}" class="btn" style="margin-left: 5px;">导出</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="space-4"></div>
+
+            {{if eq .typeId 0}}
+            <div class="table-panel" table-wrap="280">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th stickyL>日期</th>
+                            <th>渠道类</th>
+                            <th>渠道别名</th>
+                            <th>支付渠道</th>
+                            <th>代收金额（玩家实付）</th>
+                            <th>代收税费</th>
+                            <th>代付金额（渠道实付）</th>
+                            <th>代付税费（按率）</th>
+                            <th>代付税费（按单）</th>
+                            <th>理论实收入</th>
+                            <th>理论实付出</th>
+                            <th>理论净收益</th>
+                            <th>渠道实收入（已扣税）</th>
+                            <th>渠道实付出（已加税）</th>
+                            <th>渠道收-支</th>
+                            <th>理论与实际的差额</th>
+                            <th>渠道实时余额（接口值）</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $k, $v := .list}}
+                        <tr>
+                            <!--日期--> <td>{{$v.Date}}</td>
+                            <!--渠道类--> <td>{{$v.ChannelClass}}</td>
+                            <!--渠道别名--> <td>{{$v.Channel1}}</td>
+                            <!--支付渠道--> <td>{{$v.PayChannel}}</td>
+                            <!--代收金额（玩家实付）--> <td>{{$v.PayAmount}}</td>
+                            <!--代收税费--> <td>{{$v.PayAmountTax}}</td>
+                            <!--代付金额（渠道实付）--> <td>{{$v.WithdrawAmount}}</td>
+                            <!--代付税费（按率）--> <td>{{$v.WithdrawAmountTaxRate}}</td>
+                            <!--代付税费（按单）--> <td>{{$v.WithdrawAmountTaxTimes}}</td>
+                            <!--理论实收入--> <td>{{$v.Earning}}</td>
+                            <!--理论实付出--> <td>{{$v.Expense}}</td>
+                            <!--理论净收益--> <td>{{$v.Profit}}</td>
+                            <!--渠道实收入（已扣税）--> <td>{{$v.EarningActual}}</td>
+                            <!--渠道实付出（已加税）--> <td>{{$v.ExpenseActual}}</td>
+                            <!--渠道收-支--> <td>{{$v.ProfitActual}}</td>
+                            <!--理论与实际的差额--> <td>{{$v.ProfitDiff}}</td>
+                            <!--渠道实时余额（接口值）--> <td>{{$v.PayChannelBalance}}</td>
+                        </tr>
+                        {{end}}
+
+                        {{if eq .count 0}}
+                        <tr>
+                            <td colspan="20">暂无记录...</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{else if eq .typeId 1}}
+            <!-- 折线图 -->
+            <div class="row" style="width: 1000px; margin-left: 20px">
+                <div class="col-xs-12 center">
+            
+                <!-- <canvas id="online" width="100" height="120"></canvas> -->
+                <canvas id="info"></canvas>
+                <script src="../../assets/js/Chart.js"></script>
+                
+                <script>
+                    var ctx = document.getElementById('info').getContext('2d');
+                    var timelabel = {{.TimedLabel}}; // 日期
+                    var Pay = {{.xdpay}}; // XDPAY
+                    var Pay1 = {{.mlpay}}; // MLPAY
+                    var Pay2 = {{.pay1916}}; // 1916pay
+                    var Pay3 = {{.letspay}}; // LestPay
+                    var Pay4 = {{.kingpay}}; // KingPay
+                    var Pay5 = {{.xfpay}}; // XFPAY
+                    var Pay6 = {{.sailspay}}; // SailsPay
+                    var Pay7 = {{.flypay}}; //FLYPAY
+                    var Pay8 = {{.uwinpay}}; // Uwinpay
+                    
+                    var Pay20 = {{.ramapay}}; // RamaPay
+                    var Pay21 = {{.icepay}}; // IcePay
+                    var Pay22 = {{.wepay}}; // Wepay
+                    var Pay23 = {{.oepay}}; // OePay
+                    var Pay24 = {{.pay9s}}; // 9sPay
+                    var Pay25 = {{.blizzardpy}}; // blizzardpy
+                    var Pay26 = {{.metagopay}}; // metagopay
+                    var Pay27 = {{.universalpay}}; // universalpay
+                    var Pay5002 = {{.usdt}}; // usdt
+
+                    var chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels:timelabel,
+                            datasets: [{
+                                label: 'XDPAY',
+                                data: Pay,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(0, 123, 255, 1)',
+                                borderWidth: 1
+                            }
+                            ,{
+                                label: 'MLPAY',
+                                data: Pay1,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }
+                            ,{
+                                label: '1916Pay',
+                                data: Pay2,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(252, 186, 3, 1)',
+                                borderWidth: 1
+                            },{
+                                label: 'LestPay',
+                                data: Pay3,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgb(20, 252, 3,1)',
+                                borderWidth: 1
+                            },{
+                                label: 'KingPay',
+                                data: Pay4,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgb(115, 3, 252,1)',
+                                borderWidth: 1
+                            },{
+                                label: 'XFPAY',
+                                data: Pay5,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(252, 3, 144, 1)',
+                                borderWidth: 1
+                            }
+                            ,{
+                                label: 'SailsPay',
+                                data: Pay6,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(118, 38, 21 )',
+                                borderWidth: 1
+                            }
+                            ,{
+                                label: 'FlyPay',
+                                data: Pay7,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(195, 235, 52 )',
+                                borderWidth: 1
+                            }
+                            ,{
+                                label: 'Uwinpay',
+                                data: Pay8,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(52, 235, 192 )',
+                                borderWidth: 1
+                            },{
+                                label: 'RamaPay',
+                                data: Pay20,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(178,34,34 )',
+                                borderWidth: 1
+                            },{
+                                label: 'CloudPay',
+                                data: Pay21,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(	0,100,0 )',
+                                borderWidth: 1
+                            },{
+                                label: 'Wepay',
+                                data: Pay22,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(47,79,79 )',
+                                borderWidth: 1
+                            },{
+                                label: 'OePay',
+                                data: Pay23,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(	0,134, 139 )',
+                                borderWidth: 1
+                            },{
+                                label: '9sPay',
+                                data: Pay24,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(	105, 105, 105 )',
+                                borderWidth: 1
+                            },{
+                                label: 'blizzardpy',
+                                data: Pay25,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(	125, 125, 25 )',
+                                borderWidth: 1
+                            },{
+                                label: 'metagopay',
+                                data: Pay26,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(	125, 125, 80 )',
+                                borderWidth: 1
+                            },{
+                                label: 'universalpay',
+                                data: Pay27,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(	125, 125, 160 )',
+                                borderWidth: 1
+                            },{
+                                label: 'USDT',
+                                data: Pay5002,
+                                backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                borderColor: 'rgba(	105, 155, 155 )',
+                                borderWidth: 1
+                            }
+                        ]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                </script>
+                </div>
+            </div>
+            {{else if eq .typeId 2}}
+            <div class="table-panel" table-wrap="280">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th stickyL>日期</th>
+                            <th>提现总单数</th>
+                            <th>提现总额</th>
+                            <th>总通过单数</th>
+                            <th>通过总额</th>
+                            <th>人工通过单数</th>
+                            <th>自动通过单数</th>
+                            <th>人审占比</th>
+                            <th>机审占比</th>
+                            <th>转单数</th>
+                            <th>转单付成单数</th>
+                            <th>转单付成率</th>
+                            <th>重复付款单数</th>
+                            <th>重复付款多付金额</th>
+                            <th>重复付款频次</th>
+                            <th>被拒单数</th>
+                            <th>被拒总额</th>
+                            <th>被拒单均价</th>
+                            <th>付成单数</th>
+                            <th>付成总额</th>
+                            <th>付成单均价</th>
+                            <th>通过率</th>
+                            <th>通过订单的付成率</th>
+                            <th>平均审核时长(分)</th>
+                            <th>平均滞单时长(分)</th>
+                            <th>平均到账时长(分)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $index, $v := .list}}
+                        <tr>
+                            <td>{{$v.SDate}}</td>
+                            <td>{{$v.TotalNumber}}</td>
+                            <td>{{printf "%.2f" $v.TotalAmount}}</td>
+                            <td>{{$v.PassNumber}}</td>
+                            <td>{{printf "%.2f" $v.PassAmount}}</td>
+                            <td>{{$v.RgPassNumber}}</td>
+                            <td>{{$v.JqPassNumber}}</td>
+                            <td>{{printf "%.2f" $v.RgAuditRatio}}%</td>
+                            <td>{{printf "%.2f" $v.JqAuditRatio}}%</td>
+                            <td>{{$v.ZdNumber}}</td>
+                            <td>{{$v.ZdSGNumber}}</td>
+                            <td>{{printf "%.2f" $v.ZdRatio}}%</td>
+                            <td>{{$v.CfNumber}}</td>
+                            <td>{{printf "%.2f"  $v.FCfAmount}}</td>
+                            <td>{{$v.CfFrequency}}</td>
+                            <td>{{$v.RefuseNumber}}</td>
+                            <td>{{printf "%.2f" $v.RefuseAmount}}</td>
+                            <td>{{printf "%.2f" $v.RefuseAvg}}</td>
+                            <td>{{$v.SuccessfulNumber}}</td>
+                            <td>{{printf "%.2f" $v.SuccessfulAmount}}</td>
+                            <td>{{printf "%.2f" $v.SuccessfulAvg}}</td>
+                            <td>{{printf "%.2f" $v.PassRatio}}%</td>
+                            <td>{{printf "%.2f" $v.SuccessfulRatio}}%</td>
+                            <td>{{printf "%.2f" $v.AuditTimeAvg}}</td>
+                            <td>{{printf "%.2f" $v.DelayTimeAvg}}</td>
+                            <td>{{printf "%.2f" $v.ArrivalTimeAvg}}</td>
+                        </tr>
+                        {{end}}
+                
+                        {{if eq .count 0}}
+                        <tr>
+                            <td colspan="20">暂无记录...</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</div>
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+	<form class="form-inline ajax-form" method="post" action="{{urlfor "PayController.AddPayStatsRemark"}}">
+		<div class="modal-dialog" style="width: 800px !important;">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel">添加备注</h4>
+				</div>
+				<div class="modal-body">
+					<div id="alert-warning" class="alert alert-warning alert-dismissible hide" role="alert"></div>
+                    <input type="hidden" class="form-control" id="id" name="id" autocomplete="off">
+                    <input type="hidden" class="form-control" id="channel" name="channel" autocomplete="off">
+                    <div id="game-info">
+					</div>
+					<div class="form-group">
+						<span>备注：</span>
+                        <textarea name="remark" style="width: 600px;"  id="remark" class="form-control" rows="5" autocomplete="off" placeholder="请输入备注"></textarea>	
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn">确定</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+
+<script>
+	$(document).ready(function(){
+		$('#addModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var rid = $(event.relatedTarget).data('id');
+            var cid = $(event.relatedTarget).data('channel');
+			var war = document.getElementById("alert-warning");
+			war.classList.add("hide");
+			var input = document.getElementById("id");
+			input.value = rid
+            var cinput = document.getElementById("channel");
+			cinput.value = cid
+            $.get("/admin/pay/addpaystatsremark?id=" + rid+"&"+"channelid="+cid, function(data){
+				// 将查询结果填充到模态框中
+				$('#game-info').html(data);
+			});
+		});
+
+        // 支付渠道
+        $("#selectChannel").on("change", function () {
+            var selectVal = $("#selectChannel").val()
+            console.log("selectChannel：" + selectVal)
+            $("#channel_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change", function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias：" + selectVal)
+            $("#alias_id").val(selectVal)
+        });
+        
+        // 渠道类
+        $("#selectClass").on("change", function () {
+            var selectVal = $("#selectClass").val()
+            console.log("selectClass" + selectVal)
+            $("#class_id").val(selectVal)
+        });
+
+        // 支付渠道
+        var channelVal = $("#channel_id").val()
+        if (channelVal) {
+            var arr1 = channelVal.split(",");
+            $('#selectChannel').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                // console.log("selectChannel:", arr1)
+                $("#selectChannel").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    } else if (value == "-") {
+                        arr1[index] = "其他";
+                    } else {
+                        arr1[index] = $("#" + `channel_${value}`).text();
+                    }
+                });
+                var str = arr1.join(",");
+                $('#channel_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectChannel').selectpicker({ width: 200 });
+        }
+        // 渠道别名
+        var aliasVal = $("#alias_id").val()
+        if (aliasVal) {
+            var arr1 = aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+        // 渠道类
+        var classVal = $("#class_id").val()
+        if (classVal) {
+            var arr1 = classVal.split(",");
+            $('#selectClass').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                $("#selectClass").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#class_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectClass').selectpicker({ width: 200 });
+        }
+	});
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.typeId}}) });
+</script>

@@ -1,0 +1,145 @@
+.table tr th{
+    text-align: center;
+    min-width: 100px;
+    border: 1px solid;
+    position:sticky;
+    top:0;
+    background-color: #F2F2F2;
+    border-top-color: #ddd;
+}
+.table tr td{
+    text-align: center;
+    /* width: 150px !important; */
+}
+
+.tab-content>.tab-pane{
+    overflow-y: auto !important;
+}
+
+.table_filtrate{
+    margin-right: 10px;
+}
+
+textarea{
+    resize:none !important;
+}
+.lable-top{
+    padding-top: 10px;
+}
+/* .table-div{
+    width: 100% !important;
+    overflow-x: auto;
+}
+.table-operation{
+    width: 500px !important;
+} */
+table tbody tr td {
+    word-wrap: break-word;
+    text-align: center;
+  }
+.table-time{
+    width: 100px !important;
+}
+.table-device{
+    min-width: 350px !important;
+}
+.table-user-opt{
+    min-width: 280px !important;
+}
+.table-content-opt{
+    min-width: 450px !important;
+}
+.table-opt{
+    min-width: 200px !important;
+}
+.table-maxwidth{
+    max-width: 600px !important;
+    width: 600px !important;
+    word-wrap: break-word;  /* 允许单词内换行 */
+}
+/* 样式化固定列 */
+.fixed-column {
+    position: sticky;
+    left: 0;
+    background-color: transparent;
+}
+.table-panel{
+    width: 100%;
+    /* height: 700px;  */
+    overflow: auto;
+}
+ul{
+    list-style-type: none;
+}
+.players-panel{
+    float: left;
+    word-wrap:break-word;
+    width: 90% !important;
+}
+.page-close{
+    display: inline-block; 
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}
+.wrap{
+    max-width: 500px !important;       /* 设置单元格最大宽度 */
+    word-wrap: break-word;  /* 允许单词内换行 */
+    white-space: normal;   /* 允许多行显示 */
+}
+
+.tabbable{
+    margin-bottom: 10px !important;
+}
+.ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100px !important;
+}
+.table{
+    /* border-collapse: collapse;
+    table-layout:fixed; */
+    /* 只有定义了表格的布局算法为fixed，下面td的定义才能起作用。 */
+}
+/*分页组件*/
+
+.row-page{
+    display: flex;
+    text-align: center;
+}
+.pagination-jump{
+    margin: 15px 0px;
+    padding-left: 10px;
+    line-height: 30px;
+}
+
+.prompt-msg{
+    margin-left: 10px;
+    background-color: red;
+    color: white;
+    border-radius: 10px; /* 圆角半径为 10 像素 */
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    text-align: center;
+    font-size: 8px;
+    line-height: 20px;
+}
+.bootstrap-select>.dropdown-toggle{
+    background-color: transparent !important;
+    color: #858585 !important;
+    border: 1px solid #d5d5d5 !important;
+    width: 200px !important;
+}
+.bootstrap-select>.dropdown-toggle:hover{
+    background-color: transparent !important;
+}
+
+/* .btn:hover, .btn-default:hover, .btn:active, .btn-default:active, .open>.btn.dropdown-toggle, .open>.btn-default.dropdown-toggle{
+    background-color: transparent !important;
+} */
+
+.open>.btn.dropdown-toggle, .open>.btn-default.dropdown-toggle{
+    background-color: transparent !important;
+}

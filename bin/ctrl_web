@@ -1,0 +1,205 @@
+#!/bin/bash
+
+set -e
+
+SCRIPT_DIR=$(cd `dirname $0`; pwd)
+
+cd $SCRIPT_DIR
+
+PROJECT_DIR=$(cd ${SCRIPT_DIR}/../; pwd)
+
+PROTO_DIR="${PROJECT_DIR}/proto"
+
+TABLE_DIR="${PROJECT_DIR}/table"
+
+TABLE_DIR_M="${PROJECT_DIR}/m-table"
+
+TBL_DIR="${PROJECT_DIR}/tbl"
+
+PB_DIR="${PROJECT_DIR}/pb"
+
+LOG_DIR="${PROJECT_DIR}/bin/logs"
+
+CMD_PB_DIR="${PROJECT_DIR}/tool/pb"
+
+LOG_FILE="${SCRIPT_DIR}/ctrl_cmd.log"
+
+
+usage() {
+    echo " ./ctrl_web "
+    echo " cmd : build"
+    echo " cmd : start -target=(login|gate|dbms) (-node=1)"
+    echo " cmd : stop -target=(login|gate|dbms) (-node=1)"
+    echo " cmd : restart -target=(login|gate|dbms) (-node=1)"
+}
+
+get_target() {
+    # $1=-target=dbms
+    if [[ $1 == '-target='* ]]; then
+        target=(`echo $1 | tr '=' ' '`)
+        echo ${target[1]}
+    fi
+}
+
+get_nodeid() {
+    # $1=-node=1
+    if [[ $1 == '-node='* ]]; then
+        node=(`echo $1 | tr '=' ' '`)
+        echo ${node[1]}
+        # echo ${1:0-1:1}
+    fi
+}
+
+check_bin() {
+    if [[ ! -e ${SCRIPT_DIR}/cmd_web.bin ]]; then
+        echo "失败, 执行文件不存在"
+        exit 1
+    fi
+}
+
+get_pid() {
+    binFile=${SCRIPT_DIR}/cmd_web.bin
+    target=`get_target $1`
+    nodeid=`get_nodeid $2`
+    if [[ ${nodeid} == '' ]]; then
+        ps aux | grep ${binFile} | grep target=${target} | grep -v grep | awk '{print $2}' | head -1
+    else
+        ps aux | grep ${binFile} | grep target=${target} | grep node=${nodeid} | grep -v grep | awk '{print $2}' | head -1
+    fi
+}
+
+get_logfile() {
+    target=`get_target $1`
+    nodeid=`get_nodeid $2`
+    if [[ ${nodeid} == '' ]]; then
+        echo ${target}-node.log
+    else
+        echo ${target}-node-${nodeid}.log
+    fi
+}
+
+status() {
+    check_bin
+    target=`get_target $1`
+    pid=`get_pid $1 $2`
+
+    if [[ -z "$pid" ]]; then
+        echo "未运行 ${target} $2"
+    else
+        echo "运行中 ${target} $2 进程ID为 ${pid}"
+    fi
+}
+
+get_curr_time() {
+    echo `date +"%Y-%m-%d %H:%M:%S"`
+}
+
+save_log() {
+    echo "" >> ${LOG_FILE}
+    echo "Time: "`get_curr_time`"   $1 " >> ${LOG_FILE}
+}
+
+start() {
+    check_bin
+    target=`get_target $1`
+    pid=`get_pid $1 $2`
+    binFile=${SCRIPT_DIR}/cmd_web.bin
+
+    if [ "$pid" != '' ]; then
+        echo "运行中 ${target} $2 进程ID为 ${pid}"
+    else
+        logFile=`get_logfile $1 $2`
+        if [[ ${1} == '' ]]; then
+            echo "未指定输出日志文件"
+            exit 1
+        fi
+        echo -n "正在启动 ${target} ${2} ... "
+        save_log "正在启动 ${target} ${2} ... "
+        ${binFile} $1 $2 >& ${logFile} &
+        # ${binFile} $1 $2 -log_dir="logs" -stderrthreshold="INFO" >& ${logFile} &
+        save_log "${target} ${2} started $! ... "
+        sleep 3s
+        status $1 $2
+    fi
+}
+
+stop() {
+    check_bin
+    target=`get_target $1`
+    pid=`get_pid $1 $2`
+
+    if [ "$pid" != '' ]; then
+        echo -n "正在停止 ${target} ... "
+        save_log "正在停止 ${target} ${pid} ... "
+        #kill -9 $pid
+        kill -9 $pid
+        # sleep 15s
+        echo "$pid killed!"
+        save_log "${target} ${pid} killed! "
+    else
+        echo "未运行 ${target} $2"
+    fi
+}
+
+restart() {
+    echo -n "正在重启 ${target} ... "
+    stop $1 $2
+    sleep 1s
+    start $1 $2
+}
+
+build() {
+    go build -o ${SCRIPT_DIR}/cmd_web.bin -ldflags "-w -s" ${PROJECT_DIR}/cmd/web
+}
+
+sync_web_test(){
+    scp ${SCRIPT_DIR}/cmd_web.bin test:/home/ubuntu/game/web
+}
+
+sync_web_test_tar(){
+    cd ${SCRIPT_DIR} && tar zcf cmd_web.bin.tar.gz cmd_web.bin
+    scp ${SCRIPT_DIR}/cmd_web.bin.tar.gz test:/home/ubuntu/game/web
+}
+
+start_all() {
+    start -target=web
+    start -target=webAgent
+    start -target=webStats
+}
+
+stop_all() {
+    stop -target=web
+    stop -target=webAgent
+    stop -target=webStats
+}
+
+show() {
+    status -target=web
+    status -target=webAgent
+    status -target=webStats
+}
+
+case $1 in
+    build)
+        build;;
+    start)
+        start $2 $3;;
+    stop)
+        stop $2 $3;;
+    status)
+        status $2 $3;;
+    restart)
+        restart $2 $3;;
+    startall)
+        start_all;;
+    stopall)
+        stop_all;;
+    show)
+        show;;
+    sync_web_test)
+        sync_web_test;;
+    sync_web_test_tar)
+        sync_web_test_tar;;
+    *)
+        usage;;
+esac

@@ -1,0 +1,197 @@
+							
+<div class="row">
+	<div class="col-xs-12">
+	
+	<div class="tabbable">
+		<ul class="nav nav-tabs" id="list-tab">
+			<li {{if eq .tabId 0}}class="active"{{end}}>
+				<a href="{{urlfor "Statistics2Controller.TpStoryStock" "tabId" 0}}">总览</a>
+			</li>
+			<li {{if eq .tabId 1}}class="active"{{end}}>
+				<a href="{{urlfor "Statistics2Controller.TpStoryStock" "tabId" 1}}">日志</a>
+			</li>
+		</ul>
+	
+		<div class="tab-content">
+        {{if eq .tabId 1}}
+		<div class="row" style="margin-left: 12px">
+			<!-- 筛选条件 -->
+            <form class="form-inline" method="post" action="{{urlfor "Statistics2Controller.TpStoryStock"}}">
+                <input type="hidden" name="tabId" value="{{.tabId}}" />
+                
+                <div class="input-group table_filtrate">
+                    查询:
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="id" name="id" value="{{.id}}" class="form-control"
+                            placeholder="" autocomplete="off" />
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-users"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="input-group table_filtrate">
+                    <div class="input-group input-group-sm">
+                        <select name="type_id" id="type_id">
+                            <option value="0" {{if eq $.typeId 0}}selected{{end}}>玩家ID</option>
+                            <option value="1" {{if eq $.typeId 1}}selected{{end}}>流水号</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group table_filtrate">
+                    时间:
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off" />
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    至
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="input-group input-group-sm">
+                    <button type="submit" class="btn">查询</button>
+                </div>
+            </form>
+		</div>
+        {{end}}
+		<div class="space-4"></div>
+
+		<div class="table-panel">
+			<table class="table table-striped table-bordered table-hover">
+				<thead>
+                    {{if eq .tabId 0}}
+					<tr>
+                        <th>房间ID</th>
+                        <th>房间名称</th>
+                        <th>剧充玩家库存</th>
+                        <th>最低使用值</th>
+                        <th>操作</th>
+                    </tr>
+					{{else}}
+					<tr>
+                        <th>用户ID</th>
+                        <th>时间</th>
+                        <th>位置</th>
+                        <th>变化</th>
+                        <th>账变前</th>
+                        <th>账变后</th>
+                        <th>局号</th>
+                    </tr>
+					{{end}}
+				</thead>
+				<tbody>
+                    {{if eq .tabId 0}}
+                        {{range $k, $v := .list}}
+                        <tr>
+                            <th style="font-weight: normal;">{{$v.Id}}</th>
+                            <th style="font-weight: normal;">{{$v.Name}}</th>
+                            <th style="font-weight: normal;">{{$v.FStock}}</th>
+                            <th style="font-weight: normal;">{{$v.FStockMin}}</th>
+                            <th style="font-weight: normal;">
+                                <a href="{{urlfor "Statistics2Controller.TpStoryStockEdit" "id" $v.Id}}"  class="pink">修改</a>
+                            </th>
+                        </tr>
+                        {{end}}
+                    {{else}}
+                        {{range $k, $v := .list}}
+                        <tr>
+                            <th style="font-weight: normal;">
+                                <a href="{{urlfor "Statistics2Controller.PlayerData" "userid" $v.Userid}}" target="_blank">{{$v.Userid}}</a>
+                            </th>
+                            <th style="font-weight: normal;">{{$v.FTimestamp}}</th>
+                            <th style="font-weight: normal;">{{$v.GameId}}</th>
+                            <th style="font-weight: normal;">{{$v.FChange}}</th>
+                            <th style="font-weight: normal;">{{$v.FBefore}}</th>
+                            <th style="font-weight: normal;">{{$v.FAfter}}</th>
+                            <th style="font-weight: normal;">
+                                <a href="{{urlfor "PlayerController.TpDetails" "id" $v.DetailId}}" target="_blank">{{$v.DetailId}}</a>
+                            </th>
+                        </tr>
+                        {{end}}
+                    {{end}}
+
+					{{if eq .count 0}}
+					<tr>
+						<td colspan="20">暂无记录...</td>
+					</tr>
+				    {{end}}
+				</tbody>
+			</table>
+		</div>
+		<div class="row">
+			<div class="row-page"> 
+				{{if gt .count 20}}
+				    {{str2html .pageBar}}
+			    {{end}}
+			</div>
+		</div>
+		</div>
+	</div>
+	</div>
+</div>
+<script>
+    // $(function () {
+    //     $("#selectPackage").on("change",function () {
+    //     var selectVal = $("#selectPackage").val()
+    //     console.log(selectVal)
+    //     $("#package_id").val(selectVal)
+    // });
+    // // 渠道别名
+    // $("#selectAlias").on("change",function () {
+    //     var selectVal = $("#selectAlias").val()
+    //     console.log("selectAlias："+selectVal)
+    //     $("#alias_id").val(selectVal)
+    // });
+    //     var packVal =  $("#package_id").val()
+    //     if (packVal != ""){
+            
+    //         var arr = packVal.split(",");
+    //         $('#selectPackage').selectpicker({ width: 200 });
+    //         if (arr != null){
+    //             $("#selectPackage").val(arr)
+    //             $.each(arr, function(index, value) {
+    //                 if (value == "0"){
+    //                     arr[index] = "全部"; 
+    //                 }
+    //                 if (value == "-"){
+    //                     arr[index] = "其他"; 
+    //                 }
+    //             });
+    //             var str = arr.join(",");
+    //             $('#package_div .filter-option-inner-inner').html(str)
+    //         }
+    //     }else{
+    //         $('#selectPackage').selectpicker({ width: 200 });
+    //     }
+
+    //     // 渠道别名
+    //     var aliasVal =  $("#alias_id").val()
+    //     if (aliasVal != ""){
+    //         var arr1= aliasVal.split(",");
+    //         $('#selectAlias').selectpicker({ width: 200 });
+    //         if (arr1 != null){
+    //             console.log("arr1:"+arr1)
+    //             $("#selectAlias").val(arr1)
+    //             $.each(arr1, function(index, value) {
+    //                 if (value == "0"){
+    //                     arr1[index] = "全部"; 
+    //                 }
+    //                 if (value == "-"){
+    //                     arr1[index] = "其他"; 
+    //                 }
+    //             });
+    //             var str = arr1.join(",");
+    //             $('#alias_div .filter-option-inner-inner').html(str)
+    //         }
+    //     }else{
+    //         $('#selectAlias').selectpicker({ width: 200 });
+    //     }
+    // });
+    
+</script>

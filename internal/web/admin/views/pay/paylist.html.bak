@@ -1,0 +1,304 @@
+<div class="row">
+	<div class="col-xs-12">
+	</div>
+</div>
+
+<div class="space-4"></div>
+
+<div class="row">
+	<div class="col-xs-12">
+
+		{{if .flash.error}}
+		<div class="alert alert-danger alert-dismissible fade in" role="alert">
+			{{.flash.error}}
+		</div>
+		{{end}}
+		{{if .flash.success}}
+		<div class="alert alert-warning alert-dismissible fade in" role="alert">
+			{{.flash.success}}
+		</div>
+		<script>$(".alert").fadeOut(2000);</script>
+		{{end}}
+
+		<form class="form-inline" method="post" action="{{urlfor "PayController.PayList"}}">
+			<input type="hidden" name="status" value="{{.status}}" />
+			<div class="input-group table_filtrate">
+				查询:
+				<div class="input-group input-group-sm">
+					<input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+						placeholder="用户ID" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-users"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				<div class="input-group input-group-sm">
+					<select name="type_id" id="type_id">
+						{{range $k,$v := .typeList}}
+						<option value="{{$k}}" {{if eq $.typeId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				订单状态:
+				<div class="input-group input-group-sm">
+					<select name="status_id" id="status_id">
+						{{range $k,$v := .statusList}}
+						<option value="{{$k}}" {{if eq $.statusId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				充值渠道:
+				<div class="input-group input-group-sm">
+					<select name="pay_id" id="pay_id">
+						{{range $k,$v := .payList}}
+						<option value="{{$v.Id}}"  {{if eq $.payId $v.Id}}selected{{end}}>{{$v.Name}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				商品类型:
+				<div class="input-group input-group-sm">
+					<select name="shop_id" id="shop_id">
+						{{range $k,$v := .shopList}}
+						<option value="{{$k}}" {{if eq $.shopId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				是否首充:
+				<div class="input-group input-group-sm">
+					<select name="isfirst" id="isfirst">
+						{{range $k,$v := .firstList}}
+						<option value="{{$k}}" {{if eq $.isfirst $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div style="margin-top: 10px;">
+				<div class="input-group table_filtrate">
+					渠道:
+					<div class="input-group" id="package_div">
+						<select id="selectPackage" class="selectpicker" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择渠道">
+							{{range $k,$v := .packageList}}
+							<option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+							{{end}}
+						</select>
+						<input type="hidden" id="package_id" name="package_id" value="{{.packageId}}" class="form-control" autocomplete="off" />
+					</div>
+				</div>
+				<div class="input-group table_filtrate">
+					订单生成时间:
+					<div class="input-group input-group-sm">
+						<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+						<span class="input-group-addon">
+							<i class="ace-icon fa fa-calendar"></i>
+						</span>
+					</div>
+					至
+					<div class="input-group input-group-sm">
+						<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+						<span class="input-group-addon">
+							<i class="ace-icon fa fa-calendar"></i>
+						</span>
+					</div>
+				</div>
+				<div class="input-group input-group-sm">
+					<button type="submit" class="btn">查询</button>
+				</div>
+			</div>
+
+			
+	</div>
+</div>
+</form>
+<div class="space-4"></div>
+
+<div class="table-panel" table-wrap="330">
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+			<tr>
+				<th stickyL>用户ID</th>
+				<th>昵称</th>
+				<th>渠道</th>
+				<th>订单状态</th>
+				<th>充值金额</th>
+				{{if eq $.versions "2"}}
+				<th>实付金额</th>
+				{{end}}
+				<th>充值渠道</th>
+				<th>订单生成时间</th>
+				<th>订单号</th>
+				<th>第三方订单号</th>
+				<th>商品名称</th>
+				<th>商品类型</th>
+				<th>是否首充</th>
+				<th>成功次数</th>
+				<th>均单价</th>
+				{{if $.isOperation }}
+				<th>操作</th>
+				{{end}}
+			</tr>
+		</thead>
+		<tbody>
+			{{range $k, $v := .list}}
+			<tr>
+				<td>
+					<a href="{{urlfor "PlayerController.GoldList" "userid" $v.Userid}}"  target="_blank">{{$v.Userid}}</a>
+				</td>
+				<td>{{$v.NickName}}</td>
+				<td>{{$v.PackageId}}</td>
+				<td>
+					{{if eq $v.OrderStatus 1}}
+					<span class="text-success bigger-110 orange">待支付</span>
+					{{else if eq $v.OrderStatus 2}}
+					<span class="text-warning bigger-110 red">支付失败</span>
+					{{else if eq $v.OrderStatus 3}}
+					<span class="text-warning bigger-110 red">发货失败</span>
+					{{else if eq $v.OrderStatus 4}}
+					<span class="text-success bigger-110 green">已支付</span>
+					{{else if eq $v.OrderStatus 5}}
+          			<span class="text-success bigger-110 red">下单失败</span>
+					{{else}}
+					<span class="text-warning bigger-110">--</span>
+					{{end}}
+				</td>
+				<td>{{ printf "%.2f"  $v.FAmount}}</td>
+				{{if eq $.versions "2"}}
+				<td>{{$v.FRealAmount}}</td>
+				{{end}}
+				{{if eq $v.ChannelName "USDT"}}
+				<td title="{{$v.USDTMsg}}" ondblclick="copyText(this)">{{$v.ChannelName}}</td>
+				{{else}}
+				<td>{{$v.ChannelName}}</td>
+				{{end}}
+				<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+				<td>{{$v.OrderID}}</td>
+				<td>{{$v.OutTradeNo}}</td>
+				<td>{{$v.ShopName}}</td>
+				<td>
+					{{if eq $v.ShopType 1}}
+					<span class="bigger-110">商城直充</span>
+					{{else if eq $v.ShopType 2}}
+					<span class="bigger-110 ">入门礼包</span>
+					{{else if eq $v.ShopType 3}}
+					<span class="bigger-110 ">金银铜卡</span>
+					{{else if eq $v.ShopType 4}}
+					<span class="bigger-110 ">首充</span>
+					{{else if eq $v.ShopType 5}}
+					<span class="bigger-110 ">局内充值</span>
+					{{else if eq $v.ShopType 6}}
+					<span class="bigger-110 ">限时礼包</span>
+					{{else if eq $v.ShopType 7}}
+					<span class="bigger-110 ">破产礼包</span>
+					{{else if eq $v.ShopType 8}}
+					<span class="bigger-110 ">签到充值</span>
+					{{else if eq $v.ShopType 9}}
+					<span class="bigger-110 ">自定义充值</span>
+					{{else}}
+					<span class="bigger-110 ">--</span>
+					{{end}}
+				</td>
+				<td>
+					{{if eq $v.IsFirst true}}
+					<span class="bigger-110 ">是</span>
+					{{else}}
+					<span class="bigger-110 ">否</span>
+					{{end}}
+				</td>
+				<td>{{$v.SuccessTimes}}</td>
+				<td>{{$v.AvgPay}}</td>
+				
+				{{if $.isOperation }}
+				<td>
+					{{if eq $v.OrderStatus 1}}
+					<a href="{{urlfor "PayController.PayCallback" "id" $v.OrderID}}">手动回调</a>
+					{{end}}
+				</td>
+				{{end}}
+			</tr>
+			{{end}}
+	
+			{{if eq .count 0}}
+			<tr>
+				<td colspan="20">暂无记录...</td>
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+</div>
+<div class="row">
+	<div class="row-page">
+		<div class="red" style="margin: 15px 15px; display: inline-block;font-size: 20px;">
+			<span style="margin-right: 10px;">成功订单数:{{.totalinfo.SuccessfulOrder}}</span>
+			<span style="margin-right: 10px;">成功订单金额:{{ printf "%.2f" .totalinfo.FSuccessfulAmount}}</span>
+			<span style="margin-right: 10px;">总订单数:{{.totalinfo.TotalOrder}}</span>
+			<span>总订单金额:{{ printf "%.2f" .totalinfo.FTotalAmount}}</span>
+		</div> 
+		{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+
+</div>
+</div>
+
+
+<script>
+	function copyText(event) {
+		var clickedElement = event;
+		var text = clickedElement.getAttribute('title');
+
+		var textField = document.createElement('textarea');
+		textField.value = text;
+		document.body.appendChild(textField);
+		textField.select();
+		document.execCommand('copy');
+		document.body.removeChild(textField);
+		alert("已成功复制！");
+	}
+
+    $(function () {
+        $("#selectPackage").on("change",function () {
+        	var selectVal = $("#selectPackage").val()
+        	console.log(selectVal);
+        	$("#package_id").val(selectVal);
+    	});
+
+        var packVal =  $("#package_id").val()
+        if (packVal != ""){
+            
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+				console.log("str:"+str)
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+    });
+    
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

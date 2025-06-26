@@ -1,0 +1,431 @@
+<div class="row">
+	<div class="col-xs-12">
+	</div>
+</div>
+
+<div class="space-4"></div>
+
+<style type="text/css">
+	
+</style>
+
+<ul class="nav nav-tabs" id="list-tab" style="margin-bottom:12px !important">
+    <li {{if eq .typeId 0}}class="active" {{end}}>
+        <a href="{{urlfor "StatisticsController.RecoveryCycle" "typeId" 0}}">回收周期</a>
+    </li>
+    <li {{if eq .typeId 1}}class="active" {{end}}>
+        <a href="{{urlfor "StatisticsController.RecoveryCycle" "typeId" 1}}">ROI走势图</a>
+    </li>
+</ul>
+
+<div class="row">
+	<div class="col-xs-12">
+		<form class="form-inline" id="main-form" method="post" action="{{urlfor "StatisticsController.RecoveryCycle"}}">
+            <div style="margin-bottom: 10px;">
+                {{if eq .typeId 1}}
+                <div class="input-group table_filtrate">
+                    累计区间:
+                    <div class="input-group input-group-sm">
+                        <input type="number" id="exchangeRate" name="days" value="{{.days}}" class="form-control" style="width:80px"
+                            placeholder="累计区间" autocomplete="off"/>
+                    </div> 日
+                </div>
+                {{end}}
+                <div class="input-group table_filtrate">
+                    起始日期:
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    结束时间:
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="input-group table_filtrate">
+                    汇率:
+                    <div class="input-group input-group-sm">
+                        <input type="number" id="exchangeRate" name="exchangeRate" value="{{.exchangeRate}}" class="form-control"
+                            placeholder="汇率" autocomplete="off"/>
+                    </div>
+                </div>
+            </div>
+			<div class="input-group table_filtrate">
+				渠道类:
+				<div class="input-group input-group-sm" id="class_div">
+					<select id="selectClass" class="selectpicker" multiple data-live-search="true"
+						data-width="100px" style="width: 100px !important;" title="请选择渠道类">
+						{{range $k,$v := .packageClassAll}}
+						<option value="{{$v.Key}}" {{if eq $.classId $v.Key}}selected{{end}}>{{$v.Name}}
+						</option>
+						{{end}}
+					</select>
+					<input type="hidden" id="class_id" name="class_id" value="{{.classId}}"
+						class="form-control" autocomplete="off" />
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				渠道:
+				<div class="input-group" id="package_div">
+					<select id="selectPackage" class="selectpicker" multiple data-live-search="true"
+						data-width="200px" style="width: 200px !important;" title="请选择渠道">
+						{{range $k,$v := .packageList}}
+						<option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>
+							{{$v.Name}}</option>
+						{{end}}
+					</select>
+					<input type="hidden" id="package_id" name="package_id" value="{{.packageId}}"
+						class="form-control" autocomplete="off" />
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				渠道别名:
+				<div class="input-group input-group-sm" id="alias_div">
+					<select id="selectAlias" class="selectpicker" multiple data-live-search="true"
+						data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+						{{range $k,$v := .packageAliasList}}
+						<option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}
+						</option>
+						{{end}}
+					</select>
+					<input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}"
+						class="form-control" autocomplete="off" />
+				</div>
+			</div>
+			<input type="hidden" id="typeId" name="typeId" value="{{.typeId}}"
+				class="form-control" autocomplete="off" />
+			<input type="hidden" id="consume" name="consume" value=""
+				class="form-control" autocomplete="off" />
+			<div class="input-group input-group-sm">
+				<button id="clearInput" class="btn">清空</button>
+			</div>
+			<div class="input-group input-group-sm">
+                {{if eq .typeId 0}}
+				<button type="submit" class="btn">计算</button>
+				<a href="{{urlfor "StatisticsController.RecoveryCycleExport" "start_date" .startDate "end_date" .endDate "package_id" .packageId "alias_id" .aliasId  "exchangeRate" .exchangeRate "consume" .consume}}" class="btn" style="margin-left: 5px;">导出</a>
+                {{else}}
+                <button type="submit" class="btn">作图</button>
+                {{end}}
+			</div>
+			<!-- <div class="input-group input-group-sm"> -->
+				<!-- <button type="submit" class="btn">查询</button> -->
+				<!-- <a href="{{urlfor "PlayerController.ExportUser"}}"  class="btn" style="margin-left: 5px;">导出</a> -->
+			<!-- </div> -->
+	</div>
+</div>
+</form>
+<div class="space-4"></div>
+
+<div class="table-panel" table-wrap="300">
+    {{if eq .typeId 0}}
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+			<tr>
+                <th>渠道别名</th>
+                <th stickyL>日期</th>
+                <th colspan="2">消耗</th>
+                <th>新增用户数</th>
+                <th>首充人数</th>
+                <th>累计付费人数</th>
+                <th>累计付费率</th>
+                <th>单个注成本</th>
+                <th>单个首充成本</th>
+                <th>单个付费成本</th>
+                <th>累计利润</th>
+                <th>首日利润</th>
+                <th>首日ROI</th>
+                <th>3日利润</th>
+                <th>3日ROI</th>
+                <th>7日利润</th>
+                <th>7日ROI</th>
+                <th>10日利润</th>
+                <th>10日ROI</th>
+                <th>15日利润</th>
+                <th>15日ROI</th>
+                <th>20日利润</th>
+                <th>20日ROI</th>
+                <th>30日利润</th>
+                <th>30日ROI</th>
+                <th>45日利润</th>
+                <th>45日ROI</th>
+                <th>60日利润</th>
+                <th>60日ROI</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{range $k, $v := .list}}
+			<tr>
+				{{if eq $k 0}}
+                <td style="max-width:120px" rowspan="{{$.count}}">{{$.aliasIds}}</td>
+				{{end}}
+                <td>{{$v.SDate}}</td>
+                <td>
+					<input id="consume-in-{{$k}}" value="{{$v.Consume}}" class="consume-in form-control" sdate="{{$v.SDate}}" style="height:26px;width:100px;"/>
+				</td>
+                <td>
+                    <button num="{{$k}}" class="btn paste" style="height:30px;padding:0;margin:0;">粘贴</button>
+                </td>
+                <td>{{$v.NewRegs}}</td>
+                <td>{{$v.FirstCharges}}</td>
+                <td>{{$v.Charges}}</td>
+                <td>{{$v.PayRates}}</td>
+                <td>{{$v.EachRegCost}}</td>
+                <td>{{$v.EachChargeCost}}</td>
+                <td>{{$v.EachPayCost}}</td>
+                <td>{{$v.Profit}}</td>
+                <td>{{$v.ROI1Profit}}</td>
+                <td>{{$v.ROI1}}</td>
+                <td>{{$v.ROI3Profit}}</td>
+                <td>{{$v.ROI3}}</td>
+                <td>{{$v.ROI7Profit}}</td>
+                <td>{{$v.ROI7}}</td>
+                <td>{{$v.ROI10Profit}}</td>
+                <td>{{$v.ROI10}}</td>
+                <td>{{$v.ROI15Profit}}</td>
+                <td>{{$v.ROI15}}</td>
+                <td>{{$v.ROI20Profit}}</td>
+                <td>{{$v.ROI20}}</td>
+                <td>{{$v.ROI30Profit}}</td>
+                <td>{{$v.ROI30}}</td>
+                <td>{{$v.ROI45Profit}}</td>
+                <td>{{$v.ROI45}}</td>
+                <td>{{$v.ROI60Profit}}</td>
+                <td>{{$v.ROI60}}</td>
+			</tr>
+			{{end}}
+			{{if eq .count 0}}
+                <tr>
+                    <td colspan="20">暂无记录...</td>
+                </tr>
+            {{end}}
+		</tbody>
+	</table>
+    {{else}}
+    <div style="display: flex;">
+        <div>
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th colspan="2">消耗</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $k, $v := .list}}
+                    <tr>
+                        <td>{{$v.SDate}}</td>
+                        <td>
+                            <input id="consume-in-{{$k}}" value="{{$v.Consume}}" class="consume-in form-control" sdate="{{$v.SDate}}" style="height:26px;width:100px;"/>
+                        </td>
+                        <td>
+                            <button num="{{$k}}" class="btn paste" style="height:30px;padding:0;margin:0;">粘贴</button>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        <div class="row" style="width: 1000px;margin-left: 20px;">
+            <div class="col-xs-12 center">
+                <canvas id="info"></canvas>
+                <script src="../../assets/js/Chart.js"></script>
+
+                <script>
+                    var ctx = document.getElementById('info').getContext('2d');
+                    // var times = {{.times}}.map(item => item.pay == '/' ? 0 : item); // 日期
+                    // var ltv1 = {{.ltv1}}.map(item => item.pay == '/' ? 0 : item.pay); // ltv1
+                    // var ltv7 = {{.ltv7}}.map(item => item.pay == '/' ? 0 : item.pay); // ltv7
+                    // var ltv15 = {{.ltv15}}.map(item => item.pay == '/' ? 0 : item.pay); // ltv15
+                    // var ltv30 = {{.ltv30}}.map(item => item.pay == '/' ? 0 : item.pay); // ltv30
+                    var lables = {{.lables }};
+                    var datasets = {{.datasets }};
+                    var chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: lables,
+                            datasets: datasets,
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                },
+                                yAxes: [{
+                                    ticks: {
+                                        callback: function(value, index, values) {
+                                            return value.toFixed(2) + "%";
+                                        }
+                                    }
+                                }]
+                            },
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            show: true
+                        }
+                    });
+                </script>
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+</div>
+</div>
+<script>
+	$(function () {
+        $("#selectPackage").on("change", function () {
+            var selectVal = $("#selectPackage").val()
+            console.log(selectVal)
+            $("#package_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change", function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias：" + selectVal)
+            $("#alias_id").val(selectVal)
+        });
+        // 渠道类
+        $("#selectClass").on("change", function () {
+            var selectVal = $("#selectClass").val()
+            console.log("selectClass" + selectVal)
+            $("#class_id").val(selectVal)
+        });
+
+        var packVal = $("#package_id").val()
+        if (packVal) {
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null) {
+                $("#selectPackage").val(arr)
+                $.each(arr, function (index, value) {
+                    if (value == "0") {
+                        arr[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr[index] = "其他";
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+        // 渠道别名
+        var aliasVal = $("#alias_id").val()
+        if (aliasVal) {
+            var arr1 = aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr1:" + arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+        // 渠道类
+        var classVal = $("#class_id").val()
+        if (classVal) {
+            var arr1 = classVal.split(",");
+            $('#selectClass').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr2:" + arr1)
+                $("#selectClass").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#class_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectClass').selectpicker({ width: 200 });
+        }
+
+		$("#clearInput").on("click", function(e) {
+			// 清空表单
+            e.preventDefault();
+            $(".consume-in").val("0.00")
+            $("#start_date").attr("value", "")
+            $("#end_date").attr("value", "")
+            $("#exchangeRate").attr("value", "")
+		})
+		
+        var editConsumes = {};
+        var submited = false;
+        $("#main-form").on("submit", function(e) {
+            if (!submited) {
+                e.preventDefault();
+            }
+            submited = true;
+
+            // 手动提交表单
+            // $("#utype_id option[value=3]").attr("selected", "");
+            // var range1 = $("#srange1").val();
+            // $("#range1").attr("value", range1);
+			var consume = {}
+			$(".consume-in").each(function(index, ele) {
+				ele = $(ele)
+				// console.log(ele.attr("sdate"), ele.val())
+                var sdate = ele.attr("sdate");
+                if (editConsumes[sdate]) {
+                    consume[sdate] = ele.val();
+                }
+			})
+			$("#consume").attr("value", JSON.stringify(consume));
+
+            $("#main-form").off("submit");
+            $("#main-form").submit();
+        });
+
+        $(".paste").on("click", async function(e) {
+            if (!window.navigator.clipboard) {
+                alert("请打开浏览器剪切板读取权限")
+                return
+            }
+            try {
+                var text = await window.navigator.clipboard.readText();
+                var num = parseInt($(e.target).attr("num"));
+                var lines = text.split(/[\r\n\t ]/);
+                lines = lines.filter(line => !!line);
+                for (let i = 0; i < lines.length; i++) {
+                    $(`#consume-in-${num+i}`).attr("value", lines[i]);
+                    $(`#consume-in-${num+i}`).val(lines[i]);
+                    editConsumes[$(`#consume-in-${num+i}`).attr("sdate")] = true;
+                }
+            }catch(err) {
+                alert("读取剪切板失败" + err)
+            }
+        })
+
+        $(".consume-in").on("change", function(e) {
+            editConsumes[$(e.target).attr("sdate")] = true;
+            // console.log(editConsumes)
+        })
+    });
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.typeId}}) });
+</script>

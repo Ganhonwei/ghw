@@ -1,0 +1,162 @@
+							
+<div class="row">
+	<div class="col-xs-12">
+	
+	<div class="tabbable">
+		<ul class="nav nav-tabs" id="list-tab">
+			<li {{if eq .typeId 0}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.Resource" "typeId" 0}}">全局</a>
+			</li>
+			<li {{if eq .typeId 1}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.Resource" "typeId" 1}}">游戏</a>
+			</li>
+		</ul>
+	
+		<div class="tab-content">
+		
+		<div class="row">
+			<div class="col-xs-12">
+				<form class="form-inline" method="post" action="{{urlfor "StatisticsController.Resource"}}">
+				<input type="hidden" name="typeId" value="{{.typeId}}" />
+                <div class="input-group table_filtrate">
+                    时间:
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    至
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                </div>
+					<div class="input-group input-group-sm">
+						<button type="submit" class="btn">查询</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="space-4"></div>
+
+		<div class="table-panel">
+			<table class="table table-striped table-bordered table-hover">
+				<thead>
+					{{if eq .typeId 1}}
+					<tr>
+						<th>时间</th>
+						<th>TP参与人数</th>
+						<th>TP产出彩金</th>
+						<!-- <th>TP产出奖励金</th> -->
+						<th>TP消耗彩金</th>
+						<!-- <th>TP消耗奖励金</th> -->
+						<th>RM参与人数</th>
+						<th>RM产出彩金</th>
+						<!-- <th>RM产出奖励金</th> -->
+						<th>RM消耗彩金</th>
+						<!-- <th>RM消耗奖励金</th> -->
+						<th>龙虎斗参与人数</th>
+						<th>龙虎斗产出彩金</th>
+						<!-- <th>龙虎斗产出奖励金</th> -->
+						<th>龙虎斗消耗彩金</th>
+						<!-- <th>龙虎斗消耗奖励金</th> -->
+						<th>7updown参与人数</th>
+						<th>7updown产出彩金</th>
+						<!-- <th>7updown产出奖励金</th> -->
+						<th>7updown消耗彩金</th>
+						<!-- <th>7updown消耗奖励金</th> -->
+						<th>CRASH参与人数</th>
+						<th>CRASH产出彩金</th>
+						<!-- <th>CRASH产出奖励金</th> -->
+						<th>CRASH消耗彩金</th>
+						<!-- <th>CRASH消耗奖励金</th> -->
+					</tr>
+					{{else}}
+					<tr>
+						<th>时间</th>
+						<th>登录人数</th>
+						<th>新增人数</th>
+						<th>游戏产出彩金</th>
+						<!-- <th>游戏产出奖励金</th> -->
+						<th>游戏消耗彩金</th>
+						<!-- <th>游戏消耗奖励金</th> -->
+						<th>新手注册赠送彩金</th>
+						<!-- <th>新手注册赠送奖励金</th> -->
+						<th>产出BOUNS</th>
+						<th>消耗BONUS</th>
+					</tr>
+					{{end}}
+				</thead>
+				<tbody>
+					{{if eq .typeId 1}}
+					{{range $k, $v := .list}}
+					<tr>
+						<td>{{date $v.SDate "Y-m-d"}}</td>
+						<td>{{ $v.TpNumber }}</td>
+						<td>{{ printf "%.2f" $v.TpDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.TpCoin }}</td> -->
+						<td>{{ printf "%.2f" $v.TpExpendDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.TpExpendCoin }}</td> -->
+						<td>{{ $v.RmNumber }}</td>
+						<td>{{ printf "%.2f" $v.RmDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.RmCoin }}</td> -->
+						<td>{{ printf "%.2f" $v.RmExpendDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.RmExpendCoin }}</td> -->
+						<td>{{ $v.LhdNumber }}</td>
+						<td>{{ printf "%.2f" $v.LhdDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.LhdCoin }}</td> -->
+						<td>{{ printf "%.2f" $v.LhdExpendDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.LhdExpendCoin }}</td> -->
+						<td>{{ $v.UpNumber }}</td>
+						<td>{{ printf "%.2f" $v.UpDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.UpCoin }}</td> -->
+						<td>{{ printf "%.2f" $v.UpExpendDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.UpExpendCoin }}</td> -->
+						<td>{{ $v.CRASHNumber }}</td>
+						<td>{{ printf "%.2f" $v.CRASHDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.CRASHCoin }}</td> -->
+						<td>{{ printf "%.2f" $v.CRASHExpendDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.CRASHExpendCoin }}</td> -->
+					</tr>
+				{{end}}
+					{{else}}
+					{{range $k, $v := .list}}
+					<tr>
+						<td>{{date $v.SDate "Y-m-d"}}</td>
+						<td>{{ $v.LoginNum }}</td>
+						<td>{{ $v.NewRegister }}</td>
+						<td>{{ printf "%.2f" $v.PutDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.PutCoin }}</td> -->
+						<td>{{ printf "%.2f" $v.ExpendDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.ExpendCoin }}</td> -->
+						<td>{{ printf "%.2f" $v.GiftDiamond }}</td>
+						<!-- <td>{{ printf "%.2f" $v.GiftCoin }}</td> -->
+						<td>{{ printf "%.2f" $v.PutBonus }}</td>
+						<td>{{ printf "%.2f" $v.ExpendBonus }}</td>
+					</tr>
+				{{end}}
+					{{end}}
+	
+					{{if eq .count 0}}
+					<tr>
+						<td colspan="20">暂无记录...</td>
+					</tr>
+				{{end}}
+				</tbody>
+			</table>
+		</div>
+		<div class="row">
+			<div class="row-page"> 
+				{{if gt .count 20}}
+				{{str2html .pageBar}}
+			{{end}}
+			</div>
+		</div>
+
+		</div>
+	</div>
+	</div>
+</div>

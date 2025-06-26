@@ -1,0 +1,229 @@
+<div class="row">
+	<div class="col-xs-12">
+	</div>
+</div>
+
+<div class="space-4"></div>
+
+<div class="row">
+	<div class="col-xs-12">
+
+		{{if .flash.error}}
+		<div class="alert alert-danger alert-dismissible fade in" role="alert">
+			{{.flash.error}}
+		</div>
+		{{end}}
+		{{if .flash.success}}
+		<div class="alert alert-warning alert-dismissible fade in" role="alert">
+			{{.flash.success}}
+		</div>
+		<script>$(".alert").fadeOut(2000);</script>
+		{{end}}
+
+		<form class="form-inline" method="post" action="{{urlfor "PlayerController.GoldList"}}">
+			<input type="hidden" name="status" value="{{.status}}" />
+			<div class="input-group table_filtrate">
+				账号查询:
+				<div class="input-group input-group-sm">
+					<input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+						placeholder="用户ID" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-users"></i>
+					</span>
+				</div>
+			</div>
+            <div class="input-group table_filtrate">
+				<div class="input-group input-group-sm">
+					<select name="type_id" id="type_id">
+						{{range $k,$v := .typeList}}
+						<option value="{{$k}}" {{if eq $.typeId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				流水类型：<div class="input-group input-group-sm">
+					<select name="flow_id" id="flow_id">
+						{{range $k,$v := .flowList}}
+						<option value="{{$k}}" {{if eq $.flowId $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				结果：<div class="input-group input-group-sm">
+					<select name="result_id" id="result_id">
+						{{range $k,$v := .resultList}}
+						<option value="{{$k}}" {{if eq $.resultid $k}}selected{{end}}>{{$v}}</option>
+						{{end}}
+					</select>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				渠道:
+				<div class="input-group" id="package_div">
+					<select id="selectPackage" class="selectpicker" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择渠道">
+						{{range $k,$v := .packageList}}
+						<option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+						{{end}}
+					</select>
+					<input type="hidden" id="package_id" name="package_id" value="{{.packageId}}" class="form-control" autocomplete="off" />
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				流水生成时间:
+				<div class="input-group input-group-sm">
+					<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+				至
+				<div class="input-group input-group-sm">
+					<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group input-group-sm">
+				<button type="submit" class="btn">查询</button>
+				<!-- <a href="{{urlfor "PlayerController.ExportUser"}}"  class="btn" style="margin-left: 5px;">导出</a> -->
+			</div>
+	</div>
+</div>
+</form>
+<div class="space-4"></div>
+
+<div class="table-panel" table-wrap="300">
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+			<tr>
+				<th stickyL>用户ID</th>
+				<th>昵称</th>
+				<th>渠道</th>
+				<th class="table-time">流水生成时间</th>
+				<th class="table-opt">产生流水位置</th>
+				<th>彩金变化</th>
+				<!-- <th>奖励金</th> -->
+				<!-- <th>其他资产</th> -->
+				<th>变化总金额</th>
+				<th>账变前显示金额</th>
+				<th>账变后显示金额</th>
+				<th>账变前彩金</th>
+				<th>账变后彩金</th>
+				<!-- <th>账变前奖励金</th>
+				<th>账变后奖励金</th> -->
+				<!-- <th>账变前其他资产</th>
+				<th>账变后其他资产</th> -->
+				<th>点控局</th>
+				<th>流水号</th>
+				{{if $.isOperation }}
+				<th stickyR>操作</th>
+				{{end}}
+			</tr>
+		</thead>
+		<tbody>
+			{{range $k, $v := .list}}
+			<tr>
+				<td>
+					<a href="{{urlfor "Statistics2Controller.PlayerData" "userid" $v.Userid}}" target="_blank">{{$v.Userid}}</a>
+				</td>
+				<td>{{$v.Name}}</td>
+				<td>{{$v.MediaSource}}</td>
+				<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+				<td>{{$v.WaterDesc}}</td>
+				<td>{{ printf "%.2f" $v.FAddDiamond}}</td>
+				<!-- <td>{{ printf "%.2f" $v.FAddCoin}}</td> -->
+				<!-- <td>{{ printf "%.2f" $v.FAddOtherAsset}}</td> -->
+				<td>
+					{{if eq $v.IsChangeAsset true}}
+						<span class="text-warning bigger-110 red">
+							{{ printf "%.2f" $v.FChangeAsset}}
+						</span>
+					{{else}}
+						<span class="text-success bigger-110 green">
+							{{ printf "%.2f" $v.FChangeAsset}}
+						</span>
+					{{end}}
+				</td>
+				<td>{{ printf "%.2f" $v.OldShowAmount}}</td>
+				<td>{{ printf "%.2f" $v.NowShowAmount}}</td>
+				<td>{{ printf "%.2f" $v.FOldDiamond}}</td>
+				<td>{{ printf "%.2f" $v.FNowDiamond}}</td>
+				<!-- <td>{{ printf "%.2f" $v.FOldCoin}}</td>
+				<td>{{ printf "%.2f" $v.FNowCoin}}</td> -->
+				<!-- <td>{{ printf "%.2f" $v.FOldOtherAsset}}</td>
+				<td>{{ printf "%.2f" $v.FNowOtherAsset}}</td> -->
+				<td>
+					{{if $v.Control}}
+					<span class="bigger-110">是</span>
+					{{else}}
+					<span class="bigger-110">否</span>
+					{{end}}
+				</td>
+				<td>{{$v.WaterId}}</td>
+				{{if $.isOperation }}
+					<td>
+						{{if eq $v.WaterId ""}}
+						-
+					{{else}}
+					<a href="{{urlfor "PlayerController.PlayList" "id" $v.WaterId "type_id" 1}}" target="_blank">详情</a>
+					{{end}}
+					</td>
+				{{end}}
+			</tr>
+			{{end}}
+			{{if eq .count 0}}
+					<tr>
+						<td colspan="20">暂无记录...</td>
+					</tr>
+				{{end}}
+		</tbody>
+	</table>
+</div>
+<div class="row">
+	<div class="row-page"> 
+		{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+</div>
+</div>
+<script>
+	$(function () {
+        $("#selectPackage").on("change",function () {
+        	var selectVal = $("#selectPackage").val()
+        	console.log(selectVal);
+        	$("#package_id").val(selectVal);
+    	});
+
+        var packVal =  $("#package_id").val()
+        if (packVal != ""){
+            
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+				console.log("str:"+str)
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+    });
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

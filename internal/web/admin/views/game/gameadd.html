@@ -1,0 +1,184 @@
+
+<div class="alert alert-warning alert-dismissible hide" role="alert"></div>
+
+<form class="form-horizontal ajax-form" method="post" action="{{urlfor "GameController.GameAdd"}}">
+	<div class="form-group">
+		<label for="name" class="col-sm-2 control-label">房间名称</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="name" name="name" autocomplete="off"/>
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="gtype" class="col-sm-2 control-label">玩法类型</label>
+		<div class="col-sm-3">
+		  <select name="gtype" id="gtype">
+			{{range $k,$v := .types1}}
+			<option value="{{$k}}" {{if eq $k 1}}selected{{end}}>{{$v}}</option>
+			{{end}}
+		  </select>
+		</div>
+	  </div>
+
+  <div class="form-group">
+    <label for="status" class="col-sm-2 control-label">房间开关</label>
+    <div class="col-sm-3">
+      <select name="status" id="status">
+        {{range $k,$v := .types2}}
+        <option value="{{$k}}" {{if eq $k 1}}selected{{end}}>{{$v}}</option>
+        {{end}}
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="ai_status" class="col-sm-2 control-label">房间AI开关</label>
+    <div class="col-sm-3">
+      <select name="ai_status" id="ai_status">
+        {{range $k,$v := .types3}}
+        <option value="{{$k}}" {{if eq $k 0}}selected{{end}}>{{$v}}</option>
+        {{end}}
+      </select>
+    </div>
+  </div>
+
+	<div class="form-group">
+		<label for="min_access" class="col-sm-2 control-label">最低准入</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="min_access" name="min_access" autocomplete="off" />
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="max_access" class="col-sm-2 control-label">最高准入</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="max_access" name="max_access" autocomplete="off" />
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="stock_expect" class="col-sm-2 control-label">库存期望</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="stock_expect" name="stock_expect" autocomplete="off" />
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="stock_alarm" class="col-sm-2 control-label">库存报警</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="stock_alarm" name="stock_alarm" autocomplete="off" />
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="sortId" class="col-sm-2 control-label">房间分组内排序标识</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="sortId" name="sortId" autocomplete="off" />
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="count" class="col-sm-2 control-label">房间人数上限</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="count" name="count" autocomplete="off" />
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="bottom" class="col-sm-2 control-label">底注</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="bottom" name="bottom" autocomplete="off" />
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="rounds" class="col-sm-2 control-label">轮次上限</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="rounds" name="rounds" autocomplete="off"/>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="than_rounds" class="col-sm-2 control-label">比牌轮次</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="than_rounds" name="than_rounds" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="pool_limit" class="col-sm-2 control-label">筹码池上限</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="pool_limit" name="pool_limit" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="otime" class="col-sm-2 control-label">操作时间</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="otime" name="otime" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="tcountdown" class="col-sm-2 control-label">比牌倒计时</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="tcountdown" name="tcountdown" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="scountdown" class="col-sm-2 control-label">结算倒数时间</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="scountdown" name="scountdown" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="match_time" class="col-sm-2 control-label">匹配时间区间</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="match_time" name="match_time" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="single_robot" class="col-sm-2 control-label">单局人机数区间</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="single_robot" name="single_robot" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="robot_join" class="col-sm-2 control-label">人机加入概率</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="robot_join" name="robot_join" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="robot_leave" class="col-sm-2 control-label">人机离开概率(万分比)</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="robot_leave" name="robot_leave" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="prevent_time" class="col-sm-2 control-label">防作弊匹配时间检测</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="prevent_time" name="prevent_time" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="prevent_num" class="col-sm-2 control-label">防作弊匹配次数检测</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="prevent_num" name="prevent_num" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="prevent_thaw" class="col-sm-2 control-label">防作弊匹配解冻时间</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="prevent_thaw" name="prevent_thaw" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="msg_score" class="col-sm-2 control-label">跑马灯显示分</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="msg_score" name="msg_score" autocomplete="off" />
+		</div>
+	</div>
+
+	<div class="clearfix form-actions">
+		<div class="col-sm-offset-2 col-sm-10">
+			<button type="submit" class="btn btn-info"><i class="ace-icon fa fa-check bigger-110"></i>提交</button>
+			<a href="{{urlfor "GameController.GameList"}}" class="btn btn-default"><i class="ace-icon fa fa-reply bigger-110"></i>返回</a>
+		</div>
+	</div>
+</form>

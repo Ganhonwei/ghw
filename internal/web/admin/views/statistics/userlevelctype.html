@@ -1,0 +1,896 @@
+<div class="row">
+	<div class="col-xs-12">
+	</div>
+</div>
+
+<div class="space-4"></div>
+
+<style type="text/css">
+	
+</style>
+
+<ul class="nav nav-tabs" id="list-tab" style="margin-bottom:12px !important">
+    <li {{if eq .typeId 0}}class="active" {{end}}>
+        <a href="{{urlfor "StatisticsController.UserLevelCtype" "typeId" 0}}">用户分层汇总表</a>
+    </li>
+    <li {{if eq .typeId 1}}class="active" {{end}}>
+        <a href="{{urlfor "StatisticsController.UserLevelCtype" "typeId" 1}}">用户转化效率表</a>
+    </li>
+    <li {{if eq .typeId 2}}class="active" {{end}}>
+        <a href="{{urlfor "StatisticsController.UserLevelCtype" "typeId" 2}}">分层漏斗图</a>
+    </li>
+    <li {{if eq .typeId 3}}class="active" {{end}}>
+        <a href="{{urlfor "StatisticsController.UserLevelCtype" "typeId" 3}}">分层曲线图</a>
+    </li>
+    <li {{if eq .typeId 4}}class="active" {{end}}>
+        <a href="{{urlfor "StatisticsController.UserLevelCtype" "typeId" 4}}">进量分布图</a>
+    </li>
+</ul>
+
+<div class="row">
+	<div class="col-xs-12">
+		<form class="form-inline" id="main-form" method="post" action="{{urlfor "StatisticsController.UserLevelCtype"}}">
+            <div style="margin-bottom: 10px;">
+                <div class="input-group table_filtrate">
+                    起始日期:
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    结束时间:
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+			<div class="input-group table_filtrate">
+				渠道类:
+				<div class="input-group input-group-sm" id="class_div">
+					<select id="selectClass" class="selectpicker" multiple data-live-search="true"
+						data-width="100px" style="width: 100px !important;" title="请选择渠道类">
+						{{range $k,$v := .packageClassAll}}
+						<option value="{{$v.Key}}" {{if eq $.classId $v.Key}}selected{{end}}>{{$v.Name}}
+						</option>
+						{{end}}
+					</select>
+					<input type="hidden" id="class_id" name="class_id" value="{{.classId}}"
+						class="form-control" autocomplete="off" />
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				渠道别名:
+				<div class="input-group input-group-sm" id="alias_div">
+					<select id="selectAlias" class="selectpicker" multiple data-live-search="true"
+						data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+						{{range $k,$v := .packageAliasList}}
+						<option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}
+						</option>
+						{{end}}
+					</select>
+					<input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}"
+						class="form-control" autocomplete="off" />
+				</div>
+			</div>
+			<input type="hidden" id="typeId" name="typeId" value="{{.typeId}}"
+				class="form-control" autocomplete="off" />
+			<input type="hidden" id="consume" name="consume" value=""
+				class="form-control" autocomplete="off" />
+			<!-- <div class="input-group input-group-sm">
+				<button id="clearInput" class="btn">清空</button>
+			</div> -->
+			<div class="input-group input-group-sm">
+				<button type="submit" class="btn">查询</button>
+			</div>
+            
+            {{if eq .typeId 3}}
+            <div style="margin-top:20px;">
+                <div class="input-group table_filtrate">
+                    <span style="display:inline-block;width:60px;text-align:right;">渠道类: </span>
+                    <div class="input-group" id="package_div">
+                        {{range $v := .classIds}}
+                        <input type="checkbox" group="c_channelClass" name="c_channelClass" 
+                            style="margin-left:10px"
+                            id="class_{{$v}}" value="{{$v}}" />
+                        <label style="margin-left:3px" for="class_{{$v}}">{{$v}}</label>
+						{{end}}
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:10px;">
+                <div class="input-group table_filtrate">
+                    <span style="display:inline-block;width:60px;text-align:right;">渠道别名: </span>
+                    <div class="input-group" id="package_div">
+                        {{range $v := .aliasIds}}
+                        <input type="checkbox" group="c_channelAlias" name="c_channelAlias" 
+                            style="margin-left:10px"
+                            id="alias_{{$v}}" value="{{$v}}" />
+                        <label style="margin-left:3px" for="alias_{{$v}}">{{$v}}</label>
+						{{end}}
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:10px;">
+                <div class="input-group table_filtrate">
+                    <span style="display:inline-block;width:60px;text-align:right;">日期: </span>
+                    <div class="input-group" id="package_div">
+                        {{range $v := .dates}}
+                        <input type="checkbox" group="c_dates" name="c_dates" 
+                            style="margin-left:10px"
+                            id="date_{{$v}}" value="{{$v}}" />
+                        <label style="margin-left:3px" for="date_{{$v}}">{{$v}}</label>
+						{{end}}
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:10px;">
+                <div class="input-group table_filtrate">
+                    <span style="display:inline-block;width:60px;text-align:right;">用户类型: </span>
+                    <div class="input-group" id="package_div">
+                        <input type="checkbox" group="c_ctype" name="c_ctype" 
+                            style="margin-left:10px"
+                            id="ctype_0" value="0"/>
+                        <label style="margin-left:3px" for="ctype_0">零充</label>
+                        <input type="checkbox" group="c_ctype" name="c_ctype" 
+                            style="margin-left:10px"
+                            id="ctype_2" value="2"/>
+                        <label style="margin-left:3px" for="ctype_2">普充</label>
+                        <input type="checkbox" group="c_ctype" name="c_ctype" 
+                            style="margin-left:10px"
+                            id="ctype_3" value="3"/>
+                        <label style="margin-left:3px" for="ctype_3">小R</label>
+                        <input type="checkbox" group="c_ctype" name="c_ctype" 
+                            style="margin-left:10px"
+                            id="ctype_4" value="4"/>
+                        <label style="margin-left:3px" for="ctype_4">中R</label>
+                        <input type="checkbox" group="c_ctype" name="c_ctype" 
+                            style="margin-left:10px"
+                            id="ctype_5" value="5"/>
+                        <label style="margin-left:3px" for="ctype_5">大R</label>
+                        <input type="checkbox" group="c_ctype" name="c_ctype" 
+                            style="margin-left:10px"
+                            id="ctype_6" value="6"/>
+                        <label style="margin-left:3px" for="ctype_6">超大R</label>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:10px;">
+                <div class="input-group table_filtrate">
+                    <span style="display:inline-block;width:60px;text-align:right;">图类型: </span>
+                    <div class="input-group" id="package_div">
+                        <input type="checkbox" group="c_stats" name="c_stats" 
+                            style="margin-left:10px"
+                            id="stats_0" value="0"/>
+                        <label style="margin-left:3px" for="stats_0">人数图</label>
+                        <input type="checkbox" group="c_stats" name="c_stats" 
+                            style="margin-left:10px"
+                            id="stats_1" value="1"/>
+                        <label style="margin-left:3px" for="stats_1">占比图</label>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+	</div>
+</div>
+</form>
+<div class="space-4"></div>
+
+<div class="table-panel">
+    {{if eq .typeId 0}}
+    <div table-wrap="330">
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+			<tr>
+                <th stickyL>日期</th>
+                <th>渠道类</th>
+                <th>渠道别名</th>
+                <th>注册人数</th>
+                <th>日活人数</th>
+                <th>注册：新手数</th>
+                <th>注册：平民数</th>
+                <th>注册：普r数</th>
+                <th>注册：小r数</th>
+                <th>注册：中r数</th>
+                <th>注册：大r数</th>
+                <th>注册：超大r数</th>
+                <th>注册：新手占比</th>
+                <th>注册：平民占比</th>
+                <th>注册：普r占比</th>
+                <th>注册：小r占比</th>
+                <th>注册：中r占比</th>
+                <th>注册：大r占比</th>
+                <th>注册：超大r占比</th>
+                <th style="background-color: #b7b7b7;"></th>
+                <th>日活：新手数</th>
+                <th>日活：平民数</th>
+                <th>日活：普r数</th>
+                <th>日活：小r数</th>
+                <th>日活：中r数</th>
+                <th>日活：大r数</th>
+                <th>日活：超大r数</th>
+                <th>日活：新手占比</th>
+                <th>日活：平民占比</th>
+                <th>日活：普r占比</th>
+                <th>日活：小r占比</th>
+                <th>日活：中r占比</th>
+                <th>日活：大r占比</th>
+                <th>日活：超大r占比</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{range $k, $v := .list}}
+			<tr>
+				<td>{{$v.Date}}</td> <!-- 日期 -->
+                <td>{{$v.ChannelClass}}</td> <!-- 渠道类 -->
+                <td>{{$v.Channel1}}</td> <!-- 渠道别名 -->
+                <td>{{$v.RegistCount}}</td> <!-- 注册人数 -->
+                <td>{{$v.ActiveCount}}</td> <!-- 日活人数 -->
+                <td>{{$v.Regist0Count}}</td> <!-- 注册：新手数 -->
+                <td>{{$v.Regist1Count}}</td> <!-- 注册：平民数 -->
+                <td>{{$v.Regist2Count}}</td> <!-- 注册：普r数 -->
+                <td>{{$v.Regist3Count}}</td> <!-- 注册：小r数 -->
+                <td>{{$v.Regist4Count}}</td> <!-- 注册：中r数 -->
+                <td>{{$v.Regist5Count}}</td> <!-- 注册：大r数 -->
+                <td>{{$v.Regist6Count}}</td> <!-- 注册：超大r数 -->
+                <td>{{$v.Regist0Rate}}</td> <!-- 注册：新手占比 -->
+                <td>{{$v.Regist1Rate}}</td> <!-- 注册：平民占比 -->
+                <td>{{$v.Regist2Rate}}</td> <!-- 注册：普r占比 -->
+                <td>{{$v.Regist3Rate}}</td> <!-- 注册：小r占比 -->
+                <td>{{$v.Regist4Rate}}</td> <!-- 注册：中r占比 -->
+                <td>{{$v.Regist5Rate}}</td> <!-- 注册：大r占比 -->
+                <td>{{$v.Regist6Rate}}</td> <!-- 注册：超大r占比 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.Active0Count}}</td> <!-- 日活：新手数 -->
+                <td>{{$v.Active1Count}}</td> <!-- 日活：平民数 -->
+                <td>{{$v.Active2Count}}</td> <!-- 日活：普r数 -->
+                <td>{{$v.Active3Count}}</td> <!-- 日活：小r数 -->
+                <td>{{$v.Active4Count}}</td> <!-- 日活：中r数 -->
+                <td>{{$v.Active5Count}}</td> <!-- 日活：大r数 -->
+                <td>{{$v.Active6Count}}</td> <!-- 日活：超大r数 -->
+                <td>{{$v.Active0Rate}}</td> <!-- 日活：新手占比 -->
+                <td>{{$v.Active1Rate}}</td> <!-- 日活：平民占比 -->
+                <td>{{$v.Active2Rate}}</td> <!-- 日活：普r占比 -->
+                <td>{{$v.Active3Rate}}</td> <!-- 日活：小r占比 -->
+                <td>{{$v.Active4Rate}}</td> <!-- 日活：中r占比 -->
+                <td>{{$v.Active5Rate}}</td> <!-- 日活：大r占比 -->
+                <td>{{$v.Active6Rate}}</td> <!-- 日活：超大r占比 -->
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+    </div>
+    {{else if eq .typeId 1}}
+    <div table-wrap="330">
+    <table class="table table-striped table-bordered table-hover">
+		<thead>
+			<tr>
+                <th stickyL>日期</th>
+                <th>渠道类</th>
+                <th>渠道别名</th>
+                <th>注册人数</th>
+                <th>日活人数</th>
+                <th>1日零充数</th>
+                <th>3日零充数</th>
+                <th>7日零充数</th>
+                <th>10日零充数</th>
+                <th>15日零充数</th>
+                <th>20日零充数</th>
+                <th>25日零充数</th>
+                <th>30日零充数</th>
+                <th style="background-color: #b7b7b7;"></th>
+                <th>1日普充数</th>
+                <th>3日普充数</th>
+                <th>7日普充数</th>
+                <th>10日普充数</th>
+                <th>15日普充数</th>
+                <th>20日普充数</th>
+                <th>25日普充数</th>
+                <th>30日普充数</th>
+                <th style="background-color: #b7b7b7;"></th>
+                <th>1日小r数</th>
+                <th>3日小r数</th>
+                <th>7日小r数</th>
+                <th>10日小r数</th>
+                <th>15日小r数</th>
+                <th>20日小r数</th>
+                <th>25日小r数</th>
+                <th>30日小r数</th>
+                <th style="background-color: #b7b7b7;"></th>
+                <th>1日中r数</th>
+                <th>3日中r数</th>
+                <th>7日中r数</th>
+                <th>10日中r数</th>
+                <th>15日中r数</th>
+                <th>20日中r数</th>
+                <th>25日中r数</th>
+                <th>30日中r数</th>
+                <th style="background-color: #b7b7b7;"></th>
+                <th>1日大r数</th>
+                <th>3日大r数</th>
+                <th>7日大r数</th>
+                <th>10日大r数</th>
+                <th>15日大r数</th>
+                <th>20日大r数</th>
+                <th>25日大r数</th>
+                <th>30日大r数</th>
+                <th style="background-color: #b7b7b7;"></th>
+                <th>1日超大r数</th>
+                <th>3日超大r数</th>
+                <th>7日超大r数</th>
+                <th>10日超大r数</th>
+                <th>15日超大r数</th>
+                <th>20日超大r数</th>
+                <th>25日超大r数</th>
+                <th>30日超大r数</th>
+                <th style="background-color: #b7b7b7;"></th>
+                <th>1日零充占比</th>
+                <th>3日零充占比</th>
+                <th>7日零充占比</th>
+                <th>10日零充占比</th>
+                <th>15日零充占比</th>
+                <th>20日零充占比</th>
+                <th>25日零充占比</th>
+                <th>30日零充占比</th>
+                <th style="background-color: #b7b7b7;"></th>
+                <th>1日普充占比</th>
+                <th>3日普充占比</th>
+                <th>7日普充占比</th>
+                <th>10日普充占比</th>
+                <th>15日普充占比</th>
+                <th>20日普充占比</th>
+                <th>25日普充占比</th>
+                <th>30日普充占比</th>
+                <th style="background-color: #b7b7b7;"></th>
+                <th>1日小r占比</th>
+                <th>3日小r占比</th>
+                <th>7日小r占比</th>
+                <th>10日小r占比</th>
+                <th>15日小r占比</th>
+                <th>20日小r占比</th>
+                <th>25日小r占比</th>
+                <th>30日小r占比</th>
+                <th style="background-color: #b7b7b7;"></th>
+                <th>1日中r占比</th>
+                <th>3日中r占比</th>
+                <th>7日中r占比</th>
+                <th>10日中r占比</th>
+                <th>15日中r占比</th>
+                <th>20日中r占比</th>
+                <th>25日中r占比</th>
+                <th>30日中r占比</th>
+                <th style="background-color: #b7b7b7;"></th>
+                <th>1日大r占比</th>
+                <th>3日大r占比</th>
+                <th>7日大r占比</th>
+                <th>10日大r占比</th>
+                <th>15日大r占比</th>
+                <th>20日大r占比</th>
+                <th>25日大r占比</th>
+                <th>30日大r占比</th>
+                <td style="background-color: #b7b7b7;min-width:100px;"></td>
+                <th>1日超大r占比</th>
+                <th>3日超大r占比</th>
+                <th>7日超大r占比</th>
+                <th>10日超大r占比</th>
+                <th>15日超大r占比</th>
+                <th>20日超大r占比</th>
+                <th>25日超大r占比</th>
+                <th>30日超大r占比</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{range $k, $v := .list}}
+			<tr>
+                <td>{{$v.SDate}}</td><!-- 日期 -->
+                <td>{{$v.ChannelClass}}</td><!-- 渠道类 -->
+                <td>{{$v.Channel1}}</td><!-- 渠道别名 -->
+                <td>{{$v.RegistCount}}</td><!-- 注册人数 -->
+                <td>{{$v.ActiveCount}}</td><!-- 日活人数 -->
+                <td>{{$v.C0_1}}</td><!-- 1日零充数 -->
+                <td>{{$v.C0_3}}</td><!-- 3日零充数 -->
+                <td>{{$v.C0_7}}</td><!-- 7日零充数 -->
+                <td>{{$v.C0_10}}</td><!-- 10日零充数 -->
+                <td>{{$v.C0_15}}</td><!-- 15日零充数 -->
+                <td>{{$v.C0_20}}</td><!-- 20日零充数 -->
+                <td>{{$v.C0_25}}</td><!-- 25日零充数 -->
+                <td>{{$v.C0_30}}</td><!-- 30日零充数 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.C2_1}}</td><!-- 1日普充数 -->
+                <td>{{$v.C2_3}}</td><!-- 3日普充数 -->
+                <td>{{$v.C2_7}}</td><!-- 7日普充数 -->
+                <td>{{$v.C2_10}}</td><!-- 10日普充数 -->
+                <td>{{$v.C2_15}}</td><!-- 15日普充数 -->
+                <td>{{$v.C2_20}}</td><!-- 20日普充数 -->
+                <td>{{$v.C2_25}}</td><!-- 25日普充数 -->
+                <td>{{$v.C2_30}}</td><!-- 30日普充数 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.C3_1}}</td><!-- 1日小r数 -->
+                <td>{{$v.C3_3}}</td><!-- 3日小r数 -->
+                <td>{{$v.C3_7}}</td><!-- 7日小r数 -->
+                <td>{{$v.C3_10}}</td><!-- 10日小r数 -->
+                <td>{{$v.C3_15}}</td><!-- 15日小r数 -->
+                <td>{{$v.C3_20}}</td><!-- 20日小r数 -->
+                <td>{{$v.C3_25}}</td><!-- 25日小r数 -->
+                <td>{{$v.C3_30}}</td><!-- 30日小r数 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.C4_1}}</td><!-- 1日中r数 -->
+                <td>{{$v.C4_3}}</td><!-- 3日中r数 -->
+                <td>{{$v.C4_7}}</td><!-- 7日中r数 -->
+                <td>{{$v.C4_10}}</td><!-- 10日中r数 -->
+                <td>{{$v.C4_15}}</td><!-- 15日中r数 -->
+                <td>{{$v.C4_20}}</td><!-- 20日中r数 -->
+                <td>{{$v.C4_25}}</td><!-- 25日中r数 -->
+                <td>{{$v.C4_30}}</td><!-- 30日中r数 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.C5_1}}</td><!-- 1日大r数 -->
+                <td>{{$v.C5_3}}</td><!-- 3日大r数 -->
+                <td>{{$v.C5_7}}</td><!-- 7日大r数 -->
+                <td>{{$v.C5_10}}</td><!-- 10日大r数 -->
+                <td>{{$v.C5_15}}</td><!-- 15日大r数 -->
+                <td>{{$v.C5_20}}</td><!-- 20日大r数 -->
+                <td>{{$v.C5_25}}</td><!-- 25日大r数 -->
+                <td>{{$v.C5_30}}</td><!-- 30日大r数 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.C6_1}}</td><!-- 1日超大r数 -->
+                <td>{{$v.C6_3}}</td><!-- 3日超大r数 -->
+                <td>{{$v.C6_7}}</td><!-- 7日超大r数 -->
+                <td>{{$v.C6_10}}</td><!-- 10日超大r数 -->
+                <td>{{$v.C6_15}}</td><!-- 15日超大r数 -->
+                <td>{{$v.C6_20}}</td><!-- 20日超大r数 -->
+                <td>{{$v.C6_25}}</td><!-- 25日超大r数 -->
+                <td>{{$v.C6_30}}</td><!-- 30日超大r数 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.C0Rate_1}}</td><!-- 1日零充占比 -->
+                <td>{{$v.C0Rate_3}}</td><!-- 3日零充占比 -->
+                <td>{{$v.C0Rate_7}}</td><!-- 7日零充占比 -->
+                <td>{{$v.C0Rate_10}}</td><!-- 10日零充占比 -->
+                <td>{{$v.C0Rate_15}}</td><!-- 15日零充占比 -->
+                <td>{{$v.C0Rate_20}}</td><!-- 20日零充占比 -->
+                <td>{{$v.C0Rate_25}}</td><!-- 25日零充占比 -->
+                <td>{{$v.C0Rate_30}}</td><!-- 30日零充占比 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.C2Rate_1}}</td><!-- 1日普充占比 -->
+                <td>{{$v.C2Rate_3}}</td><!-- 3日普充占比 -->
+                <td>{{$v.C2Rate_7}}</td><!-- 7日普充占比 -->
+                <td>{{$v.C2Rate_10}}</td><!-- 10日普充占比 -->
+                <td>{{$v.C2Rate_15}}</td><!-- 15日普充占比 -->
+                <td>{{$v.C2Rate_20}}</td><!-- 20日普充占比 -->
+                <td>{{$v.C2Rate_25}}</td><!-- 25日普充占比 -->
+                <td>{{$v.C2Rate_30}}</td><!-- 30日普充占比 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.C3Rate_1}}</td><!-- 1日小r占比 -->
+                <td>{{$v.C3Rate_3}}</td><!-- 3日小r占比 -->
+                <td>{{$v.C3Rate_7}}</td><!-- 7日小r占比 -->
+                <td>{{$v.C3Rate_10}}</td><!-- 10日小r占比 -->
+                <td>{{$v.C3Rate_15}}</td><!-- 15日小r占比 -->
+                <td>{{$v.C3Rate_20}}</td><!-- 20日小r占比 -->
+                <td>{{$v.C3Rate_25}}</td><!-- 25日小r占比 -->
+                <td>{{$v.C3Rate_30}}</td><!-- 30日小r占比 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.C4Rate_1}}</td><!-- 1日中r占比 -->
+                <td>{{$v.C4Rate_3}}</td><!-- 3日中r占比 -->
+                <td>{{$v.C4Rate_7}}</td><!-- 7日中r占比 -->
+                <td>{{$v.C4Rate_10}}</td><!-- 10日中r占比 -->
+                <td>{{$v.C4Rate_15}}</td><!-- 15日中r占比 -->
+                <td>{{$v.C4Rate_20}}</td><!-- 20日中r占比 -->
+                <td>{{$v.C4Rate_25}}</td><!-- 25日中r占比 -->
+                <td>{{$v.C4Rate_30}}</td><!-- 30日中r占比 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.C5Rate_1}}</td><!-- 1日大r占比 -->
+                <td>{{$v.C5Rate_3}}</td><!-- 3日大r占比 -->
+                <td>{{$v.C5Rate_7}}</td><!-- 7日大r占比 -->
+                <td>{{$v.C5Rate_10}}</td><!-- 10日大r占比 -->
+                <td>{{$v.C5Rate_15}}</td><!-- 15日大r占比 -->
+                <td>{{$v.C5Rate_20}}</td><!-- 20日大r占比 -->
+                <td>{{$v.C5Rate_25}}</td><!-- 25日大r占比 -->
+                <td>{{$v.C5Rate_30}}</td><!-- 30日大r占比 -->
+                <td style="background-color: #b7b7b7;"></td>
+                <td>{{$v.C6Rate_1}}</td><!-- 1日超大r占比 -->
+                <td>{{$v.C6Rate_3}}</td><!-- 3日超大r占比 -->
+                <td>{{$v.C6Rate_7}}</td><!-- 7日超大r占比 -->
+                <td>{{$v.C6Rate_10}}</td><!-- 10日超大r占比 -->
+                <td>{{$v.C6Rate_15}}</td><!-- 15日超大r占比 -->
+                <td>{{$v.C6Rate_20}}</td><!-- 20日超大r占比 -->
+                <td>{{$v.C6Rate_25}}</td><!-- 25日超大r占比 -->
+                <td>{{$v.C6Rate_30}}</td><!-- 30日超大r占比 -->
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+    </div>
+    {{else if eq .typeId 2}}
+    <div>
+        {{range $k, $v := .list}}
+        <div class="row screen" style="width: 1200px;margin-left: 20px;overflow-x: scroll;">
+            <div style="font-size: 16px;margin-top:30px;font-weight: bold;">
+                <span>渠道：{{$v.Channel1}}</span>
+                <span style="margin-left:100px;">所属渠道类：{{$v.ChannelClass}}</span>
+            </div>
+            <div style="display: flex;">
+            {{range $s := $v.Stats}}
+            <div style="width:240px;margin-top:10px;padding-bottom: 10px;">
+                <div style="padding-left: 30px;font-size: 14px; margin-bottom: 5px;">{{$s.SDate}}</div>
+                <div id="stats-funnel-{{$v.Channel1}}-{{$s.SDate}}" style="width:240px;height:240px;"></div>
+            </div>
+            <script type="text/javascript">
+                (function() {
+                    var myChart = echarts.init(document.getElementById('stats-funnel-{{$v.Channel1}}-{{$s.SDate}}'));
+                    var series = [];
+                    // series.push();
+                    myChart.setOption({
+                        tooltip: {
+                            trigger: 'item',
+                            formatter: '{a} <br/>{b} : {c}%'
+                        },
+                        series: [{
+                            name: {{$s.SDate}},
+                            type: 'funnel',
+                            width: '50%',
+                            height: '100%',
+                            left: '0%',
+                            top: '0%',
+                            data: [
+                                { value: {{$s.C0Rate}} || "0", name: '未付费 {{$s.C0}}人{{if ne $s.C0 0}}:{{$s.C0Rate}}%{{end}}' },
+                                { value: {{$s.C2Rate}} || "0", name: '普充 {{$s.C2}}人{{if ne $s.C2 0}}:{{$s.C2Rate}}%{{end}}' },
+                                { value: {{$s.C3Rate}} || "0", name: '小R {{$s.C3}}人{{if ne $s.C3 0}}:{{$s.C3Rate}}%{{end}}' },
+                                { value: {{$s.C4Rate}} || "0", name: '中R {{$s.C4}}人{{if ne $s.C4 0}}:{{$s.C4Rate}}%{{end}}' },
+                                { value: {{$s.C5Rate}} || "0", name: '大R {{$s.C5}}人{{if ne $s.C5 0}}:{{$s.C5Rate}}%{{end}}' },
+                                { value: {{$s.C6Rate}} || "0", name: '超大R {{$s.C6}}人{{if ne $s.C6 0}}:{{$s.C6Rate}}%{{end}}' },
+                            ]
+                        }],
+                    });
+                })();
+                // myChart.setOption({
+                //     tooltip: {
+                //         trigger: 'item',
+                //         formatter: '{a} <br/>{b} : {c}%'
+                //     },
+                //     series: [
+                //         {
+                //             name: '2024-09-14',
+                //             type: 'funnel',
+                //             width: '80%',
+                //             height: '100%',
+                //             left: '0%',
+                //             top: '0%',
+                //             data: [
+                //                 { value: 60, name: 'Visit' },
+                //                 { value: 30, name: 'Inquiry' },
+                //                 { value: 10, name: 'Order' },
+                //                 { value: 80, name: 'Click' },
+                //                 { value: 100, name: 'Show' },
+                //                 { value: 5.51, name: '超大R' }
+                //             ]
+                //         }
+                //     ]
+                // });
+            </script>
+            {{end}}
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{else if eq .typeId 3}}
+    <div class="row" style="width: 1000px;margin-left: 20px;">
+        <div class="col-xs-12 center">
+            <canvas id="info"></canvas>
+            <script src="../../assets/js/Chart.js"></script>
+            <script>
+                var ctx = document.getElementById('info').getContext('2d');
+                var lables = [];
+                var datasets = [];
+                var countStats = {{.countStats}} || {};
+                var rateStats = {{.rateStats}} || {};
+                for (var i = 1; i <= 30; i++) {
+                    lables.push(i+"日");
+                }
+                var i = 0;
+                var len = Object.keys(countStats).length;
+                var part = Math.min(30, parseInt(255 / Object.keys(countStats).length));
+                for (var key in countStats) {
+                    var r = parseInt(255 - 255/len*i);
+                    var g = parseInt(255 / len * i);
+                    var b = parseInt(Math.abs(r - g + 255/len));
+                    var color = `rgba(${r}, ${g}, ${b}, 1)`;
+                    // var color = `rgba(${Math.max(0,255-i*part)}, ${Math.min(255,0+i*part)}, ${Math.max(0,255-i*part)}, 1)`;
+                    console.log(part, color);
+                    datasets.push({
+                        label: key,
+                        data: countStats[key],
+                        fill: false,
+                        borderColor: color,
+                        borderWidth: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                        yAxisID: 'y',
+                    });
+                    i++;
+                }
+                i = 0;
+                len = Object.keys(rateStats).length;
+                part = Math.min(30, parseInt(255 / Object.keys(rateStats).length ));
+                for (var key in rateStats) {
+                    var r = parseInt(255 / len * i);
+                    var g = parseInt(255 - 255/len*i);
+                    var b = parseInt(Math.abs(r - g + 255/len));
+                    var color = `rgba(${r}, ${g}, ${b}, 1)`;
+                    // var color = `rgba(${parseInt(255 / len * i)}, ${parseInt(255 - 255/len*i)}, ${parseInt(Math.abs(r - g + 255/len))}, 1)`;
+                    datasets.push({
+                        label: key,
+                        data: rateStats[key],
+                        fill: false,
+                        borderColor: color,
+                        borderWidth: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                        yAxisID: 'y1',
+                    });
+                    i++;
+                }
+                var chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: lables,
+                        datasets: datasets,
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        scales: {
+                            yAxes: [{
+                                id: 'y',
+                                type: 'linear',
+                                position: 'left',
+                                ticks: {
+                                    callback: function(value, index, values) {
+                                        if (index == 0) {
+                                            return "(人数) " + value;
+                                        }
+                                        return value;
+                                    }
+                                }
+                            }, {
+                                id: 'y1',
+                                type: 'linear',
+                                position: 'right',
+                                ticks: {
+                                    callback: function(value, index, values) {
+                                        if (index == 0) {
+                                            return value.toFixed(2) + "% (占比)";
+                                        }
+                                        return value.toFixed(2) + "%";
+                                    }
+                                }
+                            }],
+                        },
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        show: true
+                    }
+                });
+            </script>
+        </div>
+    </div>
+    {{else if eq .typeId 4}}
+    <div>进量分布图</div>
+    <div style="display: flex;flex-wrap: nowrap; overflow: scroll;">
+        {{range $k,$v := .list}}
+        <div id="user-reg-stats-{{$v.SDate}}" style="min-width:500px; height:480px;"></div>
+        {{end}}
+    </div>
+    <script>
+        var userRegData = {{.list}} || [];
+        console.log(userRegData);
+        for (var i = 0; i < userRegData.length; i++) {
+            var userReg = userRegData[i];
+            console.log(userReg, document.getElementById('user-reg-stats-' + userReg.sdate));
+            var datas = [];
+            userReg.channels.forEach(function(channel) {
+                datas.push({
+                    value: channel.regUsers,
+                    name: channel.channel1 + "(" + channel.regUsers + ")"
+                });
+            });
+            var option = {
+                title: {
+                    text: userReg.sdate,
+                    // subtext: '汇总：' + userReg.regUsers,
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left'
+                },
+                series: [
+                    {
+                        name: '渠道',
+                        type: 'pie',
+                        radius: '50%',
+                        data: datas,
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            };
+            var chart = echarts.init(document.getElementById('user-reg-stats-' + userReg.sdate));
+            chart.setOption(option);
+        }
+    </script>
+    {{end}}
+</div>
+</div>
+</div>
+<script>
+	$(function () {
+        $("#selectPackage").on("change", function () {
+            var selectVal = $("#selectPackage").val()
+            console.log(selectVal)
+            $("#package_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change", function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias：" + selectVal)
+            $("#alias_id").val(selectVal)
+        });
+        // 渠道类
+        $("#selectClass").on("change", function () {
+            var selectVal = $("#selectClass").val()
+            console.log("selectClass" + selectVal)
+            $("#class_id").val(selectVal)
+        });
+
+        var packVal = $("#package_id").val()
+        if (packVal) {
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null) {
+                $("#selectPackage").val(arr)
+                $.each(arr, function (index, value) {
+                    if (value == "0") {
+                        arr[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr[index] = "其他";
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+        // 渠道别名
+        var aliasVal = $("#alias_id").val()
+        if (aliasVal) {
+            var arr1 = aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr1:" + arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+        // 渠道类
+        var classVal = $("#class_id").val()
+        if (classVal) {
+            var arr1 = classVal.split(",");
+            $('#selectClass').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr2:" + arr1)
+                $("#selectClass").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#class_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectClass').selectpicker({ width: 200 });
+        }
+
+		$("#clearInput").on("click", function(e) {
+			// 清空表单
+            e.preventDefault();
+            $(".consume-in").val("0.00")
+            $("#start_date").attr("value", "")
+            $("#end_date").attr("value", "")
+            $("#exchangeRate").attr("value", "")
+		})
+		
+        var submited = false;
+        $("#main-form").on("submit", function(e) {
+            if (!submited) {
+                e.preventDefault();
+            }
+            submited = true;
+
+            // 手动提交表单
+            // $("#utype_id option[value=3]").attr("selected", "");
+            // var range1 = $("#srange1").val();
+            // $("#range1").attr("value", range1);
+			var consume = {}
+			$(".consume-in").each(function(index, ele) {
+				ele = $(ele)
+				console.log(ele.attr("sdate"), ele.val())
+				consume[ele.attr("sdate")] = ele.val();
+			})
+			$("#consume").attr("value", JSON.stringify(consume));
+
+            $("#main-form").off("submit");
+            $("#main-form").submit();
+        });
+
+        $(".paste").on("click", async function(e) {
+            if (!window.navigator.clipboard) {
+                alert("请打开浏览器剪切板读取权限")
+                return
+            }
+            try {
+                var text = await window.navigator.clipboard.readText();
+                var num = parseInt($(e.target).attr("num"));
+                var lines = text.split(/[\r\n\t ]/);
+                lines = lines.filter(line => !!line);
+                for (let i = 0; i < lines.length; i++) {
+                    $(`#consume-in-${num+i}`).attr("value", lines[i]);
+                    $(`#consume-in-${num+i}`).val(lines[i]);
+                }
+            }catch(err) {
+                alert("读取剪切板失败" + err)
+            }
+        })
+
+        {{if eq .typeId 3}}
+        // 多选框
+        for (var item of {{.c_channelClass}} || []) {
+            $(`#class_${item}`).attr("checked", "checked");
+        }
+        for (var item of {{.c_channelAlias}} || []) {
+            $(`#alias_${item}`).attr("checked", "checked");
+        }
+        for (var item of {{.c_dates}} || []) {
+            $(`#date_${item}`).attr("checked", "checked");
+        }
+        for (var item of {{.c_ctype}} || []) {
+            $(`#ctype_${item}`).attr("checked", "checked");
+        }
+        for (var item of {{.c_stats}} || []) {
+            $(`#stats_${item}`).attr("checked", "checked");
+        }
+        {{end}}
+    });
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.typeId}}) });
+</script>

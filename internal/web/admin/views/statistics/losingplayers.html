@@ -1,0 +1,130 @@
+<div class="row">
+	<div class="col-xs-12">
+	</div>
+</div>
+
+<div class="space-4"></div>
+
+<div class="row">
+	<div class="col-xs-12">
+		<form class="form-inline" method="post" action="{{urlfor "StatisticsController.LosingPlayers"}}">
+			<div class="input-group table_filtrate">
+				注册日期:
+				<div class="input-group input-group-sm">
+					<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+				至
+				<div class="input-group input-group-sm">
+					<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				下线未登录天数:
+				<div class="input-group input-group-sm">
+					<input type="number" id="notloginDays" name="notloginDays" value="{{.notloginDays}}" class="form-control"
+						placeholder="下线未登录天数" autocomplete="off"/>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				当前赢分:
+				<div class="input-group input-group-sm">
+					<input type="number" id="winScore1" name="winScore1" value="{{.winScore1}}" class="form-control"
+						placeholder="当前赢分1" autocomplete="off"/>
+				</div>
+                至
+				<div class="input-group input-group-sm">
+					<input type="number" id="winScore2" name="winScore2" value="{{.winScore2}}" class="form-control"
+						placeholder="当前赢分2" autocomplete="off"/>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				充值金额:
+				<div class="input-group input-group-sm">
+					<input type="number" id="recharge1" name="recharge1" value="{{.recharge1}}" class="form-control"
+						placeholder="充值金额1" autocomplete="off"/>
+				</div>
+                至
+				<div class="input-group input-group-sm">
+					<input type="number" id="recharge1" name="recharge2" value="{{.recharge2}}" class="form-control"
+						placeholder="充值金额2" autocomplete="off"/>
+				</div>
+			</div>
+			<div class="input-group input-group-sm">
+				<button type="submit" class="btn">查询</button>
+				<!-- <a href="{{urlfor "PlayerController.ExportUser"}}"  class="btn" style="margin-left: 5px;">导出</a> -->
+			</div>
+	</div>
+</div>
+</form>
+<div class="space-4"></div>
+
+<div class="table-panel" table-wrap="300">
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+			<tr>
+				<th stickyL>用户ID</th>
+				<th class="table-time" style="min-width:150px;">注册时间</th>
+				<th class="table-time" style="min-width:150px;">最后登录时间</th>
+				<th>彩金</th>
+				<th>充值金额</th>
+				<th>提现金额</th>
+				<th>当前赢分</th>
+				<th>充值次数</th>
+				<th>单均价</th>
+				<th>游戏局数</th>
+				<th>游戏时长</th>
+				<th>局数最多游戏1</th>
+				<th>局数最多游戏2</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{range $k, $v := .list}}
+			<tr>
+				<td>
+					<a href="{{urlfor "PlayerController.List" "userid" $v.userid}}">{{$v.userid}}</a>
+				</td>
+				<td>{{$v.ctime}}</td>
+				<td>{{$v.loginTime}}</td>
+				<td>{{$v.diamond}}</td>
+				<td>{{$v.money}}</td>
+				<td>{{$v.cashOut}}</td>
+				<td>{{$v.winScore}}</td>
+				<td>{{$v.rechargeTimes}}</td>
+				<td>{{$v.avgRecharge}}</td>
+				<td>{{$v.gameTimes}}</td>
+				<td>{{$v.playTime}}</td>
+				<td>{{$v.gameTimesMax1}}</td>
+				<td>{{$v.gameTimesMax2}}</td>
+			</tr>
+			{{end}}
+			{{if eq .count 0}}
+					<tr>
+						<td colspan="20">暂无记录...</td>
+					</tr>
+				{{end}}
+		</tbody>
+	</table>
+</div>
+<div class="row">
+	<div class="row-page"> 
+	{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+</div>
+</div>
+<script>
+	// $(function () {
+    // });
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

@@ -1,0 +1,35 @@
+version: '3'
+
+services:
+  prometheus:
+    container_name: prometheus
+    restart: always
+    image: bitnami/prometheus:2.55.1
+    network_mode : host
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      #- "./data/prometheus:/opt/bitnami/prometheus/data"
+      - "./prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml"
+      - "./node_alert_rules.yml:/opt/bitnami/prometheus/conf/node_alert_rules.yml"
+    command: ["--config.file=/opt/bitnami/prometheus/conf/prometheus.yml", "--web.listen-address=:9090"]
+  # grafana:
+  #   container_name: grafana
+  #   restart: always
+  #   image: grafana/grafana:11.4.0
+  #   network_mode : host
+  #   volumes:
+  #     - "/etc/localtime:/etc/localtime:ro"
+      # - "./data/grafana:/var/lib/grafana"
+  alertmanager:
+    container_name: alertmanager
+    restart: always
+    image: bitnami/alertmanager:0.27.0
+    network_mode : host
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "./alertmanager.yml:/opt/bitnami/alertmanager/conf/config.yml"
+  alertmanager_tg_bot:
+    container_name: alertmanager_tg_bot
+    restart: always
+    image: alertmanager_tg_bot:1
+    network_mode : host

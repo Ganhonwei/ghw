@@ -1,0 +1,549 @@
+<div id="app">
+ 
+  <div class="args-wrap">
+    <el-form ref="args" :model="args" label-width="auto" :inline="true">
+      <el-form-item label="查询:" style="margin-right:0">
+        <el-input size="small" v-model="args.id"></el-input>
+      </el-form-item>
+      <el-form-item label="">
+        <el-select size="small" v-model="args.idType" placeholder="查询ID" style="width:120px">
+          <el-option label="用户ID" :value="1"></el-option>
+          <el-option label="订单号" :value="2"></el-option>
+          <el-option label="第三方订单号" :value="3"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="支付通道:">
+        <el-select size="small" v-model="args.payChannels" placeholder="支付通道" multiple collapse-tags clearable  style="width:200px" class="short-tag">
+          <el-option v-for="c in channels" :key="c.id" :label="c.name" :value="c.id"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="订单生成时间:">
+        <el-date-picker
+          v-model="args.ctimeRange"
+          value-format="yyyy-MM-dd"
+          size="small"
+          style="width:220px"
+          type="daterange"
+          range-separator=""
+          start-placeholder="开始日期"
+          end-placeholder="结束日期">
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="订单完成时间:">
+        <el-date-picker
+          v-model="args.payTimeRange"
+          value-format="yyyy-MM-dd"
+          size="small"
+          style="width:220px"
+          type="daterange"
+          range-separator=""
+          start-placeholder="开始日期"
+          end-placeholder="结束日期">
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="订单状态:">
+        <el-select size="small" v-model="args.orderStatus" placeholder="订单状态" style="width:110px">
+          <el-option label="全部" :value="0"></el-option>
+          <el-option label="待支付" :value="1"></el-option>
+          <el-option label="支付失败" :value="2"></el-option>
+          <el-option label="发货失败" :value="3"></el-option>
+          <el-option label="已支付" :value="4"></el-option>
+          <el-option label="下单失败" :value="5"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="是否有UTR:">
+        <el-select size="small" v-model="args.isUTR" placeholder="是否有UTR" style="width:80px">
+          <el-option label="全部" :value="0"></el-option>
+          <el-option label="有" :value="1"></el-option>
+          <el-option label="无" :value="2"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="是否有标记:">
+        <el-select size="small" v-model="args.isTag" placeholder="是否有标记" style="width:80px">
+          <el-option label="全部" :value="0"></el-option>
+          <el-option label="有" :value="1"></el-option>
+          <el-option label="无" :value="2"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="是否首充:">
+        <el-select size="small" v-model="args.isFirstPay" placeholder="是否首充" style="width:80px">
+          <el-option label="全部" :value="0"></el-option>
+          <el-option label="有" :value="1"></el-option>
+          <el-option label="无" :value="2"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="渠道:">
+        <el-select size="small" v-model="args.channelIds" placeholder="渠道" multiple collapse-tags clearable style="width:200px" class="short-tag">
+          <el-option v-for="c in packages" :key="c.key" :label="c.name" :value="c.key"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="渠道类:">
+        <el-select size="small" v-model="args.channelClasses" placeholder="渠道类" multiple collapse-tags clearable style="width:160px" class="short-tag">
+          <el-option v-for="c in packageClasses" :key="c.key" :label="c.name" :value="c.key"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-button size="small" type="primary" :loading="loading" @click="onArgsSubmit">查询</el-button>
+        <el-button size="small" style="margin-left:0" @click="onArgsClean">重置</el-button>
+        <el-button v-if="isExport" size="small" style="margin-left:0" @click="handleExport">导出</el-button>
+      </el-form-item>
+    </el-form>
+  </div>
+  
+  <div style="margin-bottom: 10px;" class="statistic-wrap">
+    <el-row :gutter="20">
+      <el-col :span="3">
+        <el-statistic :value="stats.total" title="总订单数" group-separator=","></el-statistic>
+      </el-col>
+      <el-col :span="3">
+        <el-statistic :value="stats.payCount" title="已支付订单数" group-separator=","></el-statistic>
+      </el-col>
+      <el-col :span="3">
+        <el-statistic title="自动单数成功率">
+          <template slot="formatter">
+            #{stats.autoPayRate}
+          </template>
+        </el-statistic>
+      </el-col>
+      <el-col :span="3">
+        <el-statistic :value="stats.totalAmount" title="总订单金额" group-separator="," :precision="2"></el-statistic>
+      </el-col>
+      <el-col :span="3">
+        <el-statistic :value="stats.payAmount" title="成功金额" group-separator="," :precision="2"></el-statistic>
+      </el-col>
+      <el-col :span="3">
+        <el-statistic :value="stats.amountAvg" title="拉单均价" group-separator="," :precision="2"></el-statistic>
+      </el-col>
+      <el-col :span="3">
+        <el-statistic :value="stats.autoPayAmountAvg" title="自动成功单均价" group-separator="," :precision="2"></el-statistic>
+      </el-col>
+    </el-row>
+  </div>
+  <div class="table-wrap">
+    <!-- header-contextmenu	 -->
+      <el-table :data="datas" row-key="orderid" size="small" border v-loading="loading" :max-height="layout.tableHeight" class="go-table" 
+        @sort-change="onTableSort" :row-class-name="tableRowClassName">
+        <el-table-column v-for="c in columns" v-if="!c.hidden" :key="c.prop" :prop="c.prop" :label="c.label" :fixed="c.fixed" :sortable="c.sortable" :sort-orders="c.sortOrders" :min-width="c.minWidth">
+          <template slot-scope="scope">
+            <template v-if="c.prop === 'operate'">
+              <el-button v-if="scope.row.orderStatus === 1" size="mini" type="warning" 
+                :loading="repair.orderid === scope.row.orderid && repair.loading"
+                @click="handleRepair(scope.row.orderid)">补单上分</el-button>
+              <el-tooltip v-else-if="scope.row.fRepair" effect="dark" :content="scope.row.fRepair" placement="left">
+                <p :title="scope.row.fRepair" class="text-ellipsis">#{scope.row.fRepair}</p>
+              </el-tooltip>
+            </template>
+            <template v-else-if="c.prop === 'user_id'">
+              <a :href="`admin/player/goldlist?userid=${scope.row.user_id}`" target="_blank">#{scope.row.user_id}</a>
+            </template>
+            <template v-else-if="c.prop === 'fOrderStatus'">
+              <span v-if="scope.row.orderStatus === 1" class="text-success bigger-110 orange">#{scope.row[c.prop]}</span>
+              <span v-else-if="scope.row.orderStatus === 2" class="text-warning bigger-110 red">#{scope.row[c.prop]}</span>
+              <span v-else-if="scope.row.orderStatus === 3" class="text-warning bigger-110 red">#{scope.row[c.prop]}</span>
+              <span v-else-if="scope.row.orderStatus === 4" class="text-success bigger-110 green">#{scope.row[c.prop]}</span>
+              <span v-else-if="scope.row.orderStatus === 5" class="text-success bigger-110 red">#{scope.row[c.prop]}</span>
+              <span v-else class="text-success bigger-110 red">#{scope.row[c.prop]}</span>
+            </template>
+            <template v-else-if="c.prop === 'fUtrs'">
+              <el-tooltip v-for="utr in scope.row.fUtrs" effect="dark" :content="utr" placement="left">
+                <p :title="utr" class="text-ellipsis">#{utr}</p>
+              </el-tooltip>
+            </template>
+            <template v-else-if="c.prop === 'errorMsgs'">
+              <div v-for="(msg,index) in scope.row.errorMsgs" style="display:flex;flex-wrap:nowrap;justify-content:space-around;">
+                <el-tooltip effect="dark" :content="msg" placement="left">
+                  <span class="text-ellipsis">#{msg}</span>
+                </el-tooltip>
+                <a size="mini" style="cursor:pointer;text-align:right;width:40px;display:inline-block;" @click="handleTagDel(scope.row.orderid, index, msg)">删除</a>
+              </div>
+              <el-button size="mini" @click="handleTag(scope.row.orderid)">标记</el-button>
+            </template>
+            <template v-else>#{scope.row[c.prop]}</template>
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      
+      <el-dialog title="添加标记信息" :visible.sync="tag.dialogVisible">
+        <el-form :model="tag" label-width="auto">
+          <el-form-item label="标记内容" :required="true">
+            <el-input type="textarea" v-model="tag.msg" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="常用标记" >
+            <el-select size="small" v-model="tag.option" placeholder="" @change="v => tag.msg = v">
+              <el-option label="通道查实未收到" value="通道查实未收到"></el-option>
+              <el-option label="通道查实无此单" value="通道查实无此单"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button size="small" @click="tag.dialogVisible = false">取 消</el-button>
+          <el-button size="small" type="primary" :loading="tag.dialogLoading" @click="handleTagSubmit">确 定</el-button>
+        </div>
+      </el-dialog>
+  </div>
+  <div class="paging-wrap">
+    <el-pagination
+      background
+      layout="total, sizes, prev, pager, next, jumper"
+      :current-page="args.page"
+      :page-sizes="layout.pageSizes"
+      :page-size="args.pageSize"
+      :total="total"
+      :hide-on-single-page="true"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange">
+    </el-pagination>
+  </div>
+</div>
+
+<script>
+  // 创建 Vue 实例
+  new Vue({
+    delimiters: ['#{', '}'],
+    el: '#app',
+    data() {
+      return {
+        layout: {
+          tableHeight: 600,
+          pageSizes: [20, 40, 50, 100, 200],
+        },
+        args: {
+          page: 1,
+          pageSize: 20,
+          sortBy: 'ctime',
+          asc: 0,
+          date: '',
+          id: '',
+          payChannels: null,
+          idType: 1,
+          ctimeRange: null,
+          payTimeRange: null,
+          orderStatus: 0,
+          isUTR: 0,
+          isTag: 0,
+          isFirstPay: 0,
+          channelIds: null,
+          channelClasses: null,
+        },
+        loading: false,
+        total: 0,
+        datas: [],
+        channels: [],
+        packageClasses: [],
+        packages: [],
+        today: '',
+        isExport: false,
+        columns: [
+          {prop: "user_id", label: "UID", sortable: false, fixed: "left"},
+          {prop: "nickName", label: "昵称", fixed: false, sortable: false, minWidth: '126px'},
+          {prop: "fPackageAlias", label: "渠道别名", fixed: false, sortable: false, minWidth: '100px'},
+          {prop: "fPackageClass", label: "渠道类", fixed: false, sortable: false, minWidth: '100px'},
+          {prop: "fChannel", label: "支付通道", fixed: false, sortable: false, minWidth: '130px'},
+          {prop: "fChannelType", label: "通道类型", fixed: false, sortable: false, minWidth: '100px'},
+          {prop: "orderid", label: "订单号", fixed: false, sortable: false, minWidth: '160px'},
+          {prop: "outTradeNo", label: "第三方订单号", fixed: false, sortable: false, minWidth: '160px'},
+          {prop: "fCtime", label: "订单生成时间", fixed: false, sortable: 'custom', sortOrders: ['ascending', 'descending'], minWidth: '150px'},
+          {prop: "fPayTime", label: "完成时间", fixed: false, sortable: false, minWidth: '150px'},
+          {prop: "ShopName", label: "商品名称", fixed: false, sortable: false, minWidth: '180px'},
+          {prop: "fShopType", label: "商品类型", fixed: false, sortable: false, minWidth: '120px'},
+          {prop: "fFirstPay", label: "是否首充", fixed: false, sortable: 'custom', minWidth: '120px'},
+          {prop: "fAmount", label: "充值金额", fixed: false, sortable: 'custom', minWidth: '120px'},
+          {prop: "fRealAmount", label: "实付金额", fixed: false, sortable: false, minWidth: '120px'},
+          {prop: "fCash", label: "到账cash", fixed: false, sortable: false, minWidth: '100px'},
+          {prop: "fGiveCash", label: "赠送cash金额", fixed: false, sortable: false, minWidth: '120px'},
+          {prop: "fOtherPresent", label: "赠送bonus金额", fixed: false, sortable: false, minWidth: '120px'},
+          {prop: "fOrderStatus", label: "订单状态", fixed: false, sortable: false, minWidth: '140px'},
+          {prop: "fUtrs", label: "UTR", fixed: false, sortable: false, minWidth: '260px'},
+          {prop: "errorMsgs", label: "标记", fixed: false, sortable: false, minWidth: '260px'},
+          {prop: "operate", label: "操作", fixed: "right", sortable: false, minWidth: '108px'},
+        ],
+        tag: {
+          orderid: '',
+          msg: '',
+          option: '',
+          dialogVisible: false,
+          dialogLoading: false,
+        },
+        repair: {
+          orderid: '',
+          loading: false,
+        },
+        stats: {
+          total: 0,
+          payCount: 0,
+          autoPayRate: "0%",
+          totalAmount: "0",
+          payAmount: "0",
+          amountAvg: "0",
+          autoPayAmountAvg: "0",
+        },
+      };
+    },
+    created() {
+      calcInnerRestHeight(350, height => this.layout.tableHeight = height);
+      this.fetchAside();
+    },
+    methods: {
+      tableRowClassName({row, rowIndex}) {
+        if (row.orderStatus === 1 && !!row.lastUtr && !row.errorMsg) {
+          return 'warning-row';
+        }
+        if (!!row.errorMsg) {
+          return 'info-row';
+        }
+        return '';
+      },
+      handleSizeChange(pageSize) {
+        this.args.pageSize = pageSize;
+        this.fetchDatas();
+      },
+      handleCurrentChange(page) {
+        this.args.page = page;
+        this.fetchDatas(true);
+      },
+      onArgsClean() {
+        this.args = {
+          page: 1,
+          pageSize: 20,
+          sortBy: 'ctime',
+          asc: 0,
+          date: '',
+          id: '',
+          payChannels: null,
+          idType: 1,
+          ctimeRange: [this.today, this.today],
+          payTimeRange: null,
+          orderStatus: 0,
+          isUTR: 0,
+          isTag: 0,
+          isFirstPay: 0,
+          channelIds: null,
+          channelClasses: null,
+        };
+        this.fetchDatas();
+      },
+      onArgsSubmit() {
+        this.fetchDatas();
+      },
+      onTableSort(sort) {
+        switch(sort.prop) {
+          case 'fCtime':
+            this.args.sortBy = 'ctime'; break;
+          case 'fFirstPay':
+            this.args.sortBy = 'firstPay'; break;
+          case 'fAmount':
+            this.args.sortBy = 'amount'; break;
+        }
+
+        if (!sort.order) {
+          this.args.sortBy = 'ctime';
+          this.args.asc = 0;
+        } else {
+          this.args.asc = sort.order === "ascending" ? 1 : 0;
+        }
+        this.fetchDatas();
+        return 0
+      },
+      fetchAside() {
+        fetchGET('/admin/pay/paylist?action=Aside')
+          .then(res => {
+            this.channels = res.data.channels || [];
+            this.packageClasses = res.data.packageClasses || [];
+            this.packages = res.data.packages || [];
+            this.today = res.data.today;
+            this.args.ctimeRange = [this.today, this.today];
+            this.isExport = res.data.isExport;
+            if (res.data.version !== 2) {
+              this.columns.find(item => item.prop === 'fRealAmount').hidden = true;
+            }
+            if (!res.data.isOperation) {
+              this.columns.find(item => item.prop === 'operate').hidden = true;
+            }
+            this.fetchDatas();
+          }).catch(err => {
+            this.$message({type: 'error', message: `${err.msg}`});
+          });
+      },
+      fetchDataArgs() {
+        var args = {
+          payChannels: this.args.payChannels,
+          orderStatus: this.args.orderStatus,
+          isUTR: this.args.isUTR,
+          isTag: this.args.isTag,
+          isFirstPay: this.args.isFirstPay,
+          channelIds: this.args.channelIds,
+          channelClasses: this.args.channelClasses,
+        };
+        switch(this.args.idType) {
+          case 1: args.userid = this.args.id; break;
+          case 2: args.orderId = this.args.id; break;
+          case 3: args.outTradeNo = this.args.id; break;
+        }
+        if (this.args.ctimeRange) {
+          args.ctimeS = this.args.ctimeRange[0];
+          args.ctimeE = this.args.ctimeRange[1];
+        }
+        if (this.args.payTimeRange) {
+          args.payTimeS = this.args.payTimeRange[0];
+          args.payTimeE = this.args.payTimeRange[1];
+        }
+        return args;
+      },
+      fetchDatas(unresetPage) {
+        this.loading = true;
+        var args = this.fetchDataArgs();
+        if (!unresetPage) {
+          this.args.page = 1;
+        }
+
+        var params = `page=${this.args.page}&pageSize=${this.args.pageSize}&sortBy=${this.args.sortBy}&asc=${this.args.asc}`;
+        fetchPOST(`/admin/pay/paylist?action=PayList&${params}`, args)
+          .then(res => {
+            this.datas = res.data.list || [];
+            this.total = res.data.total;
+            // this.tableHeight = 300;
+          }).catch(err => {
+            console.log(err)
+            this.$message({type: 'error', message: `${err.msg}`});
+          }).finally(() => this.loading = false);
+        
+        if (!unresetPage) {
+          this.fetchStats();
+        }
+      },
+      fetchStats() {
+        var args = this.fetchDataArgs();
+        fetchPOST(`/admin/pay/paylist?action=Stats`, args)
+          .then(res => {
+            this.stats = res.data || {};
+            // console.log('stats', this.stats);
+          }).catch(err => {
+            this.$message({type: 'error', message: `${err.msg}`});
+          });
+      },
+      handleExport() {
+        var args = this.fetchDataArgs();
+        var params = `sortBy=${this.args.sortBy}&asc=${this.args.asc}`;
+        fetchDownloadFile(`/admin/pay/paylistexport?${params}`, args)
+          .then(() => {
+            this.$message({type: 'success', message: '导出成功'});
+          })
+          .catch(err => this.$message({type: 'error', message: `${err.msg}`}))
+      },
+      handleTag(orderid) {
+        console.log(orderid)
+        this.tag.orderid = orderid;
+        this.tag.dialogVisible = true;
+      },
+      handleTagSubmit() {
+        if (!this.tag.msg) {
+          return this.$message({type: 'error', message: `标记信息不能为空`});
+        }
+        this.tag.dialogLoading = true;
+        fetchGET(`/admin/pay/paylistopt?action=PayTag&id=${this.tag.orderid}&tag=${this.tag.msg}`)
+          .then(res => {
+            this.$message({type: 'success', message: '标记成功'});
+            this.tag.dialogVisible = false;
+            this.tag.msg = '';
+            this.tag.option = '';
+            this.fetchDatas(true);
+          }).catch(err => {
+            console.error(err)
+            this.$message({type: 'error', message: `标记失败: ${err.msg}`});
+          }).finally(() =>{
+            this.tag.dialogLoading = false;
+          })
+      },
+      handleTagDel(orderid, index, msg) {
+        this.$confirm(`确认删除标记: ${msg}`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          fetchGET(`/admin/pay/paylistopt?action=PayTagDel&id=${orderid}&tagIndex=${index}`)
+          .then(res => {
+            this.$message({type: 'success', message: '删除成功'});
+            this.fetchDatas(true);
+          }).catch(err => {
+            console.error(err)
+            this.$message({type: 'error', message: `删除失败: ${err.msg}`});
+          });
+        }).catch(() => {
+          // 已取消删除   
+        });
+      },
+      handleRepair(orderid) {
+        this.$confirm(`确认要补单上分，订单${orderid}`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.repair.orderid = orderid;
+          this.repair.loading = true;
+          fetchGET(`/admin/pay/paylistopt?action=PayCallback&id=${orderid}`)
+          .then(res => {
+            this.$message({type: 'success', message: '补单上分成功'});
+            this.fetchDatas(true);
+          }).catch(err => {
+            console.error(err)
+            this.$message({
+              type: 'error',
+              message: `补单上分失败: ${err.msg}`
+            });
+          }).finally(() => {
+            this.repair.orderid = '';
+            this.repair.loading = false;
+          });
+        }).catch((err) => {
+          // console.log('catch....', err)
+        });
+      },
+    },
+  });
+</script>
+
+<style>
+  .el-table .warning-row {
+    background:rgb(236, 204, 252);
+  }
+
+  .el-table .info-row {
+    background:  oldlace;
+  }
+
+  .el-form-item__label-wrap {
+    margin-left: 0 !important;
+  }
+  .el-form-item__label {
+    padding: 0 6px 0 0 !important;
+  }
+  .el-select input[readonly] {
+    color: inherit;
+    background-color: inherit !important;
+  }
+  .el-table thead {
+    color: #707070;
+    font-weight: bold;
+  }
+  .el-form-item {
+    margin-bottom: 0;
+  }
+  .short-tag .el-select__tags .el-tag {
+    max-width: 120px;
+  }
+  .statistic-wrap .el-statistic .con {
+    color: #dd5a43;
+  }
+  /* 修改主题色 */
+  /* :root {
+       --el-color-primary: #abbac3;
+     }
+     .el-button--primary {
+       background-color: var(--el-color-primary);
+     } */
+
+    /* .table-wrap {
+      max-height: 10;
+    } */
+</style>

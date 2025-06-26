@@ -1,0 +1,458 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <div class="tabbable">
+            <div class="tab-content">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <form class="form-inline" method="post" action="{{urlfor "Statistics2Controller.FinanceStats"}}">
+                            <div class="input-group table_filtrate">
+                                渠道类:
+                                <div class="input-group input-group-sm" id="class_div">
+                                    <select id="selectClass" class="selectpicker" multiple data-live-search="true"
+                                        data-width="100px" style="width: 100px !important;" title="请选择渠道类">
+                                        {{range $k,$v := .packageClassAll}}
+                                        <option value="{{$v.Key}}" {{if eq $.classId $v.Key}}selected{{end}}>{{$v.Name}}
+                                        </option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="class_id" name="class_id" value="{{.classId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                渠道别名:
+                                <div class="input-group input-group-sm" id="alias_div">
+                                    <select id="selectAlias" class="selectpicker" multiple data-live-search="true" data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                        {{range $k,$v := .packageAliasList}}
+                                        <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}" class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                账号类型:
+                                <div class="input-group input-group-sm">
+                                    <select name="registArea" id="registArea" style="width: 80px;">
+                                        <option value="0" {{if eq 0 $.registArea}}selected{{end}}>全部</option>
+                                        <option value="1" {{if eq 1 $.registArea}}selected{{end}}>A类</option>
+                                        <option value="2" {{if eq 2 $.registArea}}selected{{end}}>B类</option>
+                                        <option value="3" {{if eq 3 $.registArea}}selected{{end}}>C类</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                日期:
+                                <div class="input-group input-group-sm" style="width: 90px;">
+                                    <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off" style="border-right:0;padding-right:0;" placeholder="开始日期"/>
+                                </div>
+                                <div class="input-group input-group-sm" style="width: 120px;">
+                                    <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off" style="border-left:0;padding-left:0;" placeholder="结束日期"/>
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <button type="submit" class="btn">查询</button>
+                                {{if $.isExport }}
+                                <a href="{{urlfor "Statistics2Controller.FinanceStatsExport" "start_date" .startDate "end_date" .endDate "registArea" .registArea "alias_id" .aliasId "class_id" .classId}}" class="btn" style="margin-left: 5px;">导出</a>
+                                {{end}}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="space-4"></div>
+
+                <!-- const calcTableWrapHeighterDebounce = debounce(tableWrapHeighter, 500);
+                window.addEventListener('resize', calcTableWrapHeighterDebounce); -->
+                <!-- table-wrap="200" -->
+                <div class="table-panel" table-wrap-only="200">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th class="p-sticky" style="min-width: 125px;"></th>
+                                <th></th>
+                                <th colspan="8" class="f-th-colspan">钱包余额</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th colspan="11" class="f-th-colspan">游戏营收</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th colspan="6" class="f-th-colspan">VIP bonus发放</th>
+                                <th colspan="8" class="f-th-colspan">排行榜bonus发放</th>
+                                <th colspan="8" class="f-th-colspan">代理bonus发放</th>
+                                <th colspan="2" class="f-th-colspan">转盘bonus发放</th>
+                                <th colspan="2" class="f-th-colspan">波动返水bonus发放</th>
+                                <th colspan="2" class="f-th-colspan">礼包码bonus发放</th>
+                                <th colspan="2" class="f-th-colspan">周卡bonus发放</th>
+                                <th colspan="2" class="f-th-colspan">首充bonus发放</th>
+                                <th colspan="2" class="f-th-colspan">二充bonus发放</th>
+                                <th colspan="2" class="f-th-colspan">三充bonus发放</th>
+                                <th colspan="2" class="f-th-colspan">普充bonus发放</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th colspan="6" class="f-th-colspan">VIP cash发放</th>
+                                <th colspan="8" class="f-th-colspan">排行榜cash发放</th>
+                                <th colspan="8" class="f-th-colspan">代理cash发放</th>
+                                <th colspan="2" class="f-th-colspan">转盘cash发放</th>
+                                <th colspan="2" class="f-th-colspan">波动返水cash发放</th>
+                                <th colspan="2" class="f-th-colspan">礼包码cash发放</th>
+                                <th colspan="2" class="f-th-colspan">周卡cash发放</th>
+                                <th colspan="2" class="f-th-colspan">首充cash发放</th>
+                                <th colspan="2" class="f-th-colspan">二充cash发放</th>
+                                <th colspan="2" class="f-th-colspan">三充cash发放</th>
+                                <th colspan="2" class="f-th-colspan">普充cash发放</th>
+                            </tr>
+                            <tr>
+                                <!-- stickyL -->
+                                <th class="p-sticky p-sticky-l">日期</th>
+                                <th>日活</th>
+                                <th>钱包总余额</th>
+                                <th>可提现余额</th>
+                                <th>不可提现余额</th>
+                                <th>可提现占总余额比</th>
+                                <th>日活钱包余额</th>
+                                <th>日活可提现余额</th>
+                                <th>日活不可提现余额</th>
+                                <th>日活可提现占总余额比</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>游戏收入</th>
+                                <th>bonus发放总额</th>
+                                <th>bonus发放占收入比</th>
+                                <th>cash流入总额</th>
+                                <th>cash发放总额</th>
+                                <th>cash发放占收入比</th>
+                                <th>bonus转cash总额</th>
+                                <th>bonus转cash占收入比</th>
+                                <th>充-提收入</th>
+                                <th>游戏收入-cash流入总额</th>
+                                <th>盈余误差</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>VIP发放总额</th>
+                                <th>VIP占比</th>
+                                <th>VIP升级奖励</th>
+                                <th>升级奖励占比</th>
+                                <th>VIP周奖励</th>
+                                <th>周奖励占比</th>
+                                <th>排行榜发放总额</th>
+                                <th>排行榜占比</th>
+                                <th>日榜</th>
+                                <th>日榜占比</th>
+                                <th>周榜</th>
+                                <th>周榜占比</th>
+                                <th>月榜</th>
+                                <th>月榜占比</th>
+                                <th>代理发放总额</th>
+                                <th>代理占比</th>
+                                <th>下注返佣总额</th>
+                                <th>下注返佣占比</th>
+                                <th>人头奖总额</th>
+                                <th>人头奖占比</th>
+                                <th>里程碑奖总额</th>
+                                <th>里程碑奖占比</th>
+                                <th>转盘发放总额</th>
+                                <th>转盘占比</th>
+                                <th>波动返水总额</th>
+                                <th>返水占比</th>
+                                <th>礼包码发放总额</th>
+                                <th>礼包码占比</th>
+                                <th>周卡发放总额</th>
+                                <th>周卡占比</th>
+                                <th>首充发放总额</th>
+                                <th>首充占比</th>
+                                <th>二充发放总额</th>
+                                <th>二充占比</th>
+                                <th>三充发放总额</th>
+                                <th>三充占比</th>
+                                <th>普充发放总额</th>
+                                <th>普充占比</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>VIP发放总额</th>
+                                <th>VIP占比</th>
+                                <th>VIP升级奖励</th>
+                                <th>升级奖励占比</th>
+                                <th>VIP周奖励</th>
+                                <th>周奖励占比</th>
+                                <th>排行榜发放总额</th>
+                                <th>排行榜占比</th>
+                                <th>日榜</th>
+                                <th>日榜占比</th>
+                                <th>周榜</th>
+                                <th>周榜占比</th>
+                                <th>月榜</th>
+                                <th>月榜占比</th>
+                                <th>代理发放总额</th>
+                                <th>代理占比</th>
+                                <th>下注返佣总额</th>
+                                <th>下注返佣占比</th>
+                                <th>人头奖总额</th>
+                                <th>人头奖占比</th>
+                                <th>里程碑奖总额</th>
+                                <th>里程碑奖占比</th>
+                                <th>转盘发放总额</th>
+                                <th>转盘占比</th>
+                                <th>波动返水总额</th>
+                                <th>返水占比</th>
+                                <th>礼包码发放总额</th>
+                                <th>礼包码占比</th>
+                                <th>周卡发放总额</th>
+                                <th>周卡占比</th>
+                                <th>首充发放总额</th>
+                                <th>首充占比</th>
+                                <th>二充发放总额</th>
+                                <th>二充占比</th>
+                                <th>三充发放总额</th>
+                                <th>三充占比</th>
+                                <th>普充发放总额</th>
+                                <th>普充占比</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--日期--> <td class="p-sticky">{{$v.SDate}}</td>
+                                <!--日活--> <td>{{$v.LoginUsers}}</td>
+                                <!--钱包总余额--> <td>{{$v.Cash}}</td>
+                                <!--可提现余额--> <td>{{$v.Withdrawable}}</td>
+                                <!--不可提现余额--> <td>{{$v.NonWithdrawable}}</td>
+                                <!--可提现占总余额比--> <td>{{$v.WithdrawableRate}}</td>
+                                <!--日活钱包余额--> <td>{{$v.LiveCash}}</td>
+                                <!--日活可提现余额--> <td>{{$v.LiveWithdrawable}}</td>
+                                <!--日活不可提现余额--> <td>{{$v.LiveNonWithdrawable}}</td>
+                                <!--日活可提现占总余额比--> <td>{{$v.LiveWithdrawableRate}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--游戏收入--> <td>{{$v.GameIncome}}</td>
+                                <!--bonus发放总额--> <td>{{$v.BonusGift}}</td>
+                                <!--bonus发放占收入比--> <td>{{$v.BonusIncomeRate}}</td>
+                                <!--cash流入总额--> <td>{{$v.CashFlow}}</td>
+                                <!--cash发放总额--> <td>{{$v.CashGift}}</td>
+                                <!--cash发放占收入比--> <td>{{$v.CashGiftIncomeRate}}</td>
+                                <!--bonus转cash总额--> <td>{{$v.CashVb}}</td>
+                                <!--bonus转cash占收入比--> <td>{{$v.CashVbIncomeRate}}</td>
+                                <!--充-提收入--> <td>{{$v.PaySubWithdraws}}</td>
+                                <!--游戏收入-cash流入总额--> <td>{{$v.GameIncomeSubCashFlow}}</td>
+                                <!--盈余误差--> <td>{{$v.SurplusMiss}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--VIP发放总额--> <td>{{$v.BonusVip}}</td>
+                                <!--VIP占比--> <td>{{$v.BonusVipRate}}</td>
+                                <!--VIP升级奖励--> <td>{{$v.BonusVipUpgrade}}</td>
+                                <!--升级奖励占比--> <td>{{$v.BonusVipUpgradeRate}}</td>
+                                <!--VIP周奖励--> <td>{{$v.BonusVipWeek}}</td>
+                                <!--周奖励占比--> <td>{{$v.BonusVipWeekRate}}</td>
+                                <!--排行榜发放总额--> <td>{{$v.BonusBetRank}}</td>
+                                <!--排行榜占比--> <td>{{$v.BonusBetRankRate}}</td>
+                                <!--日榜--> <td>{{$v.BonusBetRankDaily}}</td>
+                                <!--日榜占比--> <td>{{$v.BonusBetRankDailyRate}}</td>
+                                <!--周榜--> <td>{{$v.BonusBetRankWeekly}}</td>
+                                <!--周榜占比--> <td>{{$v.BonusBetRankWeeklyRate}}</td>
+                                <!--月榜--> <td>{{$v.BonusBetRankMonthly}}</td>
+                                <!--月榜占比--> <td>{{$v.BonusBetRankMonthlyRate}}</td>
+                                <!--代理发放总额--> <td>{{$v.BonusShareAgent}}</td>
+                                <!--代理占比--> <td>{{$v.BonusShareAgentRate}}</td>
+                                <!--下注返佣总额--> <td>{{$v.BonusShareAgentBets}}</td>
+                                <!--下注返佣占比--> <td>{{$v.BonusShareAgentBetsRate}}</td>
+                                <!--人头奖总额--> <td>{{$v.BonusShareAgentHeads}}</td>
+                                <!--人头奖占比--> <td>{{$v.BonusShareAgentHeadsRate}}</td>
+                                <!--里程碑奖总额--> <td>{{$v.BonusShareAgentTasks}}</td>
+                                <!--里程碑奖占比--> <td>{{$v.BonusShareAgentTasksRate}}</td>
+                                <!--转盘发放总额--> <td>{{$v.BonusTurn}}</td>
+                                <!--转盘占比--> <td>{{$v.BonusTurnRate}}</td>
+                                <!--波动返水总额--> <td>{{$v.BonusSubsidy}}</td>
+                                <!--返水占比--> <td>{{$v.BonusSubsidyRate}}</td>
+                                <!--礼包码发放总额--> <td>{{$v.BonusGivePack}}</td>
+                                <!--礼包码占比--> <td>{{$v.BonusGivePackRate}}</td>
+                                <!--周卡发放总额--> <td>{{$v.BonusWeekCard}}</td>
+                                <!--周卡占比--> <td>{{$v.BonusWeekCardRate}}</td>
+                                <!--首充发放总额--> <td>{{$v.BonusPay1Give}}</td>
+                                <!--首充占比--> <td>{{$v.BonusPay1GiveRate}}</td>
+                                <!--二充发放总额--> <td>{{$v.BonusPay2Give}}</td>
+                                <!--二充占比--> <td>{{$v.BonusPay2GiveRate}}</td>
+                                <!--三充发放总额--> <td>{{$v.BonusPay3Give}}</td>
+                                <!--三充占比--> <td>{{$v.BonusPay3GiveRate}}</td>
+                                <!--普充发放总额--> <td>{{$v.BonusPayGive}}</td>
+                                <!--普充占比--> <td>{{$v.BonusPayGiveRate}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--VIP发放总额--> <td>{{$v.CashVip}}</td>
+                                <!--VIP占比--> <td>{{$v.CashVipRate}}</td>
+                                <!--VIP升级奖励--> <td>{{$v.CashVipUpgrade}}</td>
+                                <!--升级奖励占比--> <td>{{$v.CashVipUpgradeRate}}</td>
+                                <!--VIP周奖励--> <td>{{$v.CashVipWeek}}</td>
+                                <!--周奖励占比--> <td>{{$v.CashVipWeekRate}}</td>
+                                <!--排行榜发放总额--> <td>{{$v.CashBetRank}}</td>
+                                <!--排行榜占比--> <td>{{$v.CashBetRankRate}}</td>
+                                <!--日榜--> <td>{{$v.CashBetRankDaily}}</td>
+                                <!--日榜占比--> <td>{{$v.CashBetRankDailyRate}}</td>
+                                <!--周榜--> <td>{{$v.CashBetRankWeekly}}</td>
+                                <!--周榜占比--> <td>{{$v.CashBetRankWeeklyRate}}</td>
+                                <!--月榜--> <td>{{$v.CashBetRankMonthly}}</td>
+                                <!--月榜占比--> <td>{{$v.CashBetRankMonthlyRate}}</td>
+                                <!--代理发放总额--> <td>{{$v.CashShareAgent}}</td>
+                                <!--代理占比--> <td>{{$v.CashShareAgentRate}}</td>
+                                <!--下注返佣总额--> <td>{{$v.CashShareAgentBets}}</td>
+                                <!--下注返佣占比--> <td>{{$v.CashShareAgentBetsRate}}</td>
+                                <!--人头奖总额--> <td>{{$v.CashShareAgentHeads}}</td>
+                                <!--人头奖占比--> <td>{{$v.CashShareAgentHeadsRate}}</td>
+                                <!--里程碑奖总额--> <td>{{$v.CashShareAgentTasks}}</td>
+                                <!--里程碑奖占比--> <td>{{$v.CashShareAgentTasksRate}}</td>
+                                <!--转盘发放总额--> <td>{{$v.CashTurn}}</td>
+                                <!--转盘占比--> <td>{{$v.CashTurnRate}}</td>
+                                <!--波动返水总额--> <td>{{$v.CashSubsidy}}</td>
+                                <!--返水占比--> <td>{{$v.CashSubsidyRate}}</td>
+                                <!--礼包码发放总额--> <td>{{$v.CashGivePack}}</td>
+                                <!--礼包码占比--> <td>{{$v.CashGivePackRate}}</td>
+                                <!--周卡发放总额--> <td>{{$v.CashWeekCard}}</td>
+                                <!--周卡占比--> <td>{{$v.CashWeekCardRate}}</td>
+                                <!--首充发放总额--> <td>{{$v.CashPay1Give}}</td>
+                                <!--首充占比--> <td>{{$v.CashPay1GiveRate}}</td>
+                                <!--二充发放总额--> <td>{{$v.CashPay2Give}}</td>
+                                <!--二充占比--> <td>{{$v.CashPay2GiveRate}}</td>
+                                <!--三充发放总额--> <td>{{$v.CashPay3Give}}</td>
+                                <!--三充占比--> <td>{{$v.CashPay3GiveRate}}</td>
+                                <!--普充发放总额--> <td>{{$v.CashPayGive}}</td>
+                                <!--普充占比--> <td>{{$v.CashPayGiveRate}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $("#selectPackage").on("change",function () {
+            var selectVal = $("#selectPackage").val()
+            console.log(selectVal)
+            $("#package_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change",function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias："+selectVal)
+            $("#alias_id").val(selectVal)
+        });
+
+        // 渠道类
+        $("#selectClass").on("change", function () {
+            var selectVal = $("#selectClass").val()
+            console.log("selectClass" + selectVal)
+            $("#class_id").val(selectVal)
+        });
+        
+        // 账号类型
+        $("#selectTabId").on("change", function () {
+            var selectVal = $("#selectTabId").val()
+            $("#registArea").val(selectVal)
+        });
+
+        var packVal =  $("#package_id").val()
+        if (packVal){
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+        // 渠道别名
+        var aliasVal =  $("#alias_id").val()
+        if (aliasVal){
+            var arr1= aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null){
+                console.log("arr1:"+arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function(index, value) {
+                    if (value == "0"){
+                        arr1[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr1[index] = "其他"; 
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+
+        // 渠道类
+        var classVal = $("#class_id").val()
+        if (classVal) {
+            var arr1 = classVal.split(",");
+            $('#selectClass').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr2:" + arr1)
+                $("#selectClass").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#class_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectClass').selectpicker({ width: 200 });
+        }
+    });
+
+</script>
+<style>
+    .highlight {
+        background-color: #9AFF9A !important;
+    }
+
+    .table>thead>tr>.f-th-colspan {
+        /* background-color: antiquewhite; */
+        position: relative;
+    }
+    .table>thead>tr>.f-th-colspan::after {
+        content: "";
+        display: block;
+        width: 1px;
+        height: 100%;
+        position: absolute;
+        right: 0;
+        top: 0;
+        background-color: #b7b7b7;
+    }
+    .p-sticky {
+        position: sticky;
+        z-index: 1;
+        left: 0px;
+        top: 72px;
+        background-color: rgb(255, 255, 255);
+    }
+    
+    .p-sticky-l::after {
+        display: inline;
+        content: "📌";
+    }
+</style>
+
+<script>
+	// $(document).ready(function() { _StickyMemory() });
+</script>

@@ -1,0 +1,428 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <div class="tabbable">
+            <ul class="nav nav-tabs" id="list-tab">
+                <li {{if eq .typeId 0}}class="active" {{end}}>
+                    <a href="{{urlfor "StatisticsController.PlayerBetStats" "typeId" 0}}">玩家打码分层</a>
+                </li>
+                <li {{if eq .typeId 1}}class="active" {{end}}>
+                    <a href="{{urlfor "StatisticsController.PlayerBetStats" "typeId" 1}}">玩家打码明细</a>
+                </li>
+                <li {{if eq .typeId 2}}class="active" {{end}}>
+                    <a href="{{urlfor "StatisticsController.PlayerBetStats" "typeId" 2}}">子游戏打码统计</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <form class="form-inline" method="post" action="{{urlfor "StatisticsController.PlayerBetStats"}}">
+                            <input type="hidden" name="typeId" value="{{.typeId}}" />
+                            <div class="input-group table_filtrate">
+                                渠道类:
+                                <div class="input-group input-group-sm" id="class_div">
+                                    <select id="selectClass" class="selectpicker" multiple data-live-search="true"
+                                        data-width="100px" style="width: 100px !important;" title="请选择渠道类">
+                                        {{range $k,$v := .packageClassAll}}
+                                        <option value="{{$v.Key}}" {{if eq $.classId $v.Key}}selected{{end}}>{{$v.Name}}
+                                        </option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="class_id" name="class_id" value="{{.classId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                渠道别名:
+                                <div class="input-group input-group-sm" id="alias_div">
+                                    <select id="selectAlias" class="selectpicker" multiple data-live-search="true" data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                        {{range $k,$v := .packageAliasList}}
+                                        <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}" class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                账号类型:
+                                <div class="input-group input-group-sm">
+                                    <select name="registArea" id="registArea" style="width: 80px;">
+                                        <option value="0" {{if eq 0 $.registArea}}selected{{end}}>全部</option>
+                                        <option value="1" {{if eq 1 $.registArea}}selected{{end}}>A类</option>
+                                        <option value="2" {{if eq 2 $.registArea}}selected{{end}}>B类</option>
+                                        <option value="3" {{if eq 3 $.registArea}}selected{{end}}>C类</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                玩家类型:
+                                <div class="input-group input-group-sm" id="utype_id_div">
+                                    <select id="sutype_id" class="selectpicker" multiple data-live-search="true">
+                                        {{range $k,$v := .usertype}}
+                                            {{range $k2,$v2 := $v}}
+                                            <option value="{{$k2}}" >{{$v2}}</option>
+                                            {{end}}
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="utype_id" name="utype_id" value="{{.usertypeId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                日期:
+                                <div class="input-group input-group-sm" style="width: 90px;">
+                                    <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off" style="border-right:0;padding-right:0;" placeholder="开始日期"/>
+                                </div>
+                                <div class="input-group input-group-sm" style="width: 120px;">
+                                    <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off" style="border-left:0;padding-left:0;" placeholder="结束日期"/>
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <button type="submit" class="btn">查询</button>
+                                {{if $.isExport }}
+                                <a href="{{urlfor "StatisticsController.PlayerBetStatsExport" "typeId" .typeId "start_date" .startDate "end_date" .endDate "registArea" .registArea "alias_id" .aliasId "class_id" .classId}}" class="btn" style="margin-left: 5px;">导出</a>
+                                {{end}}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="space-4"></div>
+
+                {{if eq .typeId 0}}
+                <!-- 玩家打码分层 -->
+                <div class="table-panel" table-wrap="200">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th stickyL style="min-width:125px;">日期</th>
+                                <th>总打码量</th>
+                                <th>打码前0.5%玩家人数</th>
+                                <th>打码前0.5%玩家码量总和</th>
+                                <th>打码前0.5%玩家人均码量</th>
+                                <th>打码前0.5%玩家码量占总码量比</th>
+                                <th>打码前1%玩家人数</th>
+                                <th>打码前1%玩家码量总和</th>
+                                <th>打码前1%玩家人均码量</th>
+                                <th>打码前1%玩家码量占总码量比</th>
+                                <th>打码前3%玩家人数</th>
+                                <th>打码前3%玩家码量总和</th>
+                                <th>打码前3%玩家人均码量</th>
+                                <th>打码前3%玩家码量占总码量比</th>
+                                <th>打码前5%玩家人数</th>
+                                <th>打码前5%玩家码量总和</th>
+                                <th>打码前5%玩家人均码量</th>
+                                <th>打码前5%玩家码量占总码量比</th>
+                                <th>打码前10%玩家人数</th>
+                                <th>打码前10%玩家码量总和</th>
+                                <th>打码前10%玩家人均码量</th>
+                                <th>打码前10%玩家码量占总码量比</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--日期--> <td>{{$v.SDate}}</td>
+                                <!--总打码量--> <td>{{$v.Bets}}</td>
+                                <!--打码前0.5%玩家人数--> <td>{{$v.Top05Users}}</td>
+                                <!--打码前0.5%玩家码量总和--> <td>{{$v.Top05UsersBets}}</td>
+                                <!--打码前0.5%玩家人均码量--> <td>{{$v.Top05UsersBetsAvg}}</td>
+                                <!--打码前0.5%玩家码量占总码量比--> <td>{{$v.Top05UsersBetsRate}}</td>
+                                <!--打码前1%玩家人数--> <td>{{$v.Top1Users}}</td>
+                                <!--打码前1%玩家码量总和--> <td>{{$v.Top1UsersBets}}</td>
+                                <!--打码前1%玩家人均码量--> <td>{{$v.Top1UsersBetsAvg}}</td>
+                                <!--打码前1%玩家码量占总码量比--> <td>{{$v.Top1UsersBetsRate}}</td>
+                                <!--打码前3%玩家人数--> <td>{{$v.Top3Users}}</td>
+                                <!--打码前3%玩家码量总和--> <td>{{$v.Top3UsersBets}}</td>
+                                <!--打码前3%玩家人均码量--> <td>{{$v.Top3UsersBetsAvg}}</td>
+                                <!--打码前3%玩家码量占总码量比--> <td>{{$v.Top3UsersBetsRate}}</td>
+                                <!--打码前5%玩家人数--> <td>{{$v.Top5Users}}</td>
+                                <!--打码前5%玩家码量总和--> <td>{{$v.Top5UsersBets}}</td>
+                                <!--打码前5%玩家人均码量--> <td>{{$v.Top5UsersBetsAvg}}</td>
+                                <!--打码前5%玩家码量占总码量比--> <td>{{$v.Top5UsersBetsRate}}</td>
+                                <!--打码前10%玩家人数--> <td>{{$v.Top10Users}}</td>
+                                <!--打码前10%玩家码量总和--> <td>{{$v.Top10UsersBets}}</td>
+                                <!--打码前10%玩家人均码量--> <td>{{$v.Top10UsersBetsAvg}}</td>
+                                <!--打码前10%玩家码量占总码量比--> <td>{{$v.Top10UsersBetsRate}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+
+                {{else if eq .typeId 1}}
+                <!-- 玩家打码明细 -->
+                <div class="table-panel" table-wrap="320">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th stickyL style="min-width:125px;">日期</th>
+                                <th>名次</th>
+                                <th>UID</th>
+                                <th>注册时间</th>
+                                <th>最后登录时间</th>
+                                <th>存活天数</th>
+                                <th>流失天数</th>
+                                <th>VIP等级</th>
+                                <th>玩家类型</th>
+                                <th>玩家总充值</th>
+                                <th>玩家总提现</th>
+                                <th>玩家总充-提</th>
+                                <th>玩家总打码量</th>
+                                <th>玩家总返奖率</th>
+                                <th>玩家总输赢</th>
+                                <th style="min-width:200px;">打码第1多的游戏</th>
+                                <th>打码第1多的游戏的码量</th>
+                                <th>打码第1多的游戏的局数</th>
+                                <th>打码第1多的游戏的局均码</th>
+                                <th style="min-width:200px;">打码第2多的游戏</th>
+                                <th>打码第2多的游戏的码量</th>
+                                <th>打码第2多的游戏的局数</th>
+                                <th>打码第2多的游戏的局均码</th>
+                                <th style="min-width:200px;">打码第3多的游戏</th>
+                                <th>打码第3多的游戏的码量</th>
+                                <th>打码第3多的游戏的局数</th>
+                                <th>打码第3多的游戏的局均码</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--日期--> <td>{{$v.SDate}}</td>
+                                <!--名次--> <td>{{$v.Rank}}</td>
+                                <!--UID--> <td>{{$v.Userid}}</td>
+                                <!--注册时间--> <td>{{$v.Ctime}}</td>
+                                <!--最后登录时间--> <td>{{$v.LastLoginTime}}</td>
+                                <!--存活天数--> <td>{{$v.LiveDays}}</td>
+                                <!--流失天数--> <td>{{$v.LoseDays}}</td>
+                                <!--VIP等级--> <td>{{$v.VipLv}}</td>
+                                <!--玩家类型--> <td>{{$v.UserType}}</td>
+                                <!--玩家总充值--> <td>{{$v.Pays}}</td>
+                                <!--玩家总提现--> <td>{{$v.Withdraws}}</td>
+                                <!--玩家总充-提--> <td>{{$v.PaysSubWithdraws}}</td>
+                                <!--玩家总打码量--> <td>{{$v.Bets}}</td>
+                                <!--玩家总返奖率--> <td>{{$v.RabateRate}}</td>
+                                <!--玩家总输赢--> <td>{{$v.Wins}}</td>
+                                <!--打码第1多的游戏--> <td>{{$v.Top1Game}}</td>
+                                <!--打码第1多的游戏的码量--> <td>{{$v.Top1GameBets}}</td>
+                                <!--打码第1多的游戏的局数--> <td>{{$v.Top1GameRounds}}</td>
+                                <!--打码第1多的游戏的局均码--> <td>{{$v.Top1GameBetsAvg}}</td>
+                                <!--打码第2多的游戏--> <td>{{$v.Top2Game}}</td>
+                                <!--打码第2多的游戏的码量--> <td>{{$v.Top2GameBets}}</td>
+                                <!--打码第2多的游戏的局数--> <td>{{$v.Top2GameRounds}}</td>
+                                <!--打码第2多的游戏的局均码--> <td>{{$v.Top2GameBetsAvg}}</td>
+                                <!--打码第3多的游戏--> <td>{{$v.Top3Game}}</td>
+                                <!--打码第3多的游戏的码量--> <td>{{$v.Top3GameBets}}</td>
+                                <!--打码第3多的游戏的局数--> <td>{{$v.Top3GameRounds}}</td>
+                                <!--打码第3多的游戏的局均码--> <td>{{$v.Top3GameBetsAvg}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                {{else if eq .typeId 2}}
+                <!-- 子游戏打码统计 -->
+                <div class="table-panel" table-wrap="320">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th stickyL style="min-width:125px;">日期</th>
+                                <th>游戏大类</th>
+                                <th>游戏小类</th>
+                                <th>厂商名称</th>
+                                <th>游戏ID</th>
+                                <th>游戏名称</th>
+                                <th>投注人数</th>
+                                <th>投注金额</th>
+                                <th>人均投注</th>
+                                <th>厂商回退金额</th>
+                                <th>厂商回滚金额</th>
+                                <th>玩家总输赢</th>
+                                <th>RTP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--日期--> <td>{{$v.SDate}}</td>
+                                <!--游戏大类--> <td>{{$v.GtypeCategory1}}</td>
+                                <!--游戏小类--> <td>{{$v.GtypeCategory2}}</td>
+                                <!--厂商名称--> <td>{{$v.Factory}}</td>
+                                <!--游戏ID--> <td>{{$v.GameId}}</td>
+                                <!--游戏名称--> <td>{{$v.GameName}}</td>
+                                <!--投注人数--> <td>{{$v.BetUsers}}</td>
+                                <!--投注金额--> <td>{{$v.Bets}}</td>
+                                <!--人均投注--> <td>{{$v.BetsAvg}}</td>
+                                <!--厂商回退金额--> <td>{{$v.Rebates}}</td>
+                                <!--厂商回滚金额--> <td>{{$v.BetsRollback}}</td>
+                                <!--玩家总输赢--> <td>{{$v.Wins}}</td>
+                                <!--RTP--> <td>{{$v.RTP}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                {{end}}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {{ if or (eq .typeId 1) (eq .typeId 2) }}
+	<div class="row-page"> 
+		{{if gt .count 20}}
+            {{str2html .pageBar}}
+        {{end}}
+	</div>
+    {{end}}
+</div>
+
+<script>
+    $(function () {
+        $("#selectPackage").on("change",function () {
+            var selectVal = $("#selectPackage").val()
+            console.log(selectVal)
+            $("#package_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change",function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias："+selectVal)
+            $("#alias_id").val(selectVal)
+        });
+
+        // 渠道类
+        $("#selectClass").on("change", function () {
+            var selectVal = $("#selectClass").val()
+            console.log("selectClass" + selectVal)
+            $("#class_id").val(selectVal)
+        });
+        
+        // 账号类型
+        $("#selectTabId").on("change", function () {
+            var selectVal = $("#selectTabId").val()
+            $("#registArea").val(selectVal)
+        });
+
+        var packVal =  $("#package_id").val()
+        if (packVal){
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+        // 渠道别名
+        var aliasVal =  $("#alias_id").val()
+        if (aliasVal){
+            var arr1= aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null){
+                console.log("arr1:"+arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function(index, value) {
+                    if (value == "0"){
+                        arr1[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr1[index] = "其他"; 
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+
+        // 渠道类
+        var classVal = $("#class_id").val()
+        if (classVal) {
+            var arr1 = classVal.split(",");
+            $('#selectClass').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr2:" + arr1)
+                $("#selectClass").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#class_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectClass').selectpicker({ width: 200 });
+        }
+    });
+
+    // 用户类型
+    $("#sutype_id").on("change", function () {
+        var selectVal = $("#sutype_id").val()
+        console.log("sutype_id：" + selectVal)
+        $("#utype_id").val(selectVal)
+    });
+    var utype_id = $("#utype_id").val()
+    if (!utype_id) {
+        utype_id = "0";
+    }
+    $('#sutype_id').selectpicker({ width: 120 });
+    console.log('utype_id', utype_id)
+    var utypeids = utype_id.split(",");
+    var utypes = {0: "全部", 10: "新手", 1: "平民", 2: "普R",3: "小R",4: "中R",5: "大R",6: "超大R"};
+    var utypeNames = [];
+    for (let i = 0; i < utypeids.length; i++) {
+        var utypeid = utypeids[i];
+        $(`#sutype_id option[value=${utypeid}]`).attr("selected", true);
+
+        var name = utypes[utypeid];
+        utypeNames.push(name);
+    }
+    var str = utypeNames.join(", ");
+    $('#utype_id_div .filter-option-inner-inner').html(str)
+</script>
+<style>
+    .highlight{
+        background-color: #9AFF9A !important;
+    }
+</style>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.typeId}}) });
+</script>

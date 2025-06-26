@@ -1,0 +1,925 @@
+<div class="row">
+	<div class="col-xs-12">
+
+		<div class="tabbable">
+			<ul class="nav nav-tabs" id="list-tab">
+				<li {{if eq .tabid 0}}class="active" {{end}}>
+					<a href="{{urlfor "MessageController.NoticeList" "tabid" 0}}">跑马灯消息</a>
+				</li>
+				<li {{if eq .tabid 1}}class="active" {{end}}>
+					<a href="{{urlfor "MessageController.NoticeList" "tabid" 1}}">公告消息</a>
+				</li>
+				<li {{if eq .tabid 2}}class="active" {{end}}>
+					<a href="{{urlfor "MessageController.NoticeList" "tabid" 2}}">Banner页</a>
+				</li>
+				<li {{if eq .tabid 3}}class="active" {{end}}>
+					<a href="{{urlfor "MessageController.NoticeList" "tabid" 3}}">信息修改</a>
+				</li>
+				<li {{if eq .tabid 4}}class="active" {{end}}>
+					<a href="{{urlfor "MessageController.NoticeList" "tabid" 4}}">客服功能</a>
+				</li>
+				<li {{if eq .tabid 5}}class="active" {{end}}>
+					<a href="{{urlfor "MessageController.NoticeList" "tabid" 5}}">CDKEY</a>
+				</li>
+				<li {{if eq .tabid 6}}class="active" {{end}}>
+					<a href="{{urlfor "MessageController.NoticeList" "tabid" 6}}">社媒关注奖金活动</a>
+				</li>
+				<li {{if eq .tabid 7}}class="active" {{end}}>
+					<a href="{{urlfor "MessageController.NoticeList" "tabid" 7}}">Bonus中心</a>
+				</li>
+			</ul>
+
+			<div class="tab-content">
+				<div class="row">
+					<div class="col-xs-12">
+						<form class="form-inline" method="post" action="{{urlfor "MessageController.NoticeList"}}">
+							<input type="hidden" name="tabid" value="{{.tabid}}" />
+							{{if .isOperation }}
+								{{if eq .tabid 1}}
+									<a data-toggle="modal" data-target="#addModal" class="btn btn-sm btn-default"><i class="fa fa-plus"></i>新增公告</a>
+								{{else if eq .tabid 2}}
+									<a data-toggle="modal" data-target="#addBannerModal" class="btn btn-sm btn-default"><i class="fa fa-plus"></i>新增Banner</a>
+								{{else if eq .tabid 7}}
+									<a data-toggle="modal" data-target="#addBannerModal" class="btn btn-sm btn-default"><i class="fa fa-plus"></i>新增Bonus中心</a>
+								{{else if eq .tabid 0}}
+									<a href="{{urlfor "MessageController.NoticeAdd"}}" class="btn btn-sm btn-default"><i class="fa fa-plus"></i>新增消息</a>
+								{{else if eq .tabid 5}}
+									<a data-toggle="modal" data-target="#addCdKeyModal" class="btn btn-sm btn-default"><i class="fa fa-plus"></i>新增CDKEY</a>
+								{{end}}
+							{{end}}
+							<!-- <div class="input-group input-group-sm">
+						<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" />
+						<span class="input-group-addon">
+							<i class="ace-icon fa fa-calendar"></i>
+						</span>
+					</div>
+					<div class="input-group input-group-sm">
+						<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" />
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+					</div>
+					<div class="input-group input-group-sm">
+						<button type="submit" class="btn">查询</button>
+					</div> -->
+						</form>
+					</div>
+				</div>
+				<div class="space-4"></div>
+
+				<div class="table-panel" table-wrap="300">
+					{{if eq .tabid 4}}
+					<div class="">
+						<form class="form-inline" method="post" action="{{urlfor "MessageController.EditCustomerService"}}">
+							<input type="hidden" id="cid" name="cid" value="{{$.configInfo.Id}}">
+							<div>
+								设置：<div class="input-group table_filtrate">
+									<input type="radio" id="no-mark" name="mark" value="0" {{if eq .configInfo.Switch 0}}checked{{end}}/>
+									<label for="no-mark">不分单</label>
+								</div>
+								<div class="input-group table_filtrate">
+									<input type="radio" id="sequence" name="mark" value="1" {{if eq .configInfo.Switch 1}}checked{{end}}/>
+									<label for="sequence">顺序分单</label>
+								</div>
+							</div>
+							<div id="userdiv" {{if eq .configInfo.Switch 0}} class="hide"{{end}}>
+								<input type="hidden" id="count" name="count" value="{{.count}}">
+								<div style="margin-top: 10px;">
+									时间段：10:00-19:30
+								</div>
+								<div class="input-group table_filtrate">
+									分单用户:
+									{{if gt (len .configInfo.Users) 0 }}
+										{{ range $k, $v := .list }}
+										<div class="input-group input-group-sm" style="margin-right: 10px;">
+											<input type="checkbox" id="onebox_{{$k}}" name="onebox_{{$k}}" value="{{$v.Id}}"
+											{{range $j, $o := $.configInfo.Users}} 
+												{{ if eq $v.Id $o}}
+												checked
+												{{end}}								
+											{{end}}/>
+											<label for="scales" style="margin-left: 5px;">{{$v.UserName}}</label>
+										</div>
+										{{end}}
+									{{else}}
+									{{ range $k, $v := .list }}
+									<div class="input-group input-group-sm" style="margin-right: 5px;">
+										<input type="checkbox" id="onebox_{{$k}}" name="onebox_{{$k}}" value="{{$v.Id}}"/>
+										<label for="scales" style="margin-left: 5px;">{{$v.UserName}}</label>
+									</div>
+									{{end}}
+									{{end}}
+									
+								</div>
+								<div style="margin-top: 10px;">
+									时间段：19:30-02:30
+								</div>
+								<div class="input-group table_filtrate">
+									分单用户:
+									{{if gt (len .configInfo.Users2) 0 }}
+										{{ range $k, $v := .list }}
+										<div class="input-group input-group-sm" style="margin-right: 10px;">
+											<input type="checkbox" id="twobox_{{$k}}" name="twobox_{{$k}}" value="{{$v.Id}}"
+											{{range $j, $o := $.configInfo.Users2}} 
+												{{ if eq $v.Id $o}}
+												checked
+												{{end}}								
+											{{end}}/>
+											<label for="scales" style="margin-left: 5px;">{{$v.UserName}}</label>
+										</div>
+										{{end}}
+									{{else}}
+									{{ range $k, $v := .list }}
+									<div class="input-group input-group-sm" style="margin-right: 5px;">
+										<input type="checkbox" id="twobox_{{$k}}" name="twobox_{{$k}}" value="{{$v.Id}}"/>
+										<label for="scales" style="margin-left: 5px;">{{$v.UserName}}</label>
+									</div>
+									{{end}}
+									{{end}}
+									
+								</div>
+								<div style="margin-top: 10px;">
+									时间段：02:30-10:00
+								</div>
+								<div class="input-group table_filtrate">
+									分单用户:
+									{{if gt (len .configInfo.Users3) 0 }}
+										{{ range $k, $v := .list }}
+										<div class="input-group input-group-sm" style="margin-right: 10px;">
+											<input type="checkbox" id="threebox_{{$k}}" name="threebox_{{$k}}" value="{{$v.Id}}"
+											{{range $j, $o := $.configInfo.Users3}} 
+												{{ if eq $v.Id $o}}
+												checked
+												{{end}}								
+											{{end}}/>
+											<label for="scales" style="margin-left: 5px;">{{$v.UserName}}</label>
+										</div>
+										{{end}}
+									{{else}}
+									{{ range $k, $v := .list }}
+									<div class="input-group input-group-sm" style="margin-right: 5px;">
+										<input type="checkbox" id="threebox_{{$k}}" name="threebox_{{$k}}" value="{{$v.Id}}"/>
+										<label for="scales" style="margin-left: 5px;">{{$v.UserName}}</label>
+									</div>
+									{{end}}
+									{{end}}
+									
+								</div>
+							</div>
+							<div class="form-inline" style="margin-top: 10px;">
+								<button type="submit" class="btn">保存</button>
+							</div>
+						</form>
+					</div>
+					{{else}}
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							{{if eq .tabid 1}}
+							<tr>
+								<th>编辑时间</th>
+								<th>类型</th>
+								<th>语言类型</th>
+								<th class="table-maxwidth">消息内容</th>
+								{{if $.isOperation }}
+									<th>操作</th>
+								{{end}}
+							</tr>
+							{{else if or (eq .tabid 2) (eq .tabid 7)}}
+							<tr>
+								<th>创建时间</th>
+								<th>类型</th>
+								<th>排序</th>
+								<th>图片名</th>
+								<th>图片</th>
+								{{if $.isOperation }}
+									<th>操作</th>
+								{{end}}
+							</tr>
+							{{else if eq .tabid 3}}
+							<tr>
+								<th>修改时间</th>
+								<th>邮箱</th>
+								<th>Telegram</th>
+								<th>WhatsApp</th>
+								{{if $.isOperation }}
+									<th>操作</th>
+								{{end}}
+							</tr>
+							{{else if eq .tabid 6}}
+							<tr>
+								<th>修改时间</th>
+								<th>Youtobe</th>
+								<th>Ins</th>
+								<th>Facebook</th>
+								<th>Telegram</th>
+								<th>奖金券显示金额</th>
+								<th>WhatsApp</th>
+								<th>X</th>
+								{{if $.isOperation }}
+									<th>操作</th>
+								{{end}}
+							</tr>
+							{{else if eq .tabid 5}}
+							<tr>
+								<th>CDKEY</th>
+								<th>创建时间</th>
+								<th>结束时间</th>
+								<th>功能备注</th>
+								<th>彩金</th>
+								<th>赠送金</th>
+								<th>可提彩金</th>
+								<th>BOUNS</th>
+								<th>指定ID</th>
+								<th>操作人</th>
+								{{if $.isOperation }}
+									<th>操作</th>
+								{{end}}
+							</tr>
+							{{else}}
+							<tr>
+								<th>创建时间</th>
+								<th>开始时间</th>
+								<th>结束时间</th>
+								<th>发送频率(分)</th>
+								<th>消息内容</th>
+								{{if $.isOperation }}
+									<th>操作</th>
+								{{end}}
+							</tr>
+							{{end}}
+						</thead>
+						<tbody>
+							{{if eq .tabid 1}}
+							{{range $k, $v := .list}}
+							<tr>
+								<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+								<td>
+									{{if eq $v.Rtype 1}}
+										<span>系统公告</span>
+									{{else if eq $v.Rtype 2}}
+										<span>停服公告</span>
+									{{else}}
+										<span>--</span>
+									{{end}}
+								</td>
+								<td>
+									{{if eq $v.Language 1}}
+										<span>英语</span>
+									{{else}}
+										<span>--</span>
+									{{end}}
+								</td>
+								<td class="table-maxwidth">{{$v.Content}}</td>
+								{{if $.isOperation }}
+								<td>
+									<a data-toggle="modal" data-target="#addModal" class="bule" data-id="{{$v.Id}}" data-lang="{{$v.Language}}" data-rtype="{{$v.Rtype}}"  data-text="{{$v.Content}}">编辑</a>
+								</td>
+								{{end}}
+							</tr>
+							{{end}}
+							{{else if or (eq .tabid 2) (eq .tabid 7)}}
+							{{range $k, $v := .list}}
+							<tr>
+								<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+								<td>{{$v.RtypeName}}</td>
+								<td>{{$v.SortId}}</td>
+								<td>{{$v.ImgName}}</td>
+								<td>
+									<img src="{{$v.Url}}" alt="Banner" height="30">
+								</td>
+								{{if $.isOperation }}
+								<td>
+									<a data-toggle="modal" data-target="#addBannerModal" class="bule" data-id="{{$v.Id}}">图片上传</a>
+									 |  
+									<a data-toggle="modal" data-target="#addBannerSortModal" class="bule" data-id="{{$v.Id}}" data-sid="{{$v.SortId}}">排序</a>
+									 | 
+									 <a title="{{$v.Id}}" class="red"  onclick="confirmDel(this)">删除</a>
+									 <!-- <a id="btn-banner-del" class="red" data-id="{{$v.Id}}">删除</a> -->
+								</td>
+								{{end}}
+							</tr>
+							{{end}}
+							{{else if eq .tabid 7}}
+							{{range $k, $v := .list}}
+							<tr>
+								<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+								<td>{{$v.RtypeName}}</td>
+								<td>{{$v.SortId}}</td>
+								<td>{{$v.ImgName}}</td>
+								<td>
+									<img src="{{$v.Url}}" alt="Bonus中心" height="30">
+								</td>
+								{{if $.isOperation }}
+								<td>
+									<a data-toggle="modal" data-target="#addBannerModal" class="bule" data-id="{{$v.Id}}">图片上传</a>
+									 |  
+									<a data-toggle="modal" data-target="#addBannerSortModal" class="bule" data-id="{{$v.Id}}" data-sid="{{$v.SortId}}">排序</a>
+									 | 
+									 <a title="{{$v.Id}}" class="red"  onclick="confirmDel(this)">删除</a>
+									 <!-- <a id="btn-banner-del" class="red" data-id="{{$v.Id}}">删除</a> -->
+								</td>
+								{{end}}
+							</tr>
+							{{end}}
+							{{else if eq .tabid 3}}
+							{{range $k, $v := .list}}
+							<tr>
+								<td>{{date $v.Utime "Y-m-d H:i:s"}}</td>
+								<td>{{$v.Mail}}</td>
+								<td>{{$v.Telegram}}</td>
+								<td>{{$v.WhatsApp}}</td>
+								{{if $.isOperation }}
+								<td>
+									<a data-toggle="modal" data-target="#addWayModal" class="bule" data-id="{{$v.Id}}" data-m="{{$v.Mail}}"  data-t="{{$v.Telegram}}" data-w="{{$v.WhatsApp}}">编辑</a>
+								</td>
+								{{end}}
+							</tr>
+							{{end}}
+							{{else if eq .tabid 6}}
+							{{range $k, $v := .list}}
+							<tr>
+								<td>{{date $v.Utime "Y-m-d H:i:s"}}</td>
+								<td>{{$v.Youtobe}}</td>
+								<td>{{$v.Ins}}</td>
+								<td>{{$v.Facebook}}</td>
+								<td>{{$v.Telegram}}</td>
+								<td>{{$v.CashPrize}}</td>
+								<td>{{$v.WhatsApp}}</td>
+								<td>{{$v.X}}</td>
+								{{if $.isOperation }}
+								<td>
+									<a data-toggle="modal" data-target="#addShareWayModal" class="bule" 
+										data-id="{{$v.Id}}" data-y="{{$v.Youtobe}}" data-i="{{$v.Ins}}" data-f="{{$v.Facebook}}" data-t="{{$v.Telegram}}" data-c="{{$v.CashPrize}}">编辑</a>
+								</td>
+								{{end}}
+							</tr>
+							{{end}}
+							{{else if eq .tabid 5}}
+							{{range $k, $v := .list}}
+							<tr>
+								<td>{{$v.Key}}</td>
+								<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+								<td>{{date $v.Etime "Y-m-d H:i:s"}}</td>
+								<td>{{$v.Remark}}</td>
+								<td>{{ printf "%.2f" $v.FDiamond}}</td>
+								<td>{{ printf "%.2f" $v.FGiveDiamond}}</td>
+								<td>{{ printf "%.2f" $v.FOutDiamond}}</td>
+								<td>{{ printf "%.2f" $v.FBouns}}</td>
+								<td>{{$v.UserId}}</td>
+								<td>{{$v.OperatorName}}</td>
+								{{if $.isOperation }}
+								<td>
+									<a  data-toggle="modal" data-target="#addCdKeyModal" class="bule" data-id="{{$v.Key}}" data-end="{{$v.Etime}}" data-remark="{{$v.Remark}}"  data-d="{{$v.Diamond}}" data-g="{{$v.GiveDiamond}}" data-o="{{$v.OutDiamond}}"  data-b="{{$v.Bouns}}" data-user="{{$v.UserId}}">编辑</a> |
+									<a href="{{urlfor "MessageController.DelCdkey" "id" $v.Key}}" class="red">移除</a>
+								</td>
+								{{end}}
+							</tr>
+							{{end}}
+							{{else}}
+								{{range $k, $v := .list}}
+								<tr>
+									<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+									<td>{{date $v.Stime "Y-m-d H:i:s"}}</td>
+									<td>{{date $v.Etime "Y-m-d H:i:s"}}</td>
+									<td>{{$v.Num}}</td>
+									<td>{{$v.Content}}</td>
+									{{if $.isOperation }}
+									<td>
+										<a href="{{urlfor "MessageController.NoticeEdit" "id" $v.Id}}" class="bule">编辑</a> |
+										<a href="{{urlfor "MessageController.NoticeDel" "id" $v.Id}}" class="red">移除</a>
+									</td>
+									{{end}}
+								</tr>
+								{{end}}
+							{{end}}
+	
+							{{if eq .count 0}}
+							<tr>
+								<td colspan="20">暂无记录...</td>
+							</tr>
+							{{end}}
+						</tbody>
+					</table>
+					{{end}}
+					
+				</div>
+				<div class="row">
+					<div class="row-page"> 
+						{{if gt .count 20}}
+						{{str2html .pageBar}}
+					{{end}}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+ 
+{{if or (eq .tabid 2) (eq .tabid 7)}}
+<!-- Banner/Bonus中心模态框（Modal） -->
+<div class="modal fade" id="addBannerModal" tabindex="-1" role="dialog" aria-labelledby="addBannerModalLabel" aria-hidden="true" >
+	<form enctype="multipart/form-data" class="form-horizontal" method="post" action="{{urlfor "MessageController.AddBanner" "tabid" .tabid }}" >
+		<div class="modal-dialog">
+			<div class="modal-content" style="width: 550px;">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel" >
+						上传Banner
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div id="alert-warning" class="alert alert-warning alert-dismissible hide" role="alert"></div>
+					<input type="hidden" id="bid" name="bid">
+					<div class="form-inline" style="margin-bottom: 10px;">
+						<label style="width: 100px;text-align: right;">类型：</label>
+						<select name="type_id" id="type_id">
+							{{range $k,$v := .imgtype}}
+							<option value="{{$k}}">{{$v}}</option>
+							{{end}}
+						</select>
+					</div>
+					<div class="form-inline" style="margin-bottom: 10px;">
+						<label style="width: 100px;text-align: right;">图片：</label>
+						<input type="text" id="imgUrl" name="imgUrl" style="width: 300px;" autocomplete="off">
+						<input type="file" id="filename" name="filename" accept="image/png, image/jpeg" class="file-loading hide"  autocomplete="off"/>
+						<button id="btn-upload" type="button" class="btn btn-sm btn-default"><i class="fa fa-upload" aria-hidden="true"></i> 上传图片</button>
+					</div>
+					<div class="form-inline" style="margin-bottom: 10px;">
+						<label style="width: 100px;text-align: right;">跳转地址：</label>
+						<input type="text" id="a_Url" name="a_Url" style="width: 300px;" autocomplete="off">
+					</div>
+					<div>
+						<label style="margin-left: 100px;">仅支持图片格式为jpg,png</label>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+					<button type="submit" class="btn">保 存</button>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+<!-- Banner Sort模态框（Modal） -->
+<div class="modal fade" id="addBannerSortModal" tabindex="-1" role="dialog" aria-labelledby="addBannerSortModalLabel" aria-hidden="true" >
+	<form class="form-horizontal ajax-form" method="post" action="{{urlfor "MessageController.BannerSort" "tabid" .tabid}}" >
+		<div class="modal-dialog">
+			<div class="modal-content" style="width: 400px;">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel" style="text-align: center;">
+						设置权重
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div id="alert-warning" class="alert alert-warning alert-dismissible hide" role="alert"></div>
+					<input type="hidden" id="sid" name="sid">
+					<div class="form-inline" style="margin-bottom: 10px;">
+						<label>设置权重：</label>
+						<input type="number" onkeyup="value=value.replace(/[^\d]/g,'')" id="bannersort" name="bannersort" min="0"  autocomplete="off"/>
+					</div>
+					<div class="form-inline">
+						<label>设置权重,数字越小越靠前</label>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+					<button type="submit" class="btn">保 存</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+{{else if eq .tabid 3}}
+<!-- 联系方式模态框（Modal） -->
+<div class="modal fade" id="addWayModal" tabindex="-1" role="dialog" aria-labelledby="addWayModalLabel" aria-hidden="true" >
+	<form class="form-horizontal ajax-form" method="post" action="{{urlfor "MessageController.EditContactWay"}}" >
+		<div class="modal-dialog">
+			<div class="modal-content" style="width: 500px;">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel" >
+						信息修改
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div id="alert-warning" class="alert alert-warning alert-dismissible hide" role="alert"></div>
+					<input type="hidden" id="wid" name="wid">
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px;">
+						<label for="mail" class="lab-text">邮箱：</label>
+						<input type="text" style="width: 300px;" id="mail" name="mail" autocomplete="off" placeholder="邮箱"/>
+					</div>
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px;">
+						<label for="telegram" class="lab-text">Telegram：</label>
+						<input type="text" style="width: 300px;" id="telegram" name="telegram" autocomplete="off" placeholder="Telegram"/>
+					</div>
+					<div class="form-inline" style="width: 100%;">
+						<label for="whatsapp" class="lab-text">WhatsApp：</label>
+						<input type="text" style="width: 50px;" id="areacode" name="areacode" maxlength="4"  autocomplete="off" placeholder="区号"/>
+						<span>-</span>
+						<input type="text" style="width: 235px;" id="whatsapp" name="whatsapp" maxlength="10" autocomplete="off" placeholder="WhatsApp"/>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+					<button type="submit" class="btn">保 存</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+{{else if eq .tabid 6}}
+<!-- 分享配置模态框（Modal） -->
+<div class="modal fade" id="addShareWayModal" tabindex="-1" role="dialog" aria-labelledby="addWayModalLabel" aria-hidden="true" >
+	<form class="form-horizontal ajax-form" method="post" action="{{urlfor "MessageController.EditShare"}}" >
+		<div class="modal-dialog">
+			<div class="modal-content" style="width: 500px;">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel" >
+						信息修改
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div id="alert-warning" class="alert alert-warning alert-dismissible hide" role="alert"></div>
+					<input type="hidden" id="sid" name="sid">
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px;">
+						<label for="youtobe" class="lab-text">Youtobe</label>
+						<input type="text" style="width: 300px;" id="youtobe" name="youtobe" autocomplete="off" placeholder="Youtobe"/>
+					</div>
+					<div class="form-inline" style="width: 100%;">
+						<label for="ins" class="lab-text">Ins：</label>
+						<input type="text" style="width: 300px;" id="ins" name="ins" autocomplete="off" placeholder="Ins"/>
+					</div>
+					<div class="form-inline" style="width: 100%;">
+						<label for="facebook" class="lab-text">Facebook：</label>
+						<input type="text" style="width: 300px;" id="facebook" name="facebook" autocomplete="off" placeholder="Facebook"/>
+					</div>
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px;">
+						<label for="telegram" class="lab-text">Telegram：</label>
+						<input type="text" style="width: 300px;" id="telegram" name="telegram" autocomplete="off" placeholder="Telegram"/>
+					</div>
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px;">
+						<label for="cashPrize" class="lab-text">CashPrize：</label>
+						<input type="text" style="width: 300px;" id="cashPrize" name="cashPrize" autocomplete="off" placeholder="CashPrize"/>
+					</div>
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px;">
+						<label for="whatsApp" class="lab-text">WhatsApp：</label>
+						<input type="text" style="width: 300px;" id="whatsApp" name="whatsApp" autocomplete="off" placeholder="WhatsApp"/>
+					</div>
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px;">
+						<label for="x" class="lab-text">X：</label>
+						<input type="text" style="width: 300px;" id="x" name="x" autocomplete="off" placeholder="X"/>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+					<button type="submit" class="btn">保 存</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+{{else if eq .tabid 5}}
+<!-- CDKEY模态框 -->
+<div class="modal fade" id="addCdKeyModal" tabindex="-1" role="dialog" aria-labelledby="addCdkeyModalLabel" aria-hidden="true" >
+	<form class="form-horizontal ajax-form" method="post" action="{{urlfor "MessageController.EditCdkey"}}" >
+		<div class="modal-dialog">
+			<div class="modal-content" style="width: 500px;">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel" >
+						CDKEY
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div id="alert-warning" class="alert alert-warning alert-dismissible hide" role="alert"></div>
+					<input type="hidden" id="cid" name="cid">
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px;">
+						<label for="cdkey" class="lab-text">结束时间：</label>
+						<input type="text" id="end_date2" name="end_date2" class="form-control" autocomplete="off" value="{{.info.Etime}}" />
+					</div>
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px;">
+						<label for="cdkey" class="lab-text">CDKEY：</label>
+						<input style="width: 300px;" type="text" id="cdkey" name="cdkey" maxlength="10" autocomplete="off" placeholder="请输入CDKEY"  value="{{.info.Key}}"/>
+					</div>
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px; margin-left: 105px;">
+							<input type="radio" id="coin" name="coin" value="0" checked />
+							<label for="huey" style="margin-right: 10px;">彩金</label>
+
+							<input type="radio" id="gift" name="coin" value="1" />
+							<label for="dewey"  style="margin-right: 10px;">赠送金</label>
+
+							<input type="radio" id="withdrawn" name="coin" value="2" />
+							<label for="louie" style="margin-right: 10px;">可提彩金</label>
+
+							<input type="radio" id="bonus" name="coin" value="3" />
+							<label for="bonus">BONUS</label>
+					</div>
+					<div class="form-inline" style="width: 100%;">
+						<label for="whatsapp" class="lab-text">额度：</label>
+						<input style="width: 300px;" type="text" id="limit" name="limit" autocomplete="off" maxlength="8" placeholder="请输入额度"  value="{{.info.Key}}"/>
+						<div style="line-height: 34px; color: red;margin-left: 105px;">10000=100卢比</div>
+					</div>
+					<div class="form-inline" style="width: 100%;">
+						<label for="whatsapp" class="lab-text">指定ID：</label>
+						<input style="width: 300px;" type="text" id="userId" name="userId" autocomplete="off" placeholder="请输入用户ID" value="{{.info.UserId}}"/>
+						<div style="line-height: 34px; color: red;margin-left: 105px;">不填写视为全部玩家可用</div>
+					</div>
+					<div class="form-inline" style="width: 100%;">
+						<label for="whatsapp" class="lab-text">功能备注：</label>
+						<textarea name="remark" style="width: 300px;"  id="remark" class="form-control" rows="6" autocomplete="off" value="{{.info.Remark}}" placeholder="请输入功能备注"></textarea>	
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+					<button type="submit" class="btn">保 存</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+{{else}}
+<!-- 公告消息模态框（Modal） -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true" >
+	<form class="form-horizontal ajax-form" method="post" action="{{urlfor "MessageController.Notice"}}" >
+		<div class="modal-dialog">
+			<div class="modal-content" style="width: 400px;">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel" >
+						公告内容
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div id="alert-warning" class="alert alert-warning alert-dismissible hide" role="alert"></div>
+					<input type="hidden" id="id" name="id">
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px;">
+						<label for="msg_type">类型：</label>
+						<select name="msg_type" id="msg_type" >
+							<option value="1">系统公告</option>
+							<option value="2">停服公告</option>
+						</select>
+					</div>
+					<div class="form-inline" style="width: 100%;margin-bottom: 10px;">
+						<label for="language">语言：</label>
+						<select name="language" id="language" >
+							<option value="1">英语</option>
+						</select>
+					</div>
+					<div class="form-inline" style="width: 100%;">
+						<textarea name="content" id="content" class="form-control" rows="6" maxlength="310" style="width: 100%;"></textarea>	
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+					<button type="submit" class="btn">保 存</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+{{end}}
+
+
+
+<script>
+	$(document).ready(function(){
+		// 公告消息
+		$('#addModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var nId = $(event.relatedTarget).data('id');
+			var nlang = $(event.relatedTarget).data('lang');
+			var ntype = $(event.relatedTarget).data('rtype');
+			var nText = $(event.relatedTarget).data('text');
+			var war = document.getElementById("alert-warning");
+			war.classList.add("hide");
+			if (ntype == null || nlang == null ){
+				ntype = '1'
+				nlang = '1'
+				
+			}
+			$('#msg_type').val(ntype)
+			$('#language').val(nlang)
+			$('#content').val(nText)
+			$('#id').val(nId)
+		});
+		// banner页
+		$('#addBannerModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var bId = $(event.relatedTarget).data('id');
+			var war = document.getElementById("alert-warning");
+			war.classList.add("hide");
+			$('#bid').val(bId)
+			$('#imgUrl').val('')
+			$('#filename').val('')
+		});
+		// banner页排序
+		$('#addBannerSortModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var sid = $(event.relatedTarget).data('id');
+			var sortid = $(event.relatedTarget).data('sid');
+			var nText = $(event.relatedTarget).data('text');
+			var war = document.getElementById("alert-warning");
+			war.classList.add("hide");
+			$('#bannersort').val(sortid)
+			$('#sid').val(sid)
+		});
+		// 联系方式
+		$('#addWayModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var id = $(event.relatedTarget).data('id');
+			var m1 = $(event.relatedTarget).data('m');
+			var t1 = $(event.relatedTarget).data('t');
+			var w1 = $(event.relatedTarget).data('w');
+
+			var war = document.getElementById("alert-warning");
+			war.classList.add("hide");
+			console.log("w1:"+typeof(w1))
+			$('#mail').val(m1)
+			$('#telegram').val(t1)
+			var a1 = ""
+			var wa1 = ""
+			if (w1 != ""){
+				var str = w1.toString();
+				let firstDashIndex = str.indexOf('-'); // 找到第一个破折号的位置
+				console.log("firstDashIndex:"+firstDashIndex)
+				// 如果存在破折号
+				if (firstDashIndex !== -1) {
+    					let part1 = str.substring(0, firstDashIndex); // 从字符串开始到第一个破折号
+    					let part2 = str.substring(firstDashIndex + 1); // 从第一个破折号之后到字符串结束
+						a1 = part1
+						wa1 = part2
+    					console.log(part1); // 输出: 91
+    					console.log(part2); // 输出: 67485-29314
+				}else{
+						wa1 = str
+				}
+			}
+			$('#areacode').val(a1)
+			$('#whatsapp').val(wa1)
+			$('#wid').val(id)
+		});
+
+		$("#btn-upload").click(function() {
+			$("#filename").click();
+		});
+		//当选择好上传文件后,执行提交表单的操作
+		$("#filename").change(function() {
+			// alert("上传文件");
+			var fileInput = document.getElementById("filename").files[0];
+			if (fileInput){
+				var fileName = fileInput.name; //获取文件名（包括后缀）
+        		//判断文件类型是否为jpg或png
+        		if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png")) {
+					//在这里添加上传文件的相关操作
+					$('#imgUrl').val(fileName)
+        		} else{
+            		alert("上传图片格式有误！\n仅支持格式为jpg,png的图片！");
+					$('#filename').val('')
+       			}
+			}else{
+				alert("请选择上传图片！");
+			}
+			
+			//$("#uploadform").submit();
+		});
+	
+		// CDKEY
+		$('#addCdKeyModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var bId = $(event.relatedTarget).data('id');
+			var endtime = $(event.relatedTarget).data('end');
+			var remark = $(event.relatedTarget).data('remark');
+			var d = $(event.relatedTarget).data('d');
+			var g = $(event.relatedTarget).data('g');
+			var o = $(event.relatedTarget).data('o');
+			var b = $(event.relatedTarget).data('b');
+			var userid = $(event.relatedTarget).data('user');
+			var war = document.getElementById("alert-warning");
+			war.classList.add("hide");
+			if (endtime != null){
+				endtime = endtime.substr(0, 10);
+			}
+			$('#cid').val(bId)
+			$('#end_date2').val(endtime)
+			$('#cdkey').val(bId)
+			$('#limit').val('')
+			$('#userId').val(userid)
+			$('#remark').val(remark)
+			if (d > 0) {
+				$('#limit').val(d)
+				$('input[name="coin"][value="0"]').prop('checked', true);
+			}
+			if (g > 0) {
+				$('#limit').val(g)
+				$('input[name="coin"][value="1"]').prop('checked', true);
+			}
+			if (o > 0) {
+				$('#limit').val(o)
+				$('input[name="coin"][value="2"]').prop('checked', true);
+			}
+			if (b > 0) {
+				$('#limit').val(o)
+				$('input[name="coin"][value="3"]').prop('checked', true);
+			}
+		});
+
+		$('#addShareWayModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var id = $(event.relatedTarget).data('id');
+			var y = $(event.relatedTarget).data('y');
+			var i = $(event.relatedTarget).data('i');
+			var f = $(event.relatedTarget).data('f');
+			var t = $(event.relatedTarget).data('t');
+			var c = $(event.relatedTarget).data('c');
+			// var userid = $(event.relatedTarget).data('user');
+			var war = document.getElementById("alert-warning");
+			war.classList.add("hide");
+			
+			$('#sid').val(id)
+			$('#youtobe').val(y)
+			$('#ins').val(i)
+			$('#facebook').val(f)
+			$('#telegram').val(t)
+			$('#cashPrize').val(c)
+			// if (d > 0) {
+			// 	$('#limit').val(d)
+			// 	$('input[name="coin"][value="0"]').prop('checked', true);
+			// }
+			// if (g > 0) {
+			// 	$('#limit').val(g)
+			// 	$('input[name="coin"][value="1"]').prop('checked', true);
+			// }
+			// if (o > 0) {
+			// 	$('#limit').val(o)
+			// 	$('input[name="coin"][value="2"]').prop('checked', true);
+			// }
+			// if (b > 0) {
+			// 	$('#limit').val(o)
+			// 	$('input[name="coin"][value="3"]').prop('checked', true);
+			// }
+		});
+		// 删除banner
+		// $("#btn-banner-del").on('click',function(event){
+		// 	var sid = $(event.relatedTarget).data('id');
+		// 	alert(sid)
+		// })
+		var radioClose = document.getElementById("no-mark");
+		if (radioClose != null){
+			radioClose.addEventListener('change', () =>{
+				var war = document.getElementById("userdiv");
+				war.classList.add("hide");
+			});
+		}
+
+		var radioOpen = document.getElementById("sequence");
+		if (radioOpen != null){
+			radioOpen.addEventListener('change', () =>{
+				var war = document.getElementById("userdiv");
+				war.classList.remove("hide");
+			});
+		}
+	});
+
+	function confirmDel(event) {
+		if (confirm("确定要删除该Banner页？")) {
+			// 这里写入删除记录的代码
+			var clickedElement = event;
+			var userId = clickedElement.getAttribute('title');
+			$.post("/admin/message/delbanner?tabid={{.tabid}}&id=" + userId, function(data){
+				// 将查询结果填充到模态框中
+				alert(data.msg)
+				if (data.status == 0){
+					// 删除成功，刷新页面
+					location.reload();
+				}
+				console.log(data)
+			});
+		} else {
+			return false;
+		}
+	}
+</script>
+<style>
+	.lab-text{
+		width: 100px;
+		text-align: right;
+	}
+</style>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.tabid}}) });
+</script>

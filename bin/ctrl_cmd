@@ -1,0 +1,371 @@
+#!/bin/bash
+
+set -e
+
+SCRIPT_DIR=$(cd `dirname $0`; pwd)
+
+cd $SCRIPT_DIR
+
+PROJECT_DIR=$(cd ${SCRIPT_DIR}/../; pwd)
+
+PROTO_DIR="${PROJECT_DIR}/proto"
+
+TABLE_DIR="${PROJECT_DIR}/table"
+
+TABLE_DIR_M="${PROJECT_DIR}/m-table"
+
+TBL_DIR="${PROJECT_DIR}/tbl"
+
+PB_DIR="${PROJECT_DIR}/pb"
+
+LOG_DIR="${PROJECT_DIR}/bin/logs"
+
+CMD_PB_DIR="${PROJECT_DIR}/tool/pb"
+
+LOG_FILE="${SCRIPT_DIR}/ctrl_cmd.log"
+
+
+usage() {
+    echo " ./ctrl_cmd "
+    echo " cmd : build"
+    echo " cmd : start -target=(login|gate|dbms) (-node=1)"
+    echo " cmd : stop -target=(login|gate|dbms) (-node=1)"
+    echo " cmd : restart -target=(login|gate|dbms) (-node=1)"
+}
+
+get_target() {
+    # $1=-target=dbms
+    if [[ $1 == '-target='* ]]; then
+        target=(`echo $1 | tr '=' ' '`)
+        echo ${target[1]}
+    fi
+}
+
+get_nodeid() {
+    # $1=-node=1
+    if [[ $1 == '-node='* ]]; then
+        node=(`echo $1 | tr '=' ' '`)
+        echo ${node[1]}
+        # echo ${1:0-1:1}
+    fi
+}
+
+check_bin() {
+    if [[ ! -e ${SCRIPT_DIR}/cmd.bin ]]; then
+        echo "失败, 执行文件不存在"
+        exit 1
+    fi
+}
+
+check_global_bin() {
+    if [[ ! -e ${SCRIPT_DIR}/cmd_global.bin ]]; then
+        echo "失败, 执行文件不存在"
+        exit 1
+    fi
+}
+
+get_pid() {
+    binFile=${SCRIPT_DIR}/cmd.bin
+    target=`get_target $1`
+    nodeid=`get_nodeid $2`
+    if [[ ${nodeid} == '' ]]; then
+        ps aux | grep ${binFile} | grep target=${target} | grep -v grep | awk '{print $2}' | head -1
+    else
+        ps aux | grep ${binFile} | grep target=${target} | grep node=${nodeid} | grep -v grep | awk '{print $2}' | head -1
+    fi
+}
+
+get_global_pid() {
+    binFile=${SCRIPT_DIR}/cmd_global.bin
+    target=`get_target $1`
+    nodeid=`get_nodeid $2`
+    if [[ ${nodeid} == '' ]]; then
+        ps aux | grep ${binFile} | grep target=${target} | grep -v grep | awk '{print $2}' | head -1
+    else
+        ps aux | grep ${binFile} | grep target=${target} | grep node=${nodeid} | grep -v grep | awk '{print $2}' | head -1
+    fi
+}
+
+get_logfile() {
+    target=`get_target $1`
+    nodeid=`get_nodeid $2`
+    if [[ ${nodeid} == '' ]]; then
+        echo ${target}-node.log
+    else
+        echo ${target}-node-${nodeid}.log
+    fi
+}
+
+status() {
+    check_bin
+    target=`get_target $1`
+    pid=`get_pid $1 $2`
+
+    if [[ -z "$pid" ]]; then
+        echo "未运行 ${target} $2"
+    else
+        echo "运行中 ${target} $2 进程ID为 ${pid}"
+    fi
+}
+
+status_global() {
+    check_global_bin
+    target=`get_target $1`
+    pid=`get_global_pid $1 $2`
+
+    if [[ -z "$pid" ]]; then
+        echo "未运行 ${target} $2"
+    else
+        echo "运行中 ${target} $2 进程ID为 ${pid}"
+    fi
+}
+
+get_curr_time() {
+    echo `date +"%Y-%m-%d %H:%M:%S"`
+}
+
+save_log() {
+    echo "" >> ${LOG_FILE}
+    echo "Time: "`get_curr_time`"   $1 " >> ${LOG_FILE}
+}
+
+start() {
+    check_bin
+    target=`get_target $1`
+    pid=`get_pid $1 $2`
+    binFile=${SCRIPT_DIR}/cmd.bin
+
+    if [ "$pid" != '' ]; then
+        echo "运行中 ${target} $2 进程ID为 ${pid}"
+    else
+        logFile=`get_logfile $1 $2`
+        if [[ ${1} == '' ]]; then
+            echo "未指定输出日志文件"
+            exit 1
+        fi
+        echo -n "正在启动 ${target} ${2} ... "
+        save_log "正在启动 ${target} ${2} ... "
+        ${binFile} $1 $2 >& ${logFile} &
+        # ${binFile} $1 $2 -log_dir="logs" -stderrthreshold="INFO" >& ${logFile} &
+        save_log "${target} ${2} started $! ... "
+        sleep 3s
+        status $1 $2
+    fi
+}
+
+start_global() {
+    check_global_bin
+    target=`get_target $1`
+    pid=`get_global_pid $1 $2`
+    binFile=${SCRIPT_DIR}/cmd_global.bin
+
+    if [ "$pid" != '' ]; then
+        echo "运行中 ${target} $2 进程ID为 ${pid}"
+    else
+        logFile=`get_logfile $1 $2`
+        if [[ ${1} == '' ]]; then
+            echo "未指定输出日志文件"
+            exit 1
+        fi
+        echo -n "正在启动 ${target} ${2} ... "
+        save_log "正在启动 ${target} ${2} ... "
+        ${binFile} $1 $2 >& ${logFile} &
+        # ${binFile} $1 $2 -log_dir="logs" -stderrthreshold="INFO" >& ${logFile} &
+        save_log "${target} ${2} started $! ... "
+        sleep 3s
+        status_global $1 $2
+    fi
+}
+
+stop() {
+    check_bin
+    target=`get_target $1`
+    pid=`get_pid $1 $2`
+
+    if [ "$pid" != '' ]; then
+        echo -n "正在停止 ${target} ... "
+        save_log "正在停止 ${target} ${pid} ... "
+        #kill -9 $pid
+        kill -2 $pid
+        # sleep 15s
+        echo "$pid killed!"
+        save_log "${target} ${pid} killed! "
+    else
+        echo "未运行 ${target} $2"
+    fi
+}
+
+stop_global() {
+    check_global_bin
+    target=`get_target $1`
+    pid=`get_global_pid $1 $2`
+
+    if [ "$pid" != '' ]; then
+        echo -n "正在停止 ${target} ... "
+        save_log "正在停止 ${target} ${pid} ... "
+        #kill -9 $pid
+        kill -2 $pid
+        # sleep 15s
+        echo "$pid killed!"
+        save_log "${target} ${pid} killed! "
+    else
+        echo "未运行 ${target} $2"
+    fi
+}
+
+restart() {
+    echo -n "正在重启 ${target} ... "
+    stop $1 $2
+    sleep 1s
+    start $1 $2
+}
+
+build() {
+    go build -o ${SCRIPT_DIR}/cmd.bin -ldflags "-w -s" ${PROJECT_DIR}/cmd/game
+}
+
+build_global() {
+    go build -o ${SCRIPT_DIR}/cmd_global.bin -ldflags "-w -s" ${PROJECT_DIR}/cmd/global
+}
+
+sync_test_tar(){
+    cd ${SCRIPT_DIR} && tar zcf cmd.bin.tar.gz cmd.bin
+    scp ${SCRIPT_DIR}/cmd.bin.tar.gz test:/home/ubuntu/game
+}
+
+sync_global_test_tar(){
+    cd ${SCRIPT_DIR} && tar zcf cmd_global.bin.tar.gz cmd_global.bin
+    scp ${SCRIPT_DIR}/cmd_global.bin.tar.gz test:/home/ubuntu/game
+}
+
+sync_test(){
+    scp ${SCRIPT_DIR}/cmd.bin test:/home/ubuntu/game
+}
+
+start_all() {
+    start -target=dbms
+    start -target=gate -node=1
+    start -target=hua -node=1
+    start -target=joker -node=1
+    start -target=ak47 -node=1
+    start -target=rm2 -node=1
+    start -target=lhd -node=1
+    start -target=up7 -node=1
+    start -target=crash -node=1
+    start -target=andarbahar -node=1
+    start -target=lottery -node=1
+    start -target=plane -node=1
+    start -target=redblack -node=1
+    # start -target=sms
+    start -target=login
+    start -target=robot -node=1
+    start -target=robot -node=4
+    start -target=robot -node=5
+    start -target=robot -node=6
+    start -target=robot -node=12
+    # start -target=betrank
+}
+
+stop_all() {
+    # stop -target=betrank
+    stop -target=robot -node=1
+    stop -target=robot -node=2
+    stop -target=robot -node=3
+    stop -target=robot -node=4
+    stop -target=robot -node=5
+    stop -target=robot -node=6
+    stop -target=robot -node=7
+    stop -target=robot -node=8
+    stop -target=robot -node=9
+    stop -target=robot -node=10
+    stop -target=robot -node=12
+    stop -target=robot -node=13
+    stop -target=login
+    # stop -target=pay
+    # stop -target=sms
+    stop -target=hua -node=1
+    stop -target=joker -node=1
+    stop -target=ak47 -node=1
+    # stop -target=rm -node=1
+    stop -target=rm2 -node=1
+    stop -target=lhd -node=1
+    stop -target=up7 -node=1
+    stop -target=crash -node=1
+    stop -target=andarbahar -node=1
+    stop -target=lottery -node=1
+    stop -target=plane -node=1
+    stop -target=redblack -node=1
+    stop -target=gate -node=1
+    stop -target=dbms
+}
+
+show() {
+    status -target=dbms
+    status -target=gate -node=1
+    status -target=hua -node=1
+    # status -target=hua2 -node=1
+    status -target=joker -node=1
+    status -target=ak47 -node=1
+    # status -target=rm -node=1
+    status -target=rm2 -node=1
+    status -target=lhd -node=1
+    status -target=up7 -node=1
+    status -target=crash -node=1
+    status -target=andarbahar -node=1
+    status -target=lottery -node=1
+    status -target=plane -node=1
+    status -target=redblack -node=1
+    ./ctrl status pay
+    # status -target=sms
+    status -target=login
+    status -target=robot -node=1
+    status -target=robot -node=4
+    status -target=robot -node=5
+    status -target=robot -node=6
+    status -target=robot -node=12
+    # status -target=betrank
+}
+
+case $1 in
+    build)
+        build;;
+    start)
+        start $2 $3;;
+    stop)
+        stop $2 $3;;
+    status)
+        status $2 $3;;
+    restart)
+        restart $2 $3;;
+    startall)
+        start_all;;
+    stopall)
+        stop_all;;
+    show)
+        show;;
+    sync_test)
+        sync_test;;
+    sync_test_tar)
+        sync_test_tar;;
+    build_global)
+        build_global;;
+    sync_global_test_tar)
+        sync_global_test_tar;;
+    start_global)
+        start_global $2 $3;;
+    stop_global)
+        stop_global $2 $3;;
+    *)
+        usage;;
+esac
+
+# ln -s /home/ubuntu/game/conf.ini /home/ubuntu/game/config/conf.ini
+# ln -s /home/ubuntu/game/app.conf /home/ubuntu/game/config/app.conf
+# ln -s /home/ubuntu/game/table /home/ubuntu/game/config/table
+# ln -s /home/ubuntu/game/free /home/ubuntu/game/config/free
+# ln -s /home/ubuntu/game/GeoLite2-City.mmdb /home/ubuntu/game/config/GeoLite2-City.mmdb
+# ln -s /home/ubuntu/game/GeoLite2-Country.mmdb /home/ubuntu/game/config/GeoLite2-Country.mmdb
+# ln -s /home/ubuntu/game/name.xlsx /home/ubuntu/game/config/name.xlsx
+# ln -s /home/ubuntu/game/head.xlsx /home/ubuntu/game/config/head.xlsx
+# ln -s /home/ubuntu/game/photo.json /home/ubuntu/game/config/photo.json
+# ln -s /home/ubuntu/game/sms.ini /home/ubuntu/game/config/sms.ini

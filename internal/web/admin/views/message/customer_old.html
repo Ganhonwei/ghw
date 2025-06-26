@@ -1,0 +1,283 @@
+<div class="row">
+	<div class="col-xs-12">
+		<ul class="nav nav-tabs" id="list-tab">
+			<li {{if eq .tabid 0}}class="active" {{end}}>
+				<a href="{{urlfor "MessageController.Customer" "tabid" 0}}">你的消息</a>
+			</li>
+			<li {{if eq .tabid 1}}class="active" {{end}}>
+				<a href="{{urlfor "MessageController.Customer" "tabid" 1}}">最近消息</a>
+			</li>
+			<li {{if eq .tabid 2}}class="active" {{end}}>
+				<a href="{{urlfor "MessageController.Customer" "tabid" 2}}">全部信息</a>
+			</li>
+			<li {{if eq .tabid 3}}class="active" {{end}}>
+				<a href="{{urlfor "MessageController.Customer" "tabid" 3}}">待审头像</a>
+			</li>
+			<li {{if eq .tabid 4}}class="active" {{end}}>
+				<a href="{{urlfor "MessageController.Customer" "tabid" 4}}">全部头像信息</a>
+			</li>
+		</ul>
+		<div class="tabbable">
+			<div class="tab-content">
+				<form class="form-inline" method="post" action="{{urlfor "MessageController.Customer" "tabid"
+					.tabid}}">
+					<input type="hidden" name="status" value="{{.status}}" />
+					<div class="input-group table_filtrate">
+						账号查询:
+						<div class="input-group input-group-sm">
+							<input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+								placeholder="玩家ID" autocomplete="off" />
+							<span class="input-group-addon">
+								<i class="ace-icon fa fa-users"></i>
+							</span>
+						</div>
+					</div>
+					{{if or (eq .tabid 0) (eq .tabid 1) (eq .tabid 2) }}
+					<div class="input-group table_filtrate">
+						沟通状态:
+						<div class="input-group input-group-sm">
+							<select name="status_id" id="status_id">
+								{{range $k,$v := .statusList}}
+								<option value="{{$k}}" {{if eq $.statusId $k}}selected{{end}}>{{$v}}</option>
+								{{end}}
+							</select>
+						</div>
+					</div>
+					{{end}}
+					<div class="input-group input-group-sm">
+						<button type="submit" class="btn">查询</button>
+						{{if or (eq .tabid 0) (eq .tabid 1) (eq .tabid 2) }}
+						{{if .isOperation }}
+						<a style="margin-left: 5px;" data-toggle="modal" data-target="#addModal"
+							class="btn btn-sm btn-default" data-id="{{.stype}}"><i class="fa fa-plus"></i> 添加</a>
+						<!-- <a style="margin-left: 5px;" href="{{urlfor "PlayerController.SystemEdit" "stype" .stype}}" class="btn btn-sm btn-default"><i class="fa fa-plus"></i> 添加</a> -->
+						{{end}}
+						{{end}}
+					</div>
+				</form>
+				<div class="space-4"></div>
+
+				<div class="table-panel" table-wrap="300">
+					{{if or (eq .tabid 3) (eq .tabid 4) }}
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th>用户ID</th>
+								<th>昵称</th>
+								<th>渠道</th>
+								<th>审核状态</th>
+								<th>上传头像</th>
+								<th>上传时间</th>
+								<th>审核人</th>
+								<th>审核时间</th>
+								{{if $.isOperation }}
+								<th>操作</th>
+								{{end}}
+							</tr>
+						</thead>
+						<tbody>
+							{{range $k, $v := .list}}
+							<tr>
+								<td>
+									<a href="{{urlfor "Statistics2Controller.PlayerData" "userid" $v.UserId}}"
+										target="_blank">{{$v.UserId}}</a>
+								</td>
+								<td>{{$v.Nickname}}</td>
+								<td>{{$v.BundleId}}</td>
+								<td>
+									{{if eq $v.IsAudit 1}}
+									<span class="text-success bigger-110 green">通过</span>
+									{{else if eq $v.IsAudit 2}}
+									<span class="text-warning bigger-110 red">拒绝</span>
+									{{else if eq $v.IsAudit 0}}
+									<span class="bigger-110 orange">待审核</span>
+									{{else}}
+									<span class="bigger-110">--</span>
+									{{end}}
+								</td>
+								<td>
+									<img src="{{$v.Url}}" alt="Banner" height="30"  onclick="openOverlay(this)">
+								</td>
+								<td>
+									{{$v.S_Ctime}}
+								</td>
+								<td>
+									{{$v.Auditor}}
+								</td>
+								<td>
+									{{$v.S_ATime}}
+								</td>
+								{{if $.isOperation }}
+								<td>
+
+									{{if eq $v.IsAudit 0}}
+									<a href="{{urlfor "MessageController.UploadHeadPass" "id" $v.Id "tabid" $.tabid}}"
+										class="green">通过</a>|
+									<a href="{{urlfor "MessageController.UploadHeadRefuse" "id" $v.Id "tabid" $.tabid}}"
+										class="red">拒绝</a>
+
+									{{end}}
+								</td>
+								{{end}}
+							</tr>
+							{{end}}
+							{{if eq .count 0}}
+							<tr>
+								<td colspan="20">暂无记录...</td>
+							</tr>
+							{{end}}
+						</tbody>
+					</table>
+					{{else}}
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th>用户ID</th>
+								<th>昵称</th>
+								<th>VIP等级</th>
+								<th>渠道</th>
+								<th>状态</th>
+								<th>沟通状态</th>
+								<th>最后消息时间</th>
+								<th class="table-maxwidth">最近消息</th>
+								<th>分配客服</th>
+								{{if $.isOperation }}
+								<th>操作</th>
+								{{end}}
+							</tr>
+						</thead>
+						<tbody>
+							{{range $k, $v := .list}}
+							<tr>
+								<td>
+									<a href="{{urlfor "Statistics2Controller.PlayerData" "userid" $v.Userid}}"
+										target="_blank">{{$v.Userid}}</a>
+								</td>
+								<td>{{$v.Nickname}}</td>
+								<!-- {{$v.ChargeType}} -->
+								<td>{{$v.VipLv}}</td>
+								<td>{{$v.BundleId}}</td>
+								<td>
+									{{if eq $v.OnlineStatus true}}
+									<span class="text-success bigger-110 green">在线</span>
+									{{else}}
+									<span class="text-warning bigger-110 gray">离线</span>
+									{{end}}
+								</td>
+								<td>
+									{{if eq $v.ReplyStatus 3}}
+									<span class="text-success bigger-110 green">已回复</span>
+									{{else if eq $v.ReplyStatus 2}}
+									<span class="text-warning bigger-110 red">未回复</span>
+									{{else if eq $v.ReplyStatus 1}}
+									<span class="bigger-110 orange">未查看</span>
+									{{else}}
+									<span class="bigger-110">--</span>
+									{{end}}
+								</td>
+								<td>
+									{{ if $v.Utime.IsZero }}
+									-
+									{{ else }}
+									{{date $v.Utime "Y-m-d H:i:s"}}
+									{{ end }}
+								</td>
+								<td class="table-maxwidth">{{$v.LastMsg}}</td>
+								<td>{{$v.AssignUserName}}</td>
+								{{if $.isOperation }}
+								<td>
+									<a href="{{urlfor "MessageController.CustomerReply" "userid" $v.Userid}}"
+										class="green">沟通</a>
+								</td>
+								{{end}}
+							</tr>
+							{{end}}
+							{{if eq .count 0}}
+							<tr>
+								<td colspan="20">暂无记录...</td>
+							</tr>
+							{{end}}
+						</tbody>
+					</table>
+					{{end}}
+				</div>
+				<div class="row">
+					<div class="row-page">
+						{{if gt .count 20}}
+						{{str2html .pageBar}}
+						{{end}}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+	<form class="form-inline" method="post" action="{{urlfor "MessageController.CustomerAdd"}}">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel">
+						新增聊天
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						用户ID：<input type="text" class="form-control" id="userid" name="userid" placeholder="请输入用户ID"
+							value="{{.userid}}" autocomplete="off" />
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn">确定</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+<!-- 弹出窗口的遮罩层 -->
+<div class="overlay" onclick="closeOverlay()">
+	<img id="overlayImg" src="" alt="放大图片">
+  </div>
+  <style>
+	/* 遮罩层样式 */
+	.overlay {
+	  position: fixed;
+	  top: 0;
+	  left: 0;
+	  width: 100%;
+	  height: 100%;
+	  background-color: rgba(0, 0, 0, 0.7); /* 半透明黑色背景 */
+	  z-index: 999;
+	  display: none; /* 默认隐藏 */
+	  justify-content: center;
+	  align-items: center;
+	}
+	/* 放大图片的容器样式 */
+	.overlay img {
+	  max-width: 90%;
+	  max-height: 90%;
+	  cursor: pointer;
+	}
+  </style>
+  <script>
+	function openOverlay(img) {
+	  var overlay = document.querySelector('.overlay');
+	  var overlayImg = document.getElementById('overlayImg');
+	  overlayImg.src = img.src;
+	  overlay.style.display = 'flex'; // 显示遮罩层
+	}
+	
+	function closeOverlay() {
+	  var overlay = document.querySelector('.overlay');
+	  overlay.style.display = 'none'; // 隐藏遮罩层
+	}
+	</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.tabid}}) });
+</script>

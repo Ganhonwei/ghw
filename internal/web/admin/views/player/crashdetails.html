@@ -1,0 +1,128 @@
+<div class="row">
+    <div class="col-xs-12">
+        <form class="form-horizontal ajax-form" method="post" action="{{urlfor "PlayerController.CrashDetails"}}">
+            <div class="form-group" style="border-bottom:1px solid #DCDFE6">
+                <div class="col-sm-12" style="padding-bottom:10px;">
+                    <label for="number" class="col-sm-2 lable-top">局号：{{.info.WaterId}}</label>
+                    <label for="number" class="col-sm-2 lable-top">桌子ID：{{.info.DeskId}}</label>
+                    <label for="number" class="col-sm-2 lable-top">策略类型：
+                        {{if eq .info.CRASHDetail.IsStrategy true}}
+                        {{range $k, $v := .info.CRASHDetail.StrategyType}}
+                        {{if eq $v 1 }}
+                        <span>扶摇直上&nbsp;</span>
+                        {{else if eq $v 2}}
+                        <span>欲薅无门&nbsp;</span>
+                        {{else if eq $v 3}}
+                        <span>虚假情报&nbsp;</span>
+                        {{else if eq $v 4}}
+                        <span>起死回生&nbsp;</span>
+                        {{else if eq $v 5}}
+                        <span>奖池风控&nbsp;</span>
+                        {{else if eq $v 6}}
+                        <span>冒险奖励&nbsp;</span>
+                        {{else if eq $v 7}}
+                        <span>人狂有祸&nbsp;</span>
+                        {{else}}
+                        <span>常规&nbsp;</span>
+                        {{end}}
+                        {{end}}
+                        {{else}}
+                        <span>常规&nbsp;</span>
+                        {{end}}
+                    </label>
+                    <label for="number" class="col-sm-2 lable-top">玩家最终系数：{{.info.FPlayerFactor}}</label>
+                    <label for="number" class="col-sm-12 lable-top">
+                        <div style="float: left;">
+                            参与玩家ID：
+                        </div>
+                        <div class="players-panel">{{.info.Players}}</div>
+                    </label>
+                    <div class="page-close">
+                        <a href="{{urlfor "PlayerController.PlayList" "id" .userid "type_id" .typeId "start_date" .startDate "end_date" .endDate "record_id" .recordId "room_id" .roomId}}" class="btn btn-default"><i
+                            class="fa fa-close"></i></a>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+</form>
+<table class="table table-striped table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>开奖结果</th>
+            <th>总下注</th>
+            <th>玩家赢分</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{.info.CRASHDetail.Result }}</td>
+            <td>{{ printf "%.2f" .info.CRASHDetail.FBets }}</td>
+            <td>{{ printf "%.2f" .info.CRASHDetail.FPlayerWin }}</td>
+        </tr>
+    </tbody>
+</table>
+<div class="space-4">
+</div>
+<div class="table-panel" table-wrap="340">
+    <table class="table table-striped table-bordered table-hover" >
+        <thead>
+            <tr>
+                <th>下注用户ID</th>
+                <th>结果</th>
+                <th>下注</th>
+                <th>结算</th>
+                <th>位置1下注</th>
+                <th>位置2下注</th>
+                <th>位置1逃脱倍数</th>
+                <th>位置2逃脱倍数</th>
+                <th>位置1结算</th>
+                <th>位置2结算</th>
+                <th>账变前分数</th>
+                <th>账变后分数</th>
+                <th>账变前彩金</th>
+                <th>账变后彩金</th>
+                <!-- <th>账变前奖励金</th>
+                <th>账变后奖励金</th> -->
+                <th>彩金明税</th>
+                <!-- <th>奖励金明税</th> -->
+                <th>彩金暗税</th>
+                <!-- <th>奖励金暗税</th> -->
+            </tr>
+        </thead>
+        <tbody>
+            {{range $k, $v := .info.CRASHDetail.UserDetail}}
+            <tr>
+                <td>{{ $v.Userid }}</td>
+                <td>{{ $v.Result }}</td>
+                <td>{{ $v.FBet }}</td>
+                <td>{{ printf "%.2f" $v.FWin }}</td>
+                <td>{{ $v.FBet0 }}</td>
+                <td>{{ $v.FBet1 }}</td>
+                <td>
+                    {{if eq $v.Multiple ""}}未逃脱{{else}}{{ $v.Multiple }}{{end}}
+                    {{if $v.AutoCrash0 }}/自动逃{{end}}
+                </td>
+                <td>
+                    {{if eq $v.Multiple1 ""}}未逃脱{{else}}{{ $v.Multiple1 }}{{end}}
+                    {{if $v.AutoCrash1 }}/自动逃{{end}}
+                </td>
+                <td>{{ printf "%.2f" $v.FWin0 }}</td>
+                <td>{{ printf "%.2f" $v.FWin1 }}</td>
+                <td>{{ printf "%.2f" $v.FBeforeScore }}</td>
+                <td>{{ printf "%.2f" $v.FAfterScore }}</td>
+                <td>{{ printf "%.2f" $v.FBeforeCash }}</td>
+                <td>{{ printf "%.2f" $v.FAfterCash }}</td>
+                <!-- <td>{{ printf "%.2f" $v.FBeforeBonus }}</td>
+                <td>{{ printf "%.2f" $v.FAfterBonus }}</td> -->
+                <td>{{ printf "%.2f" $v.FCashMingTax }}</td>
+                <!-- <td>{{ printf "%.2f" $v.FBonusMingTax }}</td> -->
+                <td>{{ printf "%.2f" $v.FCashAnTax }}</td>
+                <!-- <td>{{ printf "%.2f" $v.FBonusAnTax }}</td> -->
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+</div>
+</div>

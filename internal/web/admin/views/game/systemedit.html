@@ -1,0 +1,190 @@
+
+<div class="alert alert-warning alert-dismissible hide" role="alert"></div>
+
+<form class="form-horizontal ajax-form col-sm-5" method="post" action="{{urlfor "GameController.SystemEdit"}}">
+	<input type="hidden" name="stype" value="{{.stype}}" />
+    <input type="hidden" name="count" value="{{.count}}" />
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+            {{if eq .stype "2"}}
+            <tr>
+                <th>名称</th>
+                <th>上限值</th>
+            </tr>
+            {{else if eq .stype "3"}}
+            <tr>
+                <th>名称</th>
+                <th>支付开关</th>
+                <th>提现开关</th>
+                <th>类型</th>
+                <th>代收税率</th>
+                <th>代付税率</th>
+                <th>代付固定手续费</th>
+                <th>实时余额</th>
+            </tr>
+            {{else if eq .stype "4"}}
+            <tr>
+                <th>名称</th>
+                <th>开关</th>
+            </tr>
+            {{else}}
+            <tr>
+                <th>名称</th>
+                <th>开关</th>
+                {{if eq .stype "1"}}
+                <th>是否付费</th>
+                {{end}}
+                <th>权重</th>
+                {{if eq .stype "0"}}
+                <th>展示页</th>
+                {{end}}
+            </tr>
+            {{end}}
+			</thead>
+            <tbody>
+                {{if eq "2" .stype}}
+                <div style="line-height: 34px; color: red;">说明：金额上限1=0.01元，100=1元。</div>
+                {{range $k, $v := .channel}}
+                <tr id="row_{{$k}}">
+                    <td>
+                        <input type="hidden" id="row_{{$k}}_id" name="row_{{$k}}_id" value="{{ $v.Id }}" />
+                        <input style="border: none;" type="text" id="row_{{$k}}_name" name="row_{{$k}}_name" value="{{$v.Name}}" readonly="readonly"/>
+                    </td>
+                    <td>
+                        <input class="input_width" type="number" id="row_{{$k}}_limit" name="row_{{$k}}_limit" value="{{$v.Status}}" />
+                    </td>
+                </tr>
+                {{end}}
+                {{else if eq "3" .stype}}
+                <p style="color: red; font-size: 15px;">代收固定手续费、实时余额填写1.00等于100分</p>
+                {{range $k, $v := .channel}}
+                    <tr id="row_{{$k}}">
+                        <td>
+                            <input type="hidden" id="row_{{$k}}_id" name="row_{{$k}}_id" value="{{ $v.Id }}" />
+                            <input style="border: none;" type="text" id="row_{{$k}}_name" name="row_{{$k}}_name" value="{{$v.Name}}" readonly="readonly"/>
+                        </td>
+                        <td>
+                            <select name="row_{{$k}}_status" id="row_{{$k}}_status"  class="input_width">
+                                <option value="1" {{if eq $v.Status 1}}selected{{end}}>开</option>
+                                <option value="0" {{if eq $v.Status 0}}selected{{end}}>关</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="row_{{$k}}_sort" id="row_{{$k}}_sort"  class="input_width">
+                                <option value="1" {{if eq $v.Wstatus 1}}selected{{end}}>开</option>
+                                <option value="0" {{if eq $v.Wstatus 0}}selected{{end}}>关</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="row_{{$k}}_type" id="row_{{$k}}_type"  class="input_width">
+                                <option value="1" {{if eq $v.Ptype 1}}selected{{end}}>原生</option>
+                                <option value="2" {{if eq $v.Ptype 2}}selected{{end}}>唤醒</option>
+                                <option value="0" {{if eq $v.Ptype 0}}selected{{end}}>未知</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text"  name="row_{{$k}}_payRate" id="row_{{$k}}_payRate"  value="{{$v.PayRate}}" />
+                        </td>
+                        <td>
+                            <input type="text"  name="row_{{$k}}_withdrawRate" id="row_{{$k}}_withdrawRate"  value="{{$v.WithdrawRate}}" />
+                        </td>
+                        <td>
+                            <input type="text"  name="row_{{$k}}_withdrawFee" id="row_{{$k}}_withdrawFee"  value="{{$v.FWithdrawFee}}" />
+                        </td>
+                        <td>
+                            <input type="text"  name="row_{{$k}}_balance" id="row_{{$k}}_balance"  value="{{$v.FBalance}}" />
+                        </td>
+                    </tr>
+                {{end}}
+                {{else if eq "4" .stype}}
+                {{range $k, $v := .channel}}
+                    <tr id="row_{{$k}}">
+                        <td>
+                            <input type="hidden" id="row_{{$k}}_id" name="row_{{$k}}_id" value="{{ $v.Id }}" />
+                            <input type="hidden" id="row_{{$k}}_rtype" name="row_{{$k}}_rtype" value="{{ $v.Rtype }}" />
+                            <input style="border: none;" type="text" id="row_{{$k}}_name" name="row_{{$k}}_name" value="{{$v.Name}}" readonly="readonly"/>
+
+                        </td>
+                        <td>
+                            <select name="row_{{$k}}_status" id="row_{{$k}}_status"  class="input_width">
+                                
+                                <option value="1" {{if eq $v.Status 1}}selected{{end}}>开</option>
+                                <option value="0" {{if eq $v.Status 0}}selected{{end}}>关</option>
+                                {{if eq $v.Name "提现自动审核" }}
+                                <option value="2" {{if eq $v.Status 2}}selected{{end}}>非特殊全部自动过审</option>
+                                {{end}}
+                            </select>
+                        </td>
+                    </tr>
+                {{end}}
+                {{else}}
+                {{range $k, $v := .channel}}
+                    <tr id="row_{{$k}}">
+                        <td>
+                            <input type="hidden" id="row_{{$k}}_id" name="row_{{$k}}_id" value="{{ $v.Id }}" />
+                            <input type="hidden" id="row_{{$k}}_gtype" name="row_{{$k}}_gtype" value="{{ $v.Gtype }}" />
+                            <input style="border: none;" type="text" id="row_{{$k}}_name" name="row_{{$k}}_name" value="{{$v.Name}}" readonly="readonly"/>
+
+                        </td>
+                        <td>
+                            <select name="row_{{$k}}_status" id="row_{{$k}}_status"  class="input_width">
+                                <option value="1" {{if eq $v.Status 1}}selected{{end}}>开</option>
+                                <option value="0" {{if eq $v.Status 0}}selected{{end}}>关</option>
+                            </select>
+                        </td>
+                        {{if eq $.stype "1"}}
+                        <td>
+                            <select name="row_{{$k}}_pay_status" id="row_{{$k}}_pay_status"  class="input_width">
+                                <option value="0" {{if eq $v.PayStatus 0}}selected{{end}}>全部用户</option>
+                                <option value="1" {{if eq $v.PayStatus 1}}selected{{end}}>付费用户</option>
+                                <option value="2" {{if eq $v.PayStatus 2}}selected{{end}}>未付费用户</option>
+                            </select>
+                        </td>
+                        {{end}}
+                        <td>
+                            <input class="input_width" type="number" id="row_{{$k}}_sort" name="row_{{$k}}_sort" min="1" max="10000" value="{{$v.SortId}}" />
+                        </td>
+                        {{if eq $.stype "0"}}
+                            <td>
+
+                                <div class="input-group input-group-sm"  style="margin-right: 10px;">
+                                {{ range $l, $t := $.tablist }}
+                               
+                                    <input type="checkbox" name="row_{{$k}}_tab_{{$t}}" id="row_{{$k}}_tab_{{$t}}" value="{{$t}}"
+                                    {{range $j, $o := $v.Tab}} 
+                                        {{ if eq $t $o}}
+                                            checked
+                                        {{end}}								
+                                    {{end}}/>
+                                    {{if eq $t 1}}
+                                    <label for="scales" style="margin:0px 5px 0px 10px;">Hot</label>
+                                    {{else if eq $t 2}}
+                                    <label for="scales" style="margin:0px 5px 0px 10px;">Slots</label>
+                                    {{else if eq $t 3}}
+                                    <label for="scales" style="margin:0px 5px 0px 10px;">Live</label>
+                                    {{end}}
+                                {{end}}
+                            </div>
+                            </td>
+                        {{end}}
+                    </tr>
+                {{end}}
+                {{end}}
+                <div>
+                </div>
+            </tbody>
+    </table>
+	
+	<div class="clearfix form-actions">
+		<div class="col-sm-offset-2 col-sm-10">
+			<button type="submit" class="btn btn-info"><i class="ace-icon fa fa-check bigger-110"></i>保存</button>
+			<a href="{{urlfor "GameController.SystemList" "stype" .stype}}" class="btn btn-default"><i class="ace-icon fa fa-reply bigger-110"></i>返回</a>
+		</div>
+	</div>
+</form>
+
+<style>
+    .input_width{
+        width: 100% !important;
+    }
+</style>

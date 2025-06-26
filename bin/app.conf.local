@@ -1,0 +1,253 @@
+#地址
+pay.addr = "0.0.0.0:16080"
+pay.bind = "127.0.0.1:9801"
+pay.kind = "MTI3LjAuMC4xOjk4MDE="
+
+#redis
+redis.addr = "127.0.0.1:6379"
+
+#回调地址
+paynotifyurl        = "http://54.251.73.93:16080/api/pay/notify"
+withDrawnotifyurl   = "http://54.251.73.93:16080/api/withdraw/notify"
+
+# gameserver
+gm.host = "127.0.0.1"
+gm.port = "8002"
+gm.path = "/api/web"
+gm.key = "XG0e2Ye/KAUJRXaMNnJ5UH1haBvh2FXOoAggE6f2Utw"
+gm.url = "http://192.168.0.112:8002/api"
+
+# mgo数据库配置
+mdb.host = "127.0.0.1"
+mdb.user =
+mdb.password =
+mdb.port = 27017
+mdb.name = test
+
+# mgo日志数据库配置
+mdblog.host = "127.0.0.1"
+mdblog.user =
+mdblog.password =
+mdblog.port = 27019
+mdblog.name = test
+
+# MLPAY支付配置
+mlpay.appid           = "1000100020003057"
+mlpay.applicationId   = "52"
+mlpay.md5             = "DDA50DB0B43745708601F3421CC4E85B"
+mlpay.withDrawMd5     = "F4F8B19FEC02479BACBAA63229494471"
+mlpay.payorderurl     = "https://api.lovetigervip.com/"
+mlpay.paynotifyurl    = "http://54.251.73.93:16080/api/pay/notify"
+mlpay.withDrawnotifyurl   = "http://54.251.73.93:16080/api/withdraw/notify"
+
+# XFPAY支付配置
+xfpay.machid          = "aa8a15a87a07455cb3bc6b9d9771c79d"
+xfpay.md5             = "b587a3624d0544adb081e1cceb8a3f9b"
+xfpay.withDrawMd5     = "41bf772edebb498a9c70c587e80334fe"
+xfpay.payorderurl     = "http://pay.desles.xyz"
+xfpay.paynotifyurl    = "http://54.251.73.93:16080/api/pay/notify"
+xfpay.withDrawnotifyurl   = "http://54.251.73.93:16080/api/withdraw/notify"
+
+# kingpay支付配置
+kingpay.appid           = "BH0CW9q0RgSslsac"
+kingpay.applicationId   = "1137"
+kingpay.serverPubRSA    = "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAL3GnxmCrIIz9Jd0ISejOqCsmgxlDpQi8k9sKa4pHhphgS83YBRHA76VNCqEQjMgK1CQJGVcbKsqHd9mRZCPrSMCAwEAAQ=="
+kingpay.clientPubRSA    = "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMc8H3hgSEiSCoSbWOYsUzd34cqdFzE3HJza7lr3Zofo2IrdLsN4r0lpMsLTCgHF6NxC3akUzSvkWMnRtsaU+Y0CAwEAAQ=="
+kingpay.clientPriRSA    = "MIIBVwIBADANBgkqhkiG9w0BAQEFAASCAUEwggE9AgEAAkEAxzwfeGBISJIKhJtY5ixTN3fhyp0XMTccnNruWvdmh+jYit0uw3ivSWkywtMKAcXo3ELdqRTNK+RYydG2xpT5jQIDAQABAkEAhHtTRd1oU3FhMxqFu9C/qUO7Tdq1wFEwYpEmLDEU6cvaEPKUY+CRGRO4KoZCrFEaJcSGbm0+z84Rk11pJrfNFQIhAP81lRAJ30w01H9RCiwmO2BPQChCMfTCwrF3Aux9lkgbAiEAx9olFUs+Pvv/Y+LdNt/rPCAzgYgFAmgInV6lDjQ9r3cCIQDnd4Gq+kk8pO3WS3oecM6Jm1dlLCSDCeHrczWDqKQU4QIhAJjeglMhdQGUnKv5EqEw8qzRLNS+CKbokP5fMP4Gc9DNAiEAqGvZwrRfVdqkGNMUg8tHvJAYbooBj34SrGzEnggW9iw="
+kingpay.payorderurl     = "https://api.kingspay.top"
+kingpay.paynotifyurl    = "http://54.251.73.93:16080/api/pay/notify"
+kingpay.withDrawnotifyurl   = "http://54.251.73.93:16080/api/withdraw/notify"
+
+# sailspay支付配置
+sailspay.machid          = "102"
+sailspay.md5             = "nm4upo2hyhjqxzir"
+sailspay.payorderurl     = "https://api.sailspay.net/api"
+sailspay.paynotifyurl    = "http://54.251.73.93:16080/api/pay/notify"
+sailspay.withDrawnotifyurl   = "http://54.251.73.93:16080/api/withdraw/notify"
+
+# flypay支付配置
+flypay.machid          = "21040760685101"
+flypay.md5             = "0ff1637d278d4f1059dc47c6bad82a10"
+flypay.serverpublickey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCyrhl29B41bba9pmfjjHdEbPLAa0+oo1mBZLsTs/IjgLoSiACqWHSH55oEPUjKEGaX+hyAokAOtHbBmuazFbhje9mGkPWESNClSKfJOJOwrtXgA9RfWc+ZdFiTz3rJTLTmoVU+n/f6/iRJnKOKsCRq1LBo1FepvtkUKDTdgH6qrQIDAQAB"
+flypay.privatekey      = "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAOzrQMnLcd6DhIEsShhH34Y5ewtHzKsp6JL025Q5tZDJHDU/uDa4pvci/v4ub+jexf7oHTjXpwvyPxPrNCGdnsS0p7K0sw0VnGL9GESbq1R4j+LQbY9aA6f6myBjQEEilxbcK1+tMlHZilPPRaX3NHes3DldSODjmswKfNFBWJm9AgMBAAECgYBAkXjtxjF5aDSDk9N5vJTRmvbKwz2nZFuLOYpiYjv2gqjaZkxJNZfjgLkoAvXi7FvftdjI9hUDr3i7b/2cL73l7eVgxqoGQhPH063TUgiZvGBFKhBKwHtIHVN8rHHVrH7hhaMW7XhuhBm8xtT9TtdGfNXyr33HrLYI7kTThfIYLQJBAPuiYUyr/25EmBoCi84MgpzCrJ5mvITGW31epF52Yp+1LdWVYUYF5MPjZbXaFs+kAWorv3a+ITjGsjRO3449kfMCQQDxB4QAO0Trfs7dcVLP8YYftfhmx4+OvEPz0W6W+hVYHpTIqLRWPcE5tcQyMNXVIJ4auRUw91FtB3ml0uA3fWGPAkBone8UAGJXBt+x2KMlTGA1Kl64EICKNymsat+tgkyol5vxs4RYp3Sf2Hfd7kkTlN0dtgiJJq0LPNi0FKKvMXvvAkEAu6HIJo39Jv5+d3CisPIqIUF9cDVmEg2JMKMW3j0spH6aAGMkkAZfB1fytcfCjrlnmxH95zKAlsm871Pr7AaVDQJASDVlp4ZDQawYWc8OvjYUsw5J2U70JIXqLHagvBKVxfDysKS5CY0LVJQybdM/OoImCRfB2ZXFCyQ4M2GHP+/2Gw=="
+flypay.publickey       = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCPcHzdDnY7E1p7DItF51URXTiQgelem28KtX+4bXzBrFheytUJduunr2MSsiWKrrFxQtqtCsO3t1nDPvjw3mNwhh4jvr3hNVhCuEW9Yf+RFlHYbtF1Y/7RlJ8TQ8H2QosBHETA1XgJzCbx+1rH7YyXXM23k/yyIb67ToESl9N4+wIDAQAB"
+flypay.payorderurl     = "https://pay.ybmerchantpay.in"
+flypay.paynotifyurl    = "http://54.251.73.93:16080/api/pay/notify"
+flypay.withDrawnotifyurl   = "http://54.251.73.93:16080/api/withdraw/notify"
+
+# xdpay支付配置
+xdpay.machid          = "5m199583"
+xdpay.paycode         = "101"
+xdpay.withdrawcode    = "101"
+xdpay.md5             = "fcb5741965514b76a8da9186b6f219c5"
+xdpay.payorderurl     = "https://apis.xdpay168.com/client"
+xdpay.paynotifyurl    = "http://54.251.73.93:16080/api/pay/notify"
+xdpay.withDrawnotifyurl   = "http://54.251.73.93:16080/api/withdraw/notify"
+
+# uwinpay支付配置
+uwinpay.orderurl = "https://in-api.uwinpay.com"
+uwinpay.merchant = "100000"
+uwinpay.paynotifyurl = "http://54.251.73.93:16080/api/pay/notify"
+uwinpay.withDrawnotifyurl = "http://54.251.73.93:16080/api/withdraw/notify"
+uwinpay.clientPriRSA = "MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC2Fr43Dj/+CEmCJKgN81uUS3vyUp4BRI3Vzi2ZZlOCwmWuigfHLHW2K49qoKy7TOB84l/rj3NvU6vCioMLl2OK88nfXCmfQQCIu7ZHStNh1RglgXhP/f4L/rq0EjNulK4qD4Us3FBO+7/s0OfYXncd/RI8UAm1ptGf5V4uqAkaxhZr806aed4KwpXFZU4iReFJYT2XXO8CZKfQN2Uh14jr1b79r0bOAHEuk5+EhQgT9KjtufMJjnQMoXTpMcxzfA0qkp4X2Qc61WnwT4l4k4XpYF+erMvO5rays7VwxLgHI+QThm1tCi0gkff3o1/z/ce3XqpuyuHdwRfiuF1gfw7XAgMBAAECggEBAIepXCByqnSeQf4HR3nVVOagcoDw0q2JIM8pZEnEtfVW1iD6z56x3iVSQPClMuv888e3dNVwtAU+ZlpzjfzF1rEAvud9p7jx2e8FQ2HMOr7J38qZskSOrIbNSta8NLtvZG8LzyHEJsUhxTUv03wdrUuXb82lqAZBei5R2iCSqu3ZY187ZfjCJiNCICRWQaS0wubEnXXQa88cWF3ftb2aCqegPzwD0Ko2zaCC3367w/Yk4zJsrTxVzlyM6PZlcaJdqSg/6b6jH10ngDYFxxo+AQ4bagyRVWdQ84K8Fn0q9IjhKVtp7+82YzvGTpAa4dDK4e2/EGfUxXRL7nLxUuVca7ECgYEAzWKwi0BY41/d6E+EKTnCQRXPVACVL8a1vqf1eQ5laSHkhvjS8OgAKYgu2rbwxvz1B0vHUO5vNS5cdqOLgnLf0mHH9fpZq4TKdOjKlA7xvXgVD5Jjm9jLgSK7VVBNBKp7LnCh2aCuVfjv7Ydho162OcWQVgzJzYaxryw/TvT3GbkCgYEA4vZRrFGZC1/206XnPJSib4sq1Xgmudct6isCeogqp830I9D7Hm69yKL6UfECjDDpBupOnkNEeku4kTimaNUMxJTT79TTMEbRiKy9+xnmrgBjkjxYskBzPtAMCnMZpeNn3jrWt9/kedgiwTJlxFgvNRqWCOOwXKljljT7gMbbdQ8CgYEAnEsNreo5uk2pwK9CE10wxfai33nSDZlZlMybsJOT+H0iOtP/MfRaq0BG54lvkP3OOM8hziSj3AR7uIycDZj9WkuurzDkK/HRX0YHYsQ8kcJfxInR4zcHJi4YAMQq1/Ij6yMrB0GPaT0W19q+ImRgp3YAcHsq1ow5iuRRCPTBVYECgYAgvYO+pe6781X55h7bYF2mVZ8SOEjt2hqngxjScD4nAtDLMeRn2XXLMaeGlovViWC0PKymq/F+6tlvKYrn6IP0/7srB7qHZk/ntXOae3wJccjrWYU6AY4ea4ixITV79rgPGNHMqKGe6gzpbcm8bzQwJuup0J6qX00cZ/w38XfLBQKBgQCRGpCY37e0rm7aFfGCDjRnAhMfHCRNGW6PUaTvZinNmhf5d+PwFEbCcESNQjzz2NSExhiNGHeGh5gTE4jWN9seaxD+K7SKPjFBEy6fUu/+eqveIXCMWkbxaizeFrvf9H4Y4PZtgCQUZcMMnuxfZXfM/8SSm4mzxsOG9ruaMx7KMQ=="
+uwinpay.serverPubRSA = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAroupTD8Acdbs0AwPWvAnYziQRRJJ4/gLOXgoDIDOHpqDDhqPYZ6GVVjGEdwqGwc2NgE51w+aU47QYM/4T/tgaIcF+TEmySYOy3/dVcvhh23GPi7oZMsHTTWokfTFPhvXfxEcLd8bRHdJMU2JoEw9qy+fJiZSzifxzBpZpXRuEn644ti+v/JfTQo19TAL4ROGRDkfRjK/tA8S2Y4C1CgaxOJodG/+d0bVf/0VCubkcPrR2TlLI3tFSIKQx5NqKpD/AGc0e0OiryMbv2utIEgoRDRJfM5Jy9Cv2bYPxxyPtj4M081y79DeNw8OunKrHJamYU7yjJ+ft6UzfDqc/7srXQIDAQAB"
+
+# 1916pay
+; 1916pay.appid           = "1198474277"
+1916pay.appid           = "M2024050808"
+1916pay.applicationId   = "52"
+; 1916pay.md5             = "e9c8620469ae591739d42908335d0fa4"
+; 1916pay.withDrawMd5     = "e9c8620469ae591739d42908335d0fa4"
+1916pay.md5             = "46db0013321e90b620ddc4575d3962cf"
+1916pay.withDrawMd5     = "46db0013321e90b620ddc4575d3962cf"
+1916pay.payorderurl     = "https://www.1916bill.com/api"
+; 1916pay.payorderurl     = "https://www.1916pay.com"
+1916pay.paynotifyurl    = "http://54.251.73.93:16080/api/pay/notify"
+1916pay.withDrawnotifyurl   = "http://54.251.73.93:16080/api/withdraw/notify"
+
+#letspay
+letspay.appid           = "711666755531"
+letspay.md5             = "KYKNG6BSPPG8HLZZSA1GMAY4AEHYJDQXS19BZW6S1BKXHM5ECZR5TEEUD2PTNRVOYOW5ISLAWPCYAPW2GLXIXXF50CSRWJUUIJ9AEETOTWAZS2Z8XMUQX4LERHRZER3O"
+letspay.payorderurl     = "http://api.letspayfast.com"
+letspay.checkurl        = "http://check.letspayfast.com"
+letspay.paynotifyurl    = "http://54.251.73.93:16080/api/pay/notify"
+letspay.withDrawnotifyurl   = "http://54.251.73.93:16080/api/withdraw/notify"
+
+#ramapay 支付配置
+ramapay.orderurl = "https://api.ramapay.in"
+ramapay.merchant = "1738cb514da44ed8a05f2f89626b85be"
+ramapay.paynotifyurl = "http://54.251.73.93:16080/api/pay/notify"
+ramapay.withDrawnotifyurl = "http://54.251.73.93:16080/api/withdraw/notify"
+ramapay.clientPriRSA = "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALvNQRPmwCRiFSH1f0Oeyn/PWWahF0JfCA3GRVr3ttIlyqrSafioL1c34KZLU4CU8gXXJ5f/wI/3Qsb2CLqCkTJ5LuMYpMB/3pNPy9KbV8fwes06sddzektaOLZUxSeQvVRmRAu9cC0cmPDjoHxg6O7LaCAnkhpRvvEAGil9YrNHAgMBAAECgYAn2sM4yft0vSvm7QZ4/zXSMdqzIPSirTA0XCNTzsYJiuObpNPAZVDGnaEbKVkrLHDANIy+gRQIeVy+hHANxK+zPSJHS4iygSXrDckuAQKT89/wmmFLmuneuyE+Uwu0AooBzbAS+Je4cGhD6ybRZTVakDC2trC6VsSCfyOrqvYyQQJBAOsNB1D0Dak6PZ6d6NWiFI04RTmRBGmwgK+29K2v4e/W6DVpWX1bn5xLLkkhJAiGsEDRdW9IuslnphG+CMMK3J8CQQDMii382U2RWffS0ovbo8qup9UyM8iUU5cuvalslg/8rOnzakGW1iwEYIdrGuiBfZBixRJlsBA+9NSelRAv5ABZAkEAzB30TIijlGHPQP9AQsUNs9U5yFP20RFFr1HiCTLDsdOes0NZQ1NduAxRlZACCqVsSd2bbZhrHJu1y5KLaVT1YQJAA1lL0XT5WSTg8tmxooH3Ao8K5YyFfzAzLHe8e2OllVx7ZBncQwz0oYm3DeDd56jXoVZaq8GLMoyton8MScxw2QJAKboRhzQwfFUUTTZCNG3SYd9LY4q7J0ZUk1pYwgAU89KKNb9CFVin0lk4JnsDoNO9F1XR5krmF3vIcgEQYdZQxg=="
+ramapay.serverPubRSA = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCoBEzjBiyEEmg8N8e3j3i4OaBLjlLxHPDusqn+DKpkCVSm3y12HV5UhNxy2BAdIhGuT4PDU9X1S02klCoqViinTwQZjy4K6Wrc7epmXjkROzrO/UU9gu45ka05sym93oQq1VrLcXSV6pvr6imcwUNBD8JM8TqeROTvg9EG3c7zbwIDAQAB"
+
+
+#icepay
+icepay.appid           = "388"
+icepay.md5             = "Fk1nQ8OA1c_CmEC"
+icepay.payorderurl     = "https://api.cloudspay.org"
+icepay.checkurl        = "https://api.cloudspay.org"
+icepay.paynotifyurl    = "http://54.251.73.93:16080/api/pay/notify"
+icepay.withDrawnotifyurl   = "http://54.251.73.93:16080/api/withdraw/notify"
+
+#wepay
+wepay.appid           = "22264922"
+wepay.payPassageId       = "101"
+wepay.withdrawPassageId  = "101"
+; wepay.withdrawPassageId  = "101"
+wepay.md5             = "e7ecb56259eb498aa6d4dfda4fdb8b41"
+wepay.payorderurl     = "https://apis.wepayplus.com/client"
+wepay.checkurl        = "https://apis.wepayplus.com/client"
+wepay.paynotifyurl    = "http://54.251.73.93:16080/api/pay/notify"
+wepay.withDrawnotifyurl   = "http://54.251.73.93:16080/api/withdraw/notify"
+
+#oepay
+oepay.channelId     = "6422b647e4b0ca241c1e05de"
+oepay.keyServerPub  = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCQrIxKtqv5ARaqTgtQBpP2cOcR88jlQE46nTZQeu6ShhiIV63eA3HMo8ocXzJhPJ3P5G0w35837Z53KHMjEZW+7aJ7PgFiLPX/lIMSij4zHvO+qTrzc/H8xhLmof/eIudHHwbGgk3DHNm8+XkBJi81PP2w4kOg0984G5582f8hkwIDAQAB"
+oepay.keyClientPriv = "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAMwt2KWM0f+6oNQduONHaNh+cR/UP8ceVrngnQ3kjkxivszctd48BB95V2UDlm/v6VRgXJGznxre3c3N+f+9xfjYaRy9q92Witd5cp6XAp1Giut5SBykdcs+bH9h8OOd/bXKV0G0KyLUv3ETb5m1QCLoccedU8ipmawM5a2c9EYPAgMBAAECgYB6bptUWeaqk7xQtSnijzVdbCRlU56Sxax3dSp35C83upZyvX4IrrBCNz6igc45fQDK6aVYcP7c2/rgp7xbD+6fQJsC8ULg7hPbwAKMlOwNXtUnggVs8OwTtXd5kC1BWZGztvOR0mnKew3c/MvkzIHBn0fAW+FzNdohHO0u00bmAQJBAO9reLZnGHvOB/onSojU0Ks2zccA72wNFKFB7zRal5/7Y+CkmOnVtdAjY3LzpbjhZ66ZHNO2RGRS+F8a4Zh1+I8CQQDaUZ0EZ0tscre73M1rtRzo29H6r2mhxzS/ToCmctX/1tkYC6PW71ctLbaarkJjv7CTJhlJNMWxKGC+n450RJqBAkA60Qgip0kYgRDsn2JsIvvwU9JRpSUsQjpjMzN0hRzirHto4IbAS0QTEd6IitqXhKhX+D1gtVIv40Io+w2YysJ5AkEA0uglGCvx4UKx3PriODsvQoWZxOPQ2Ejp3CaqgiJOOmoEMAaOsQVm4m5XCfdui46TtpQHuYERuqOXUpAxvoDIAQJBAKMpKmuqcSbMw37+I9ejjU9FxipKJhf3Ht+FRACJgwGcBJms7/yvBLd/gDUMC11stMojwaEocOQTyM1oDamonSA="
+oepay.keyClientPub  = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDMLdiljNH/uqDUHbjjR2jYfnEf1D/HHla54J0N5I5MYr7M3LXePAQfeVdlA5Zv7+lUYFyRs58a3t3Nzfn/vcX42GkcvavdlorXeXKelwKdRorreUgcpHXLPmx/YfDjnf21yldBtCsi1L9xE2+ZtUAi6HHHnVPIqZmsDOWtnPRGDwIDAQAB"
+oepay.payUrl        = "https://openapi.oepay.co.in"
+oepay.successUrl    = "https://google.com"
+oepay.failUrl       = "https://bing.com"
+
+#9spay
+9spay.appId         = "437B7E992BEE40DDBF1F69D22B0B21DE"
+9spay.md5           = "8B887DC8045F4628A4CF13F1B00E5739"
+9spay.chargeId      = "S2200"
+9spay.withdrawId    = "F2200"
+9spay.payUrl        = "https://api.9spay.in"
+
+#mjl-unipay
+mjluni.appId         = "10997428-4eab-5059-9b88-6c8062f88d9a"
+mjluni.name          = "bigwin"
+mjluni.payUrl        = "https://universe.solarcell.tw"
+
+#ustdpay epusdt_password_xasddawqe 
+ustdpay.payOrderUrl  = "http://192.168.0.17:8080/api/v1/order/create-transaction"
+ustdpay.withDarwUrl  = "http://192.168.0.17:8080/api/v1/order/create-withdraw"
+ustdpay.payNotifyUrl = "http://192.168.0.112:16080/api/pay/notify/usdt"
+ustdpay.withDrawNotifyUrl   = "http://192.168.0.112:16080/api/withdraw/notify/usdt"
+ustdpay.redirectUrl   = "https://google.com"
+
+#mjl-jypay
+mjljy.merno         = "807120010048303"
+mjljy.hmackey          = "570C408494B8A9FFC1ECFE0EE537B821CF09F74F3B24A2AEC29F0CC4A097C80C"
+mjljy.pubrsa          = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDU8SFQr4JW/Ji3orgOFMeMmVNmKlNzMQbVET/CnT5UfKrIxeAp3kSMsS5gKhlFziOCgkYMpYmk4txBgutg0nZLwqPOwt3KuPiS9hjaBYGCmvmnyg341HpmYld7TNClq9AmoNFy6ROT5KYSsHN+TsjsrT/KQ90MfULW+gR55LQOOQIDAQAB"
+mjljy.prirsa          = "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKxDap9VVySZnt2B8QINf50KAKCDHhkR+uDFPO6OWAtzYYYeksAXlAHgqdriYKM8Nw2JrwYjLjFt+XHD9ktSaoxLGJMY9s3+G8G0nLbw0UuJ09zbr/mlOuuKFqgStu1uwOpkpbZCAjUvG0acfdtfdq52G2Tn6gdUxbWEAaSJn1WLAgMBAAECgYEApcdjbt8UNBba+lU4+T7AVwLvQ4mrh3j0NSfb0cCPHsX1TrtRgyetunjZPdqqIa2rVY3xMDjfFZa+fiuWdTplafOLEmPG4JjDw3PGTo2wA4/qgnoR/WX2dbHmRsris9rA8dNRYnQ7mOrLhcqF0BBGieT+4ywtR6bgwpBaqHbleaECQQDq0yHszsXZC6pupQZYmjotA0ZjKt5MGa30u+94FEdSVQvNpWXW+UrAJDpfsq4fJSoW2PewR8LdFhmC8kstwCMZAkEAu8wSF2jqzL7913NXYNDZdmkS8wSkZ2jwl1fo1AHN/RlZGNOwy88SEmb3wXNveBgyCJKbaY64V7tkDPS4BCIWQwJBAMbUPJ5pOgacJRQIcQYmmGmyoy+mhZEEEVHuq0YOTZF95z+Z81ABxvRH+JE9FsfSTQAJeDfvmyRd6P4CL/ut+0kCQFj2dWONmh1gJNQZmb0Nctb7M7TX8CHkvoSTaoJ0UGajyWdPcSM7du4sxRVpX9beb2VMPj8lEwLMjLruevXKSA0CQBjS3xhFXfkCVBJS+GgII388RM1ulKa8MpjuDcxWoJl1wn7CvlLmOkTQqfArmgE4XHXQJOLjNnRmlu5TI7i4Hug="
+mjljy.payUrl          = "https://nzdgk.gbpsd.com"
+mjljy.withdrawUrl        = "https://toaxn.gbpsd.com"
+
+#mjl-99pay
+mjl99.merno         = "cf7b2a6a-c6d6-43a8-85d6-cc4ad5b103d6"
+mjl99.hmackey          = "WBnXMsZ5grkQZW1oYWSEuaTzCYtlln4woO8gQlwPtMEAfDurM1Le539DXiteLoHZocZZb3eXFT54yUZd8owmTCKUINkPo2bO0nKMw7EBVUVbNdGtzaKKRBQiN38tbK1as1yTn1XMik1bcOWStyht3JxJIjrYf6T7wRw2aTxjuWyum1uWntQwcWKPm27n571h1lUUkob8CDJ5y8kEt2dV77ShgCXrKsC52G7xlw5RzYibIqW3JdVpNKuTIIVHxiv0"
+mjl99.key         = "98e49dc525b844ca84892854dde61712"
+mjl99.pubrsa          = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDU8SFQr4JW/Ji3orgOFMeMmVNmKlNzMQbVET/CnT5UfKrIxeAp3kSMsS5gKhlFziOCgkYMpYmk4txBgutg0nZLwqPOwt3KuPiS9hjaBYGCmvmnyg341HpmYld7TNClq9AmoNFy6ROT5KYSsHN+TsjsrT/KQ90MfULW+gR55LQOOQIDAQAB"
+mjl99.prirsa          = "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKxDap9VVySZnt2B8QINf50KAKCDHhkR+uDFPO6OWAtzYYYeksAXlAHgqdriYKM8Nw2JrwYjLjFt+XHD9ktSaoxLGJMY9s3+G8G0nLbw0UuJ09zbr/mlOuuKFqgStu1uwOpkpbZCAjUvG0acfdtfdq52G2Tn6gdUxbWEAaSJn1WLAgMBAAECgYEApcdjbt8UNBba+lU4+T7AVwLvQ4mrh3j0NSfb0cCPHsX1TrtRgyetunjZPdqqIa2rVY3xMDjfFZa+fiuWdTplafOLEmPG4JjDw3PGTo2wA4/qgnoR/WX2dbHmRsris9rA8dNRYnQ7mOrLhcqF0BBGieT+4ywtR6bgwpBaqHbleaECQQDq0yHszsXZC6pupQZYmjotA0ZjKt5MGa30u+94FEdSVQvNpWXW+UrAJDpfsq4fJSoW2PewR8LdFhmC8kstwCMZAkEAu8wSF2jqzL7913NXYNDZdmkS8wSkZ2jwl1fo1AHN/RlZGNOwy88SEmb3wXNveBgyCJKbaY64V7tkDPS4BCIWQwJBAMbUPJ5pOgacJRQIcQYmmGmyoy+mhZEEEVHuq0YOTZF95z+Z81ABxvRH+JE9FsfSTQAJeDfvmyRd6P4CL/ut+0kCQFj2dWONmh1gJNQZmb0Nctb7M7TX8CHkvoSTaoJ0UGajyWdPcSM7du4sxRVpX9beb2VMPj8lEwLMjLruevXKSA0CQBjS3xhFXfkCVBJS+GgII388RM1ulKa8MpjuDcxWoJl1wn7CvlLmOkTQqfArmgE4XHXQJOLjNnRmlu5TI7i4Hug="
+mjl99.payUrl          = "https://www.99paya.com"
+mjl99.withdrawUrl        = "https://www.99paya.com"
+
+#mjl-transafepay 测试地址
+#mjltransafe.merno         = "7937213261"
+#mjltransafe.appId           = "R22e9c0f1x3hycRKd9"
+#mjltransafe.pubrsa          = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCzfNscK0HjYa2USHWjdeV9pzs3i3wRT9ucxzUeMivdjUCfwgBwU8emCXQsCYlbhg190rwupdvGGKwp1osPS19G/3Ypmc1BY088D/shKlkK5rwHw9lK7Ch5m4a9YrSKbp+LdHGDa3hSUn9X5h4zcpseNX+ka1IhN2D1we/w0IXRiwIDAQAB"
+#mjltransafe.prirsa          = "MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDYkwC5pxuCzCbfj4CIzltDPq0fsipBKuJHCK0e77ro7H1DUrHBSSYyCaa9U5cLQbIsLf5rhMzrGzef2Yl3x2eL8BBx+EGZBC4nj0L8IohqJzTzU6SIcV6hWostj0j8b3wT6hD8WTGWO9nECJmFXWPGHuRHkKf4jXRnvnTUyITQ9KUCST1FaT2Dq6OUz7qDInHNZuCzD5k2IjJRKFn67ouqg/kAW8S8JW03IXHmGu5SotpHMx9550LxECUD3wL1RVWi9I5Y4OgUJEEGYw36i+Ip0gKDUoKcbdpLbzP9C7hPx07+x5IwWSH7N5t8NY0LpsFeSTT8BtY5z8Dx6lQbGHrDAgMBAAECggEBALCEB/hI6hROHnTh+ioGvr1tDR+jT+szb5/jw25Oh/GmJmZDtRtLanUoBp2Szq3fCsAVcKLjZz1MPqbrX66feJbGwDCT3atAi/m0Oy1TXAnhELgt+RE4DZ/HM16bxSnyF5gHk3aJn+/JsjCjrbTULCjjLr3hefYMHM8dnQ18rTu8Wf7/VAnPc6dEdemJyUSW3F9HmprZBMW0E4WzxvG9JhF3jnVxBhG/cbb8ks8a7neCsneA4AJ+DcFeVIG6v/djFBrVMrFiDGs4KCGoZjAqTYngqtyFBi+h2WsPs1yRvBeg/XoQ8QqWdvELdnl8eTolYKxvK9uiStcHSePtz/Yh+yECgYEA8PY7aSdRNfOdVLMDpGmHwiJLeO9UoSWRN8rZ2QszGpz5GCj3W+ZLPiWz6lJaw7yZn/F4VUHhTGKUdujZ4Dz3wKOtNV8T7ei8stSRUh9Bk7pryD9LIaNLQiiiIUQ0QqFiXtW6GtLpgt/FeknecwByOzfTTTUQ4H1RpvOBVgEpb3ECgYEA5hcjTK5a/E+W2aYTyk6cRw2ybqZDF4yNni0IRhDTOAvJDwJTzic/lbNrHXWna0ooaLZmmX12v2QZ6RCIUSfGfSnocNXtyeputFSozOk16QWGDpH1QlhNhtW5lFB2ORc1mvTG7C3ECq0RovQRxvqsIWtCjPUKn6OvZjSlMtIim3MCgYEAzvHacmP3Bkv0mlKoVSLhGmTTxshdOY0HHBCWaiaJPFkGQa6lSoMNqhE9ZIhYNXUbx1beDvLmqPCdK0auIDycVxD7aDQA7LmOnlObfxki+9oGSVO6leglcWtuWv21mGf8ERCjpffv3puKgY1BhCkk8iDu04c4uGRIpQbK1G9pA7ECgYA222NeH9+vciZMA+2J+U4HHrvg56DtV2RYRvJHCjHhleW8v1hNuUvOnDU4k9lzmf2iYYJ6q9AI94u55mgpuSr4omo5pLeJwWvdcKXCHQPuZ5O7m47232i0cfZJ5xkYqXDtXdijbJHl3bdru3cVkqRBX3pBcxayUus5memdAT6hAwKBgQCMNiNuZl6A53hzsbAzyXGWXVuM98jWHjLoyjN6AsvY2ZmLHPNHR1ht0QQ5BssMtCdfawSi6jiIP0HOKl0SudL9F5wWU48UZADF2pA+D8qUA5qHoIW5ebU87jja1LEfOVamwh7FgG223qI+2uSE9W4mqf/rWJSjL3FJEDyLcBTMcA=="
+#mjltransafe.redirectUrl          = "https://pay-test.uangku.top"
+
+#mjl-transafepay 正式环境
+mjltransafe.merno         = "8923653337"
+mjltransafe.appId           = "TZJAzxGR0m4zo3B8vM"
+mjltransafe.pubrsa          = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxHfknfHEj//DXc3cy7ugpIuC5tbJQEp+jexIeMHkBHK6fie/ATUUUNauIL1lsU7LoL23FJD9LZNbTZbo4A8B97nqo1pc8hIV6Pqc6PKv7vTqJ/KPDeRa98vnm8slN2xL289xWylawlwnJ/ER7Or/+4Ee2sTqTtYDfcA5Ox0Cb7cKAqxUM3/R4CmpO17J0U2sIZqE4Jfb9eqhnH2OSRqr9CDB/2asvovZTSEGCoUl4WPLvelWk+B9/3J9TawcZTTE46LCc4+MaNQp5DfZCkigmfp+eNaX9z7Kj7hscXcVpD0gkYv7n2j/oVxHeQz3Cx4Jl4s2izbnbQmHu+dhcer+DwIDAQAB"
+mjltransafe.prirsa          = "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDEgMguFm0lj522Nf6UzgJecTZvSVA/CqKhDcKiFVG9aByVvl6EUjwB1h7ih2R9EUHmIiYF/XvfsGzyaC4cBI5jcaxP5Tzv5Agu931RQgaeW01eqiJZuGKUGKhtNegbQp71HLJxUbqkzNTgtanLPmMOkGWC/iBh10tXwRApUqx0S2P773SPPXRRPV6IxP8P/DReQ6jdiXUHg8lyuOyxNMcxiIRlW62nq1FyeTSd1FtpH3QT9+l7jXWyRJ3EF3pqGXAzID7AmR7DYrt29cv9dMAmTPiOa5EeIYziXSZSrPW5x3sxS4Sk2eGe/KOxu18cN68INqI1ImaVn9ZBLxepzUjjAgMBAAECggEAAf1JyYmpljlDf/5A8xG43WrpAaxs1w6NAfNpNonft3qv22Y/f7hzahNYYbO8NTXxBFrxJptf3y5ik/uxB9CV/nS+qVppSQZ2fL89sg5okb7b5Cr1yRHAUb6EKgLjNC9y+4lMVzBcIuH9/75nFystBo84r+BRxJvQ4/UM7FYtb8n1B1zS4kduuVstpyPVHA1wKtrt+8fDgRZMq35I85Mqj+O0Ogaiush80+OKAoQDU1aRRuUC5PlScfwzOANlmfUhwtifAmIOE51mMkMIFuwFKdbT8zHqZRP635IYyWtkO6cnvAI7BP+8EyiE7tOmguXbb2F4DSIwEpWwCiU9c4fZHQKBgQD/MxFi3gW5iSebF/kRnA5h8HRt2GmcfySaEMEISQzkiKEP2BZtwksbR4N7YbNg18MyZoEPW6DFrkG28CX8kPsBtbhHAv0xURPGJMAZBH7oQiZ+VZD0salrljn+eVvxccAgXoqEKMJWhwdJQ+IEIsTp+USuqt4AoOWDIoXJi6YA3QKBgQDFHpRHq07g3h16AnQ/SzSJlhdxiMp3jagCIJZMP/vY/hILhEGtslyyQr1uXLkO4aekdyTAR5TxGlVkJCbim0uuvU6O/Eg3p16oSQ4EA+oK4Bo2ToMvbazQo4o6XNEN6PbOs+acFGXWwhMG9KpYpAmAezVOK9a+A3tiz3UuLqD0vwKBgQDdY1oT4PQqbrezLmreQfmgMU9v86w7HXmNRjePjn/myjifXCCo+0LY2YNQyAMrYkJuOMqBnkWs+Gz93Pu3TbbTVugUgp1P6Tw0SrFzgpjtuGVYd7aW8IE/WkXZY0LGBJ5d9mZIHGvrUJybjI5IdDlLmPliZczN0scIqixSGhna6QKBgE9DcZq0Hv67Mh0quXXuFs0whnLH76pNUv6v/d/hZrMlzznET+i5rR6dSbEEJgH+6TtwEV4kKpcc4LNo+h3rFm7IfrtuZNfEPILtBW7F6CnBXajyvzumHXS0HlRDmGjAgeYyXwvqA91sotwMLCeCprN8V738UNiNa+MayuLsKxrfAoGBAMm0qUwcTReSMp9F6bv9i4OCwbF66fXJdIGIpZFajQBdRFeran2oB8Vzv39G5tmrKvgys6xz2mrleJg6HyAa3JMjNg06bhk4y9truv3g0ggGvd/WKdU6Oxhwm4Psv1tSpqcbL9nDBBdUfCZGDXnxM/EnmmuUKNKMy7o11f4voFs2"
+mjltransafe.redirectUrl          = "https://api-bdt.transafe.co"
+
+#mjl-mmpay
+mjlmm.merno          = "1000123"
+mjlmm.md5key         = "d5e0cc923a9455c5576dbbb7dfe62a19"
+mjlmm.baseUrl        = "https://api.mmpay.club"
+
+#mjl-safepay
+safepay.merno       = "1083930"
+safepay.key         = "ba73a901a3e4d384e033fbe14d1da13a"
+safepay.payReturnUrl   = "http://54.251.73.93:16080/api/pay/notify/safepay"
+safepay.withdrawReturnUrl = "http://54.251.73.93:16080/api/withdraw/notify/safepay"
+safepay.apiUrl      = "http://api.pnsafepay.com/gateway.aspx"
+
+
+
+#mjl-gopay
+gopay.account = "gopaybigwinm"
+gopay.key = "80651581ddb81bf60f36cba2e7c87e526e2d75a9"
+gopay.payNotifyUrl   = "http://54.251.73.93:16083/api/pay/notify/gopay"
+gopay.withdrawNotifyUrl = "http://54.251.73.93:16083/api/withdraw/notify/gopay"
+gopay.apiUrl          = "https://api.go-pay.live"
+
+#mjl-shpay
+mjlsh.merno       = "7143310841780848"
+mjlsh.appid       = "7143317362694768"
+mjlsh.key         = "ed54bb3b00de4b739df0182ef203c2d1"
+mjlsh.apiUrl      = "https://transapi.shpays.com"
+
+#mjl-99pay
+mjl99.merno         = "cf7b2a6a-c6d6-43a8-85d6-cc4ad5b103d6"
+mjl99.hmackey          = "WBnXMsZ5grkQZW1oYWSEuaTzCYtlln4woO8gQlwPtMEAfDurM1Le539DXiteLoHZocZZb3eXFT54yUZd8owmTCKUINkPo2bO0nKMw7EBVUVbNdGtzaKKRBQiN38tbK1as1yTn1XMik1bcOWStyht3JxJIjrYf6T7wRw2aTxjuWyum1uWntQwcWKPm27n571h1lUUkob8CDJ5y8kEt2dV77ShgCXrKsC52G7xlw5RzYibIqW3JdVpNKuTIIVHxiv0"
+mjl99.key         = "98e49dc525b844ca84892854dde61712"
+mjl99.pubrsa          = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDU8SFQr4JW/Ji3orgOFMeMmVNmKlNzMQbVET/CnT5UfKrIxeAp3kSMsS5gKhlFziOCgkYMpYmk4txBgutg0nZLwqPOwt3KuPiS9hjaBYGCmvmnyg341HpmYld7TNClq9AmoNFy6ROT5KYSsHN+TsjsrT/KQ90MfULW+gR55LQOOQIDAQAB"
+mjl99.prirsa          = "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKxDap9VVySZnt2B8QINf50KAKCDHhkR+uDFPO6OWAtzYYYeksAXlAHgqdriYKM8Nw2JrwYjLjFt+XHD9ktSaoxLGJMY9s3+G8G0nLbw0UuJ09zbr/mlOuuKFqgStu1uwOpkpbZCAjUvG0acfdtfdq52G2Tn6gdUxbWEAaSJn1WLAgMBAAECgYEApcdjbt8UNBba+lU4+T7AVwLvQ4mrh3j0NSfb0cCPHsX1TrtRgyetunjZPdqqIa2rVY3xMDjfFZa+fiuWdTplafOLEmPG4JjDw3PGTo2wA4/qgnoR/WX2dbHmRsris9rA8dNRYnQ7mOrLhcqF0BBGieT+4ywtR6bgwpBaqHbleaECQQDq0yHszsXZC6pupQZYmjotA0ZjKt5MGa30u+94FEdSVQvNpWXW+UrAJDpfsq4fJSoW2PewR8LdFhmC8kstwCMZAkEAu8wSF2jqzL7913NXYNDZdmkS8wSkZ2jwl1fo1AHN/RlZGNOwy88SEmb3wXNveBgyCJKbaY64V7tkDPS4BCIWQwJBAMbUPJ5pOgacJRQIcQYmmGmyoy+mhZEEEVHuq0YOTZF95z+Z81ABxvRH+JE9FsfSTQAJeDfvmyRd6P4CL/ut+0kCQFj2dWONmh1gJNQZmb0Nctb7M7TX8CHkvoSTaoJ0UGajyWdPcSM7du4sxRVpX9beb2VMPj8lEwLMjLruevXKSA0CQBjS3xhFXfkCVBJS+GgII388RM1ulKa8MpjuDcxWoJl1wn7CvlLmOkTQqfArmgE4XHXQJOLjNnRmlu5TI7i4Hug="
+mjl99.payUrl          = "https://www.99paya.com"
+mjl99.withdrawUrl        = "https://www.99paya.com"
+
+# metagopay
+metagopay.orgId = "8241200147"
+metagopay.mchId = "24122000000142"
+metagopay.accountId = "2412200000014202138"
+metagopay.md5Key = "88BA976E40E16B0754B147B4553D69A7"
+metagopay.payNotifyUrl   = "http://54.251.73.93:16083/api/pay/notify/metagopay"
+metagopay.withdrawNotifyUrl = "http://54.251.73.93:16083/api/withdraw/notify/metagopay"
+
+# universalpay
+universalpay.appid = "6760f70ee4b0f726aa4122c2"
+universalpay.prirsaClient = "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAK6K8CBT7ODcwIKo2ju7qFfUS8XY6wUvfa9VqvowFcwdyK3Pr4PBRfLCkq3xQ9Nl5D9CmgujYxVK6iJ0M+w22tEmCFLJqtE/3NwdBi/ICHbOpU2m1VY3VSjsCn6NE1ebYwuwdvgAeP8y4w9hprYnVSwM1wYNqOnBhOoyDcK0q2o9AgMBAAECgYAHAqkU31IREQTBardDNW0URABcHLOJ1Ie7ilkQ7ev+NAcKpiASTmm5D6QVDO7wt3O0r7/grkoNQaJISnsIZoag1V7VBj4iXtUXGlqIoUQAQEgVACSMk6RXQHUX80MvWeQVj+KlSOFY/yYT3r+2AoOCgH1Sa0CgQZzvv3WbE6wduQJBAOEnVNdsk+LE8IPRFa1ErkOfDkeo5frdfrtGSDQn754SpiMy6PkW/lm4wyLeAu6l5nZh5ZEVKrGcmTr2rNST8HkCQQDGdJAKZUbTMHvI5dcwLCkv79O8rfw9pHxIBoZnAicjINftSQCPQoEtSKO+QNuoYV5vviZvr7sNKmPwqUfi2D7lAkEAoP7MzdWX0ZldGgSR6Xmo2jWLsnX1LPLgwey5iIHd9zwCjDzFFgf5DBLvhakWk6sRJilOS/XEt4fwkZb9cmvukQJAKBJHN2Ilv+TtSa5nGfoAwwYo+dMjuIqq8ZwnrUr4/hXWo7n22/ZwwOUG8xaDg+dNO0Do3+pa2Ziyn1h/BGXnpQJBANCivs3Xtrs3q/J0VXoI0j9wK5e+bebYcMDI0n+0C2B4rKDTWItCE5xhsUHj/lelr+owzXe7kfoX0FtUw2brS3I="
+universalpay.pubrsaClient = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCuivAgU+zg3MCCqNo7u6hX1EvF2OsFL32vVar6MBXMHcitz6+DwUXywpKt8UPTZeQ/QpoLo2MVSuoidDPsNtrRJghSyarRP9zcHQYvyAh2zqVNptVWN1Uo7Ap+jRNXm2MLsHb4AHj/MuMPYaa2J1UsDNcGDajpwYTqMg3CtKtqPQIDAQAB"
+universalpay.pubrsaServer = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDaVg6uKqhnUperjz+vwklVPSKNUyKDuJCGoygUNq8r1Uqx3SQjiZ3JeLoKiPTZ6Bd7luYKyGl+d2wf603sidoF//GNzgXVk7eqe1t4NhTadgG0JsW4SvRvfCAd2wRPSY1d8vMhrFS2vPU5KfxkcgXDRUXE7BeUfj1cQq6TmKblGwIDAQAB"
+universalpay.payNotifyUrl   = "http://54.251.73.93:16083/api/pay/notify/universalpay"
+universalpay.withdrawNotifyUrl = "http://54.251.73.93:16083/api/withdraw/notify/universalpay"

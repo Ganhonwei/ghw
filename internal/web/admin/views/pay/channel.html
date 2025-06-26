@@ -1,0 +1,373 @@
+							
+<div class="row">
+	<div class="col-xs-12">
+	
+	<div class="tabbable">
+		<ul class="nav nav-tabs" id="list-tab">
+			<li {{if eq .tabid 0}}class="active"{{end}}>
+				<a href="{{urlfor "PayController.Channel" "tabid" 0}}">折线图</a>
+			</li>
+			<li {{if eq .tabid 1}}class="active"{{end}}>
+				<a href="{{urlfor "PayController.Channel" "tabid" 1}}">表格图</a>
+			</li>
+		</ul>
+	
+		<div class="tab-content">
+		
+		<div class="row">
+			<div class="col-xs-12">
+				<form class="form-inline" method="post" action="{{urlfor "PayController.Channel" "tabid" .tabid}}">
+                    <div class="input-group table_filtrate">
+						支付渠道:
+						<div class="input-group input-group-sm">
+							<select name="pay_id" id="pay_id">
+								{{range $k,$v := .payList}}
+								<option value="{{$v.Id}}"  {{if eq $.payId $v.Id}}selected{{end}}>{{$v.Name}}</option>
+								{{end}}
+							</select>
+						</div>
+					</div>
+					
+                    <div class="input-group table_filtrate">
+                        渠道:
+                        <div class="input-group" id="package_div">
+                            <select id="selectPackage" class="selectpicker" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择渠道">
+                                {{range $k,$v := .packageList}}
+                                <option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                                {{end}}
+                            </select>
+                            <input type="hidden" id="package_id" name="package_id" value="{{.packageId}}" class="form-control" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="input-group table_filtrate">
+                        渠道别名:
+                        <div class="input-group input-group-sm" id="alias_div">
+                            <select id="selectAlias" class="selectpicker" multiple data-live-search="true" data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                {{range $k,$v := .packageAliasList}}
+                                <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+                                {{end}}
+                            </select>
+                            <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}" class="form-control" autocomplete="off" />
+                        </div>
+                    </div>
+					<div class="input-group table_filtrate">
+                        时间:
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="start_date" style="width: 100px;" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+                            <span class="input-group-addon">
+                                <i class="ace-icon fa fa-calendar"></i>
+                            </span>
+                        </div>
+                        至
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="end_date" style="width: 100px;" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+                            <span class="input-group-addon">
+                                <i class="ace-icon fa fa-calendar"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="input-group input-group-sm">
+                        <button type="submit" class="btn">查询</button>
+                    </div>
+        </form>
+
+		<div class="space-4"></div>
+        {{if eq .tabid 0}}
+         <!-- 折线图 -->
+         <div class="row" style="width: 1000px;">
+            <div class="col-xs-12 center">
+          
+              <!-- <canvas id="online" width="100" height="120"></canvas> -->
+              <canvas id="info"></canvas>
+              <script src="../../assets/js/Chart.js"></script>
+              
+              <script>
+                var ctx = document.getElementById('info').getContext('2d');
+                var timelabel = {{.TimedLabel}}; // 日期
+				var Pay = {{.xdpay}}; // XDPAY
+                var Pay1 = {{.mlpay}}; // MLPAY
+				var Pay2 = {{.pay1916}}; // 1916pay
+				var Pay3 = {{.letspay}}; // LestPay
+				var Pay4 = {{.kingpay}}; // KingPay
+				var Pay5 = {{.xfpay}}; // XFPAY
+				var Pay6 = {{.sailspay}}; // SailsPay
+				var Pay7 = {{.flypay}}; //FLYPAY
+				var Pay8 = {{.uwinpay}}; // Uwinpay
+                
+                var Pay20 = {{.ramapay}}; // RamaPay
+                var Pay21 = {{.icepay}}; // IcePay
+                var Pay22 = {{.wepay}}; // Wepay
+                var Pay23 = {{.oepay}}; // OePay
+                var Pay24 = {{.pay9s}}; // 9sPay
+                var Pay25 = {{.blizzardpy}}; // blizzardpy
+                var Pay26 = {{.metagopay}}; // metagopay
+                var Pay27 = {{.universalpay}}; // universalpay
+                var Pay5002 = {{.usdt}}; // usdt
+
+                var chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels:timelabel,
+                        datasets: [{
+                            label: 'XDPAY',
+                            data: Pay,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(0, 123, 255, 1)',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: 'MLPAY',
+                            data: Pay1,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: '1916Pay',
+                            data: Pay2,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(252, 186, 3, 1)',
+                            borderWidth: 1
+                        },{
+                            label: 'LestPay',
+                            data: Pay3,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgb(20, 252, 3,1)',
+                            borderWidth: 1
+                        },{
+                            label: 'KingPay',
+                            data: Pay4,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgb(115, 3, 252,1)',
+                            borderWidth: 1
+                        },{
+                            label: 'XFPAY',
+                            data: Pay5,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(252, 3, 144, 1)',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: 'SailsPay',
+                            data: Pay6,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(118, 38, 21 )',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: 'FlyPay',
+                            data: Pay7,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(195, 235, 52 )',
+                            borderWidth: 1
+                        }
+                        ,{
+                            label: 'Uwinpay',
+                            data: Pay8,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(52, 235, 192 )',
+                            borderWidth: 1
+                        },{
+                            label: 'RamaPay',
+                            data: Pay20,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(178,34,34 )',
+                            borderWidth: 1
+                        },{
+                            label: 'CloudPay',
+                            data: Pay21,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	0,100,0 )',
+                            borderWidth: 1
+                        },{
+                            label: 'Wepay',
+                            data: Pay22,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(47,79,79 )',
+                            borderWidth: 1
+                        },{
+                            label: 'OePay',
+                            data: Pay23,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	0,134, 139 )',
+                            borderWidth: 1
+                        },{
+                            label: '9sPay',
+                            data: Pay24,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	105, 105, 105 )',
+                            borderWidth: 1
+                        },{
+                            label: 'blizzardpy',
+                            data: Pay25,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	125, 125, 25 )',
+                            borderWidth: 1
+                        },{
+                            label: 'metagopay',
+                            data: Pay26,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	125, 125, 80 )',
+                            borderWidth: 1
+                        },{
+                            label: 'universalpay',
+                            data: Pay27,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	125, 125, 160 )',
+                            borderWidth: 1
+                        },{
+                            label: 'USDT',
+                            data: Pay5002,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                            borderColor: 'rgba(	105, 155, 155 )',
+                            borderWidth: 1
+                        }
+                      ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            </script>
+            </div>
+          </div>
+        {{else if eq .tabid 1}}
+        <!-- 表格图 -->
+        <div class="table-panel" table-wrap="300">
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+						<th stickyL>时间</th>
+						<th>渠道</th>
+						<th>渠道别名</th>
+						<th>支付渠道</th>
+						<th>充值请求人数</th>
+						<th>拉单用户比例</th>
+						<th>充值请求订单数</th>
+						<th>充值成功订单数</th>
+						<th>充值成功率</th>
+						<th>充值成功金额</th>
+						<th>充值失败金额</th>
+						<th>提现请求人数</th>
+						<th>提现请求订单数</th>
+						<th>提现成功订单数</th>
+						<th>提现成功率</th>
+						<th>提单成功率</th>
+						<th>提现成功金额</th>
+						<th>提现失败金额</th>
+					</tr>
+                </thead>
+            <tbody>
+                {{range $k, $v := .list}}
+			<tr>
+				<td>{{date $v.SDate "Y-m-d"}}</td>
+				<td>{{$v.PackageId}}</td>
+				<td>{{$v.PackageName}}</td>
+				<td>{{$v.ChannelName}}</td>
+				<td>{{$v.PayRequest}}</td>
+				<td>{{ printf "%.2f" $v.PullRate}}%</td>
+				<td>{{$v.PayRequestOrder}}</td>
+				<td>{{$v.PaySuccessOrder}}</td>
+				<td>{{ printf "%.2f" $v.PaySuccessRate}}%</td>
+				<td>{{ printf "%.2f" $v.PaySuccessMoney}}</td>
+				<td>{{ printf "%.2f" $v.PayFailMoney}}</td>
+				<td>{{$v.WithdrawRequest}}</td>
+				<td>{{$v.WithdrawRequestOrder}}</td>
+				<td>{{$v.WithdrawSuccessOrder}}</td>
+				<td>{{ printf "%.2f" $v.WithdrawSuccessRate}}%</td>
+				<td>{{ printf "%.2f" $v.ThirdpartyOrderRate}}%</td>
+				<td>{{ printf "%.2f" $v.WithdrawSuccessMoney}}</td>
+				<td>{{ printf "%.2f" $v.WithdrawFailMoney}}</td>
+			</tr>
+			{{end}}
+                {{if eq .count 0}}
+                    <tr>
+                        <td colspan="20">暂无记录...</td>
+                    </tr>
+                {{end}}
+                </tbody>
+            </table>
+        </div>
+        <div class="row">
+            <div class="row-page"> 
+                {{if gt .count 20}}
+                {{str2html .pageBar}}
+            {{end}}
+            </div>
+        </div>
+        {{end}}
+
+		</div>
+	</div>
+	</div>
+</div>
+
+<script>
+    $(function () {
+        $("#selectPackage").on("change",function () {
+        var selectVal = $("#selectPackage").val()
+        console.log(selectVal)
+        $("#package_id").val(selectVal)
+    });
+    // 渠道别名
+    $("#selectAlias").on("change",function () {
+        var selectVal = $("#selectAlias").val()
+        console.log("selectAlias："+selectVal)
+        $("#alias_id").val(selectVal)
+    });
+        var packVal =  $("#package_id").val()
+        if (packVal != ""){
+            
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+        // 渠道别名
+        var aliasVal =  $("#alias_id").val()
+        if (aliasVal != ""){
+            var arr1= aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null){
+                console.log("arr1:"+arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function(index, value) {
+                    if (value == "0"){
+                        arr1[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr1[index] = "其他"; 
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+    });
+    
+</script>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.tabid}}) });
+</script>

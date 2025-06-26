@@ -1,0 +1,608 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "debug k8s pod",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "port": 40000,
+            "host": "127.0.0.1",
+            "remotePath": "/build"
+        },
+        {
+            "name": "dbms",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/dbms",
+            "args": [
+                "--target",
+                "dbms"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "logger",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/logger",
+            "args": [
+                "--target",
+                "logger"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "gate",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/gate",
+            "args": [
+                "--target",
+                "gate",
+                "--node",
+                "1",
+                // "-level",
+                // "DEBUG"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "login",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/login",
+            "args": [
+                "--target",
+                "login",
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "hua",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/hua",
+            "args": [
+                "--target",
+                "hua",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "joker",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/joker",
+            "args": [
+                "--target",
+                "joker",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "ak47",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/ak47",
+            "args": [
+                "--target",
+                "ak47",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "rm2",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/rm2",
+            "args": [
+                "--target",
+                "rm2",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "lhd",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/lhd",
+            "args": [
+                "--target",  
+                "lhd",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "up7",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/up7",
+            "args": [
+                "--target",
+                "up7",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "crash",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/crash",
+            "args": [
+                "--target",
+                "crash",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "plane",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/plane",
+            "args": [
+                "--target",
+                "plane",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "andarbahar",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/andarbahar",
+            "args": [
+                "--target",
+                "andarbahar",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "redblack",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/redblack",
+            "args": [
+                "--target",
+                "redblack",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "lottery",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/lottery",
+            "args": [
+                "--target",
+                "lottery",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "fortune_gems2",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/fortune_gems2",
+            "args": [
+                "--target",
+                "fortune_gems2",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "fortune_gems",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/fortune_gems",
+            "args": [
+                "--target",
+                "fortune_gems",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        {
+            "name": "robot",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/game",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/robot",
+            "args": [
+                "--target",
+                "robot",
+                "--node",
+                "1"
+            ],
+            "presentation": {
+                "group": "game",
+                "order": 1
+            }
+        },
+        // {
+        //     "name": "simrobot",
+        //     "type": "go",
+        //     "request": "launch",
+        //     "mode": "auto",
+        //     "program": "${workspaceFolder}/simrobot",
+        //     "cwd": "${workspaceFolder}/bin",
+        //     "args": [
+        //         "-log_dir",
+        //         "logs",
+        //         "-stderrthreshold",
+        //         "DEBUG",
+        //         "--node",
+        //         "1"
+        //     ]
+        // },
+        {
+            "name": "sms",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/global",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/sms",
+            "args": [
+                "--target",
+                "sms",
+            ],
+            "presentation": {
+                "group": "global",
+                "order": 1
+            }
+        },
+        {
+            "name": "sync",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/global",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/sync",
+            "args": [
+                "--target",
+                "sync",
+            ],
+            "presentation": {
+                "group": "global",
+                "order": 1
+            }
+        },
+        {
+            "name": "alert",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/global",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/alert",
+            "args": [
+                "--target",
+                "alert",
+            ],
+            "presentation": {
+                "group": "global",
+                "order": 1
+            }
+        },
+        {
+            "name": "report",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/global",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/report",
+            "args": [
+                "--target",
+                "report",
+            ],
+            "presentation": {
+                "group": "global",
+                "order": 1
+            }
+        },
+        {
+            "name": "pay",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/global",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/pay",
+            "args": [
+                "--target",
+                "pay",
+            ],
+            "presentation": {
+                "group": "global",
+                "order": 1
+            }
+        },
+        {
+            "name": "withdraw",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/global",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/withdraw",
+            "args": [
+                "--target",
+                "withdraw",
+            ],
+            "presentation": {
+                "group": "global",
+                "order": 1
+            }
+        },
+        {
+            "name": "betrank",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/global",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/betrank",
+            "args": [
+                "--target",
+                "betrank",
+            ],
+            "presentation": {
+                "group": "global",
+                "order": 1
+            }
+        },
+        {
+            "name": "utr",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/global",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/utr",
+            "args": [
+                "--target",
+                "utr",
+                "--level",
+                "DEBUG"
+            ],
+            "presentation": {
+                "group": "global",
+                "order": 1
+            }
+        },
+        {
+            "name": "online",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/global",
+            "cwd": "${workspaceFolder}/run",
+            "output": "${workspaceFolder}/run/online",
+            "args": [
+                "--target",
+                "online",
+                "--level",
+                "DEBUG"
+            ],
+            "presentation": {
+                "group": "global",
+                "order": 1
+            }
+        },
+        {
+            "name": "admin",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/web",
+            "cwd": "${workspaceFolder}/internal/web/admin",
+            "output": "${workspaceFolder}/run/admin",
+            "args": [
+                "--target",
+                "admin",
+            ],
+            "presentation": {
+                "group": "web",
+                "order": 1
+            }   
+        },
+        {
+            "name": "agent",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/web",
+            "cwd": "${workspaceFolder}/internal/web/agent",
+            "output": "${workspaceFolder}/run/agent",
+            "args": [
+                "--target",
+                "agent",
+            ],
+            "presentation": {
+                "group": "web",
+                "order": 1
+            }
+        },
+
+        {
+            "name": "stats",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/web",
+            "cwd": "${workspaceFolder}/internal/web/stats",
+            "output": "${workspaceFolder}/run/stats",
+            "args": [
+                "--target",
+                "stats",
+            ],
+            "presentation": {
+                "group": "web",
+                "order": 1
+            }
+        },
+        {
+            "name": "temp-stats",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/temp-stats",
+            "cwd": "${workspaceFolder}/bin",
+            "args": [
+                "-log_dir",
+                "logs",
+                "-stderrthreshold",
+                "DEBUG"
+            ]
+        },
+        {
+            "name": "mongo2ck",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/misc/mongo2ck",
+            "cwd": "${workspaceFolder}/bin",
+            "args": [
+                "-log_dir",
+                "logs",
+                "-stderrthreshold",
+                "DEBUG"
+            ]
+        },
+    ]
+}

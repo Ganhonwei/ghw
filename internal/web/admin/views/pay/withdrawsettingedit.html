@@ -1,0 +1,61 @@
+
+<div class="alert alert-warning alert-dismissible hide" role="alert"></div>
+
+<form class="form-horizontal ajax-form" method="post" action="{{urlfor "PayController.WithdrawSettingEdit"}}">
+	<input type="hidden" name="ctype" value="{{.ctype}}" autocomplete="off" />
+	<div class="form-group">
+		<label for="role_name" class="col-sm-2 control-label">修改用户类型</label>
+		<div class="col-sm-3" style="margin-top:8px;">
+			{{if eq $.ctype "0"}}
+			新手
+			{{else if eq $.ctype "1"}}
+			平民
+			{{else if eq $.ctype "2"}}
+			普充
+			{{else if eq $.ctype "3"}}
+			小R
+			{{else if eq $.ctype "4"}}
+			中R
+			{{else if eq $.ctype "5"}}
+			大R
+			{{else if eq $.ctype "6"}}
+			超大R
+			{{end}}
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="role_name" class="col-sm-2 control-label">机审单价上限</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="jq_withdraw_max" name="jq_withdraw_max" value="{{.withdrawSetting.JQWithdrawMax}}" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="role_name" class="col-sm-2 control-label">机审赢钱上限</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="jq_win_max" name="jq_win_max" value="{{.withdrawSetting.JQWinMax}}" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="role_name" class="col-sm-2 control-label">机审返奖率上限</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="jq_win_rate_max" name="jq_win_rate_max" value="{{.withdrawSetting.JQWinRateMax}}" autocomplete="off" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="role_name" class="col-sm-2 control-label">银行卡号是否可重复</label>
+		<div class="col-sm-3">
+            <select name="is_bank_repeatable" id="is_bank_repeatable">
+                <option value="1" {{if $.withdrawSetting.IsBankRepeatable}}selected{{end}}>是</option>
+                <option value="0" {{if not $.withdrawSetting.IsBankRepeatable}}selected{{end}}>否</option>
+            </select>
+			<!-- <input type="text" class="form-control" id="jq_withdraw_max" name="jq_withdraw_max" value="{{.withdrawSetting.JQWinRateMax}}" autocomplete="off" /> -->
+		</div>
+	</div>
+	
+	<div class="clearfix form-actions">
+		<div class="col-sm-offset-2 col-sm-10">
+			<button type="submit" class="btn btn-info"><i class="ace-icon fa fa-check bigger-110"></i>提交</button>
+			<a href="{{urlfor "PayController.WithdrawList"}}" class="btn btn-default"><i class="ace-icon fa fa-reply bigger-110"></i>返回</a>
+		</div>
+	</div>
+</form>

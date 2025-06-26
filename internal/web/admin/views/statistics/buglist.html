@@ -1,0 +1,123 @@
+							
+<div class="row">
+	<div class="col-xs-12">
+	
+	<div class="tabbable">
+		<ul class="nav nav-tabs" id="list-tab">
+			<li {{if eq .tabid 0}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.BugList" "tabid" 0}}">提交总览</a>
+			</li>
+			<li {{if eq .tabid 1}}class="active"{{end}}>
+				<a href="{{urlfor "StatisticsController.BugList" "tabid" 1}}">提交日志</a>
+			</li>
+		</ul>
+	
+		<div class="tab-content">
+		
+		<div class="row">
+			<div class="col-xs-12">
+				<form class="form-inline" method="post" action="{{urlfor "StatisticsController.BugList"}}">
+				<input type="hidden" name="tabid" value="{{.tabid}}" />
+                {{if eq .tabid 1}}
+                <div class="input-group table_filtrate">
+                    账号查询:
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+                            placeholder="玩家ID" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-users"></i>
+                        </span>
+                    </div>
+                </div>
+                {{else}}
+                <div class="input-group table_filtrate">
+                    时间:
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    至
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+                        <span class="input-group-addon">
+                            <i class="ace-icon fa fa-calendar"></i>
+                        </span>
+                    </div>
+                </div>
+                {{end}}
+					<div class="input-group input-group-sm">
+						<button type="submit" class="btn">查询</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="space-4"></div>
+
+		<div class="table-panel">
+			<table class="table table-striped table-bordered table-hover">
+				<thead>
+					{{if eq .tabid 1}}
+					<tr>
+						<th>提交记录</th>
+						<th>用户ID</th>
+						<th>BUG类型</th>
+						<th>当日提交次数</th>
+					</tr>
+					{{else}}
+					<tr>
+						<th>时间</th>
+						<th>BUG1次数</th>
+						<th>BUG2次数</th>
+						<th>BUG3次数</th>
+						<th>BUG4次数</th>
+						<th>BUG5次数</th>
+					</tr>
+					{{end}}
+				</thead>
+				<tbody>
+					{{if eq .tabid 1}}
+					{{range $k, $v := .list}}
+					<tr>
+						<td>{{date $v.SDate "Y-m-d H:i:s"}}</td>
+						<td><a href="{{urlfor "PlayerController.List" "userid" $v.UserId}}" target="_blank">{{$v.UserId}}</a></td>
+						<td>
+							{{range $i, $b := $v.BugId}}
+								{{ $b }} &nbsp;
+							{{end}}
+						</td>
+						<td>{{$v.DaySubmit}}</td>
+					</tr>
+					{{end}}
+					{{else}}
+					{{range $k, $v := .list}}
+					<tr>
+						<td>{{date $v.SDate "Y-m-d"}}</td>
+						<td>{{$v.BugType1}}</td>
+                        <td>{{$v.BugType2}}</td>
+                        <td>{{$v.BugType3}}</td>
+                        <td>{{$v.BugType4}}</td>
+                        <td>{{$v.BugType5}}</td>
+					</tr>
+					{{end}}
+					{{end}}
+					{{if eq .count 0}}
+					<tr>
+						<td colspan="20">暂无记录...</td>
+					</tr>
+				{{end}}
+				</tbody>
+			</table>
+		</div>
+		<div class="row">
+			<div class="row-page"> 
+				{{if gt .count 20}}
+				{{str2html .pageBar}}
+			{{end}}
+			</div>
+		</div>
+		</div>
+	</div>
+	</div>
+</div>

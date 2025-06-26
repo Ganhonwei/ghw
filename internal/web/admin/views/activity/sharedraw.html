@@ -1,0 +1,134 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <div class="tabbable">
+            <div class="tab-content">
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <form class="form-inline" method="post" action="{{urlfor "Statistics2Controller.Sharedraw"}}">
+                            <div class="input-group table_filtrate">
+                                时间:
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="start_date" name="start_date" value="{{.startDate}}"
+                                        class="form-control" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                                至
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="end_date" name="end_date" value="{{.endDate}}"
+                                        class="form-control" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <button type="submit" class="btn">查询</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="space-4"></div>
+
+                <div class="table-panel" table-wrap="300">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th stickyL>日期</th>
+                                <th>总日活</th>
+                                <th>总参与人数</th>
+                                <th>总参与率</th>
+                                <th>分享用户参与人数</th>
+                                <th>分享用户参与率</th>
+                                <th>总人均抽奖次数</th>
+                                <th>分享用户人均抽奖次数</th>
+                                <th>获奖人数</th>
+                                <th>获奖金额</th>
+                                <th>总分享来人数</th>
+                                <th>总分享设备数</th>
+                                <th>日活人数</th>
+                                <th>分享用户分享来人数</th>
+                                <th>分享用户分享来设备数</th>
+                                <th>总有效分享数</th>
+                                <th>分享用户有效分享数</th>
+                                <th>总有效分享率</th>
+                                <th>分享用户有效分享率</th>
+                                <th>24小时玩游戏人数</th>
+                                <th>总CPR</th>
+                                <th>有效CPR</th>
+                                <th>首充CPP</th>
+                                <th>活动利润</th>
+                                <th>D0净ROI</th>
+                                <th>累计净ROI</th>
+                                <th>D0毛ROI</th>
+                                <th>累计毛ROI</th>
+                                <th>日活占比</th>
+                                <th>活动总充额占比</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--日期--> <td>{{$v.SDate}}</td>
+                                <!--总日活--> <td>{{$v.LoginedUsers}}</td>
+                                <!--总参与人数--> <td>{{$v.PddUsers}}</td>
+                                <!--总参与率--> <td>{{$v.PddRate}}</td>
+                                <!--分享用户参与人数--> <td>{{$v.BeInvoteUsers}}</td>
+                                <!--分享用户参与率--> <td>{{$v.BeInvoteRate}}</td>
+                                <!--总人均抽奖次数--> <td>{{$v.ShareDrawRate}}</td>
+                                <!--分享用户人均抽奖次数--> <td>{{$v.ShareDrawAvg}}</td>
+                                <!--获奖人数--> <td>{{$v.AwardUsers}}</td>
+                                <!--获奖金额--> <td>{{$v.SAwardJackpot}}</td>
+                                <!--总分享来人数--> <td>{{$v.BeInvoteRegUsers}}</td>
+                                <!--总分享设备数--> <td>{{$v.BeInvoteDevices}}</td>
+                                <!--日活人数--> <td>{{$v.BeInvoteLoginedUsers}}</td>
+                                <!--分享用户分享来人数--> <td>{{$v.Share2Users}}</td>
+                                <!--分享用户分享来设备数--> <td>{{$v.Share2Devices}}</td>
+                                <!-- 总有效分享数 <td>{{$v.BeInvoteUsers}}</td> -->
+                                <!--总有效分享数--> <td>{{$v.BeInvoteDevices}}</td>
+                                <!--分享用户有效分享数--> <td>{{$v.Share2DrawUsers}}</td>
+                                <!--总有效分享率--> <td>{{$v.YxShareRate}}</td>
+                                <!--分享用户有效分享率--> <td>{{$v.YxShare2Rate}}</td>
+                                <!--24小时玩游戏人数--> <td>{{$v.PlayedReg24}}</td>
+                                <!--总CPR--> <td>{{$v.ZCrp}}</td>
+                                <!--有效CPR--> <td>{{$v.YXCrp}}</td>
+                                <!--首充CPP--> <td>{{$v.SCCpp}}</td>
+                                <!--活动利润--> <td>{{$v.Profit}}</td>
+                                <!--D0净ROI--> <td>{{$v.Roi}}</td>
+                                <!--累计净ROI--> <td>{{$v.LjRoi}}</td>
+                                <!--D0毛ROI--> <td>{{$v.DoRoi}}</td>
+                                <!--累计毛ROI--> <td>{{$v.LjMRoi}}</td>
+                                <!--日活占比--> <td>{{$v.LoginedRate}}</td>
+                                <!--活动总充额占比--> <td>{{$v.PddChargeRate}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        
+    });
+
+</script>
+<style>
+    .profit2 {
+        color: 	#ff1b1b;
+    }
+</style>
+
+<script>
+	$(document).ready(function() { _StickyMemory() });
+</script>

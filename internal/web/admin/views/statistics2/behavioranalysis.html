@@ -1,0 +1,279 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <div class="tabbable">
+            <div class="tab-content">
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <form class="form-inline" method="post" id="main-form">
+                            <div class="input-group table_filtrate">
+                                注册时间:
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="start_date" name="start_date" value="{{.startDate}}"
+                                        class="form-control" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                                至
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="end_date" name="end_date" value="{{.endDate}}"
+                                        class="form-control" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                用户类型:
+                                <div class="input-group input-group-sm">
+                                    <select name="utype_id" id="utype_id">
+                                        <option value="0" {{if eq 0 $.usertypeId}}selected{{end}}>全部</option>
+                                        <option value="1" {{if eq 1 $.usertypeId}}selected{{end}}>零充</option>
+                                        <option value="2" {{if eq 2 $.usertypeId}}selected{{end}}>小R</option>
+                                        <option value="3" {{if eq 3 $.usertypeId}}selected{{end}}>中R</option>
+                                        <option value="4" {{if eq 4 $.usertypeId}}selected{{end}}>大R</option>
+                                        <option value="5" {{if eq 5 $.usertypeId}}selected{{end}}>超大R</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" id="range1" name="range1" value="{{.range1}}"
+                                class="form-control" autocomplete="off" />
+                            <input type="hidden" id="limit1" name="limit1" value="{{.limit1}}"
+                                class="form-control" autocomplete="off" />
+                            <input type="hidden" id="charges1" name="charges1" value="{{.charges1}}"
+                                class="form-control" autocomplete="off" />
+                            <input type="hidden" id="range2" name="range2" value="{{.range2}}"
+                                class="form-control" autocomplete="off" />
+                            <input type="hidden" id="limit2" name="limit2" value="{{.limit2}}"
+                                class="form-control" autocomplete="off" />
+                            <input type="hidden" id="charges2" name="charges2" value="{{.charges2}}"
+                                class="form-control" autocomplete="off" />
+                            <input type="hidden" id="charges3" name="charges3" value="{{.charges3}}"
+                                class="form-control" autocomplete="off" />
+                            <div class="input-group input-group-sm">
+                                <button type="submit" class="btn">查询</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="space-4"></div>
+
+                <div class="table-panel">
+                    <div class="form-inline" style="margin-top: 10px;">
+                        <div class="input-group table_filtrate">
+                            统计区间:
+                            <div class="input-group input-group-sm">
+                                <select id="srange1">
+                                    <option value="0" {{if eq 0 $.range1}}selected{{end}}>请选择</option>
+                                    <option value="10" {{if eq 10 $.range1}}selected{{end}}>10局</option>
+                                    <option value="20" {{if eq 20 $.range1}}selected{{end}}>20局</option>
+                                    <option value="50" {{if eq 50 $.range1}}selected{{end}}>50局</option>
+                                    <option value="100" {{if eq 100 $.range1}}selected{{end}}>100局</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group table_filtrate">
+                            区间上限:
+                            <div class="input-group input-group-sm">
+                                <select id="slimit1">
+                                    <option value="0" {{if eq 0 $.limit1}}selected{{end}}>请选择</option>
+                                    <option value="100" {{if eq 100 $.limit1}}selected{{end}}>100局</option>
+                                    <option value="300" {{if eq 300 $.limit1}}selected{{end}}>300局</option>
+                                    <option value="500" {{if eq 500 $.limit1}}selected{{end}}>500局</option>
+                                    <option value="1000" {{if eq 1000 $.limit1}}selected{{end}}>1000局</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group table_filtrate">
+                            充值次数:
+                            <div class="input-group input-group-sm">
+                                <input type="number" id="scharges1" value="{{.charges1}}" class="form-control"
+                                min="0" placeholder="充值次数" autocomplete="off" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="table table-striped table-bordered table-hover">
+                        {{if .columns1}}
+                        <thead>
+                            <tr>
+                                {{range $k, $v := .columns1}}
+                                    <th>{{$v}}</th>
+                                {{end}}
+                            </tr>
+                        </thead>
+                        {{end}}
+                        {{if .rows1}}
+                        <tbody>
+                            {{range $k, $v := .rows1}}
+                            <tr>
+                                {{range $k2, $v2 := $v}}
+                                <td title="{{$v2.users}}" ondblclick="copyText(this)">{{$v2.val}}</td>
+                                {{end}}
+                            </tr>
+                            {{end}}
+                        </tbody>
+                        {{end}}
+                    </table>
+
+                    <!-- 第二个表格 =================== -->
+                    <div class="form-inline" style="margin-top: 30px;">
+                        <div class="input-group table_filtrate">
+                            统计区间:
+                            <div class="input-group input-group-sm">
+                                <select id="srange2">
+                                    <option value="0" {{if eq 0 $.range1}}selected{{end}}>请选择</option>
+                                    <option value="50" {{if eq 50 $.range2}}selected{{end}}>50</option>
+                                    <option value="100" {{if eq 100 $.range2}}selected{{end}}>100</option>
+                                    <option value="200" {{if eq 200 $.range2}}selected{{end}}>200</option>
+                                    <option value="500" {{if eq 500 $.range2}}selected{{end}}>500</option>
+                                    <option value="1000" {{if eq 1000 $.range2}}selected{{end}}>1000</option>
+                                    <option value="5000" {{if eq 5000 $.range2}}selected{{end}}>5000</option>
+                                    <option value="10000" {{if eq 10000 $.range2}}selected{{end}}>10000</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group table_filtrate">
+                            区间上限:
+                            <div class="input-group input-group-sm">
+                                <select id="slimit2">
+                                    <option value="0" {{if eq 0 $.limit2}}selected{{end}}>请选择</option>
+                                    <option value="500" {{if eq 500 $.limit2}}selected{{end}}>500卢比</option>
+                                    <option value="1000" {{if eq 1000 $.limit2}}selected{{end}}>1000卢比</option>
+                                    <option value="5000" {{if eq 5000 $.limit2}}selected{{end}}>5000卢比</option>
+                                    <option value="10000" {{if eq 10000 $.limit2}}selected{{end}}>10000卢比</option>
+                                    <option value="100000" {{if eq 100000 $.limit2}}selected{{end}}>100000卢比</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group table_filtrate">
+                            充值次数:
+                            <div class="input-group input-group-sm">
+                                <input type="number" id="scharges2" value="{{.charges2}}" class="form-control"
+                                    min="0" placeholder="充值次数" autocomplete="off" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="table table-striped table-bordered table-hover">
+                        {{if .columns2}}
+                        <thead>
+                            <tr>
+                                {{range $k, $v := .columns2}}
+                                    <th>{{$v}}</th>
+                                {{end}}
+                            </tr>
+                        </thead>
+                        {{end}}
+                        {{if .rows2}}
+                        <tbody>
+                            {{range $k, $v := .rows2}}
+                            <tr>
+                                {{range $k2, $v2 := $v}}
+                                <td title="{{$v2.users}}" ondblclick="copyText(this)">{{$v2.val}}</td>
+                                {{end}}
+                            </tr>
+                            {{end}}
+                        </tbody>
+                        {{end}}
+                    </table>
+
+                    <!-- 第三个表格 =================== -->
+                    <div class="form-inline" style="margin-top: 30px;">
+                        <div class="input-group table_filtrate">
+                            充值次数:
+                            <div class="input-group input-group-sm">
+                                <input type="number" id="scharges3" value="{{.charges3}}" class="form-control"
+                                min="0" placeholder="充值次数" autocomplete="off" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="table table-striped table-bordered table-hover">
+                        {{if .columns3}}
+                        <thead>
+                            <tr>
+                                {{range $k, $v := .columns3}}
+                                    <th>{{$v}}</th>
+                                {{end}}
+                            </tr>
+                        </thead>
+                        {{end}}
+                        {{if .rows3}}
+                        <tbody>
+                            {{range $k, $v := .rows3}}
+                            <tr>
+                                {{range $k2, $v2 := $v}}
+                                <td>{{$v2}}</td>
+                                {{end}}
+                            </tr>
+                            {{end}}
+                        </tbody>
+                        {{end}}
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // $(function () {
+    //     // 用户类型
+    //     $("#selectTabId").on("change", function () {
+    //         var selectVal = $("#selectTabId").val()
+    //         $("#tab_id").val(selectVal)
+    //     });
+    // });
+
+	function copyText(event) {
+		var clickedElement = event;
+		var text = clickedElement.getAttribute('title');
+
+		var textField = document.createElement('textarea');
+        textField.value = text;
+        document.body.appendChild(textField);
+        textField.select();
+        document.execCommand('copy');
+        document.body.removeChild(textField);
+        alert("用户id已成功复制！");
+	}
+
+    $(function() {
+        var submited = false;
+        $("#main-form").on("submit", function(e) {
+            if (!submited) {
+                e.preventDefault();
+            }
+            submited = true;
+
+            // 手动提交表单
+            // $("#utype_id option[value=3]").attr("selected", "");
+            var range1 = $("#srange1").val();
+            $("#range1").attr("value", range1);
+            var limit1 = $("#slimit1").val();
+            $("#limit1").attr("value", limit1);
+            var charges1 = $("#scharges1").val();
+            $("#charges1").attr("value", charges1);
+            var range2 = $("#srange2").val();
+            $("#range2").attr("value", range2);
+            var limit2 = $("#slimit2").val();
+            $("#limit2").attr("value", limit2);
+            var charges2 = $("#scharges2").val();
+            $("#charges2").attr("value", charges2);
+            var charges3 = $("#scharges3").val();
+            $("#charges3").attr("value", charges3);
+
+            $("#main-form").off("submit");
+            $("#main-form").submit();
+        })
+    });
+
+</script>
+<style>
+    .profit2 {
+        color: 	#ff1b1b;
+    }
+</style>

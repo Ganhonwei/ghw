@@ -1,0 +1,31 @@
+<div class="row">
+	
+	<div class="col-xs-6">
+		<div class="widget-box transparent">
+			<div class="widget-header widget-header-flat">
+				<h4 class="widget-title lighter">
+					<i class="ace-icon fa fa-info-circle orange"></i>
+					基本信息
+				</h4>
+			</div>
+
+			<div class="widget-body">
+				<div class="widget-main no-padding">
+					<ul class="item-list">
+						<li>
+							{{.user.UserName}}，欢迎使用后台管理系统！
+						</li>
+						<!-- <li>
+							最后登录IP：{{ .user.LastIp}}
+						</li> -->
+						<li>
+							最后登录时间：{{ date .user.LastLogin "Y-m-d H:i:s"}}
+						</li>
+						
+					</ul>
+				</div><!-- /.widget-main -->
+			</div><!-- /.widget-body -->
+		</div>
+	</div>
+	
+</div>

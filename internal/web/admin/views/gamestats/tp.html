@@ -1,0 +1,1251 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <div class="tabbable">
+            <ul class="nav nav-tabs" id="list-tab">
+                <li {{if eq .typeId 0}}class="active" {{end}}>
+                    <a href="{{urlfor "GameStatsController.TP" "typeId" 0}}">TP汇总</a>
+                </li>
+                <li {{if eq .typeId 1}}class="active" {{end}}>
+                    <a href="{{urlfor "GameStatsController.TP" "typeId" 1}}">TP明细</a>
+                </li>
+                <li {{if eq .typeId 2}}class="active" {{end}}>
+                    <a href="{{urlfor "GameStatsController.TP" "typeId" 2}}">TP房间统计</a>
+                </li>
+                <li {{if eq .typeId 3}}class="active" {{end}}>
+                    <a href="{{urlfor "GameStatsController.TP" "typeId" 3}}">TP玩家行为</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <form class="form-inline" method="post" action="{{urlfor "GameStatsController.TP"}}">
+                            <input type="hidden" name="typeId" value="{{.typeId}}" />
+                            <input type="hidden" name="status" value="{{.status}}" />
+                            {{if or (eq .typeId 1) (eq .typeId 3)}}
+                            <div class="input-group table_filtrate">
+                                账号查询:
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+                                        placeholder="玩家ID" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-users"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            {{end}}
+                            {{if ne .typeId 3}}
+                            <div class="input-group table_filtrate">
+                                时间:
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="start_date" name="start_date" value="{{.startDate}}"
+                                        class="form-control" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                                至
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="end_date" name="end_date" value="{{.endDate}}"
+                                        class="form-control" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                渠道:
+                                <div class="input-group" id="package_div">
+                                    <select id="selectPackage" class="selectpicker" multiple data-live-search="true"
+                                        data-width="200px" style="width: 200px !important;" title="请选择渠道">
+                                        {{range $k,$v := .packageList}}
+                                        <option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>
+                                            {{$v.Name}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="package_id" name="package_id" value="{{.packageId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            {{end}}
+                            <!-- <div class="input-group table_filtrate">
+                                渠道别名:
+                                <div class="input-group input-group-sm" id="alias_div">
+                                    <select id="selectAlias" class="selectpicker" multiple data-live-search="true"
+                                        data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                        {{range $k,$v := .packageAliasList}}
+                                        <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}
+                                        </option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div> -->
+                            {{if or (eq .typeId 0) (eq .typeId 1) (eq .typeId 2)}}
+                            <div class="input-group table_filtrate">
+                                用户类型:
+                                <div class="input-group input-group-sm" id="utype_id_div">
+                                    <select id="sutype_id" class="selectpicker" multiple style="width: 80px;" data-live-search="true">
+                                        {{range $k,$v := .usertype}}
+                                        <option value="{{$k}}" >{{$v}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="utype_id" name="utype_id" value="{{.usertypeId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            {{end}}
+                            {{if ne .typeId 3}}
+                            <div class="input-group table_filtrate">
+                                账号类型:
+                                <div class="input-group input-group-sm">
+                                    <select name="tab_id" id="tab_id" style="width: 80px;">
+                                        <option value="0" {{if eq 0 $.tabId}}selected{{end}}>全部</option>
+                                        <option value="1" {{if eq 1 $.tabId}}selected{{end}}>A类</option>
+                                        <option value="2" {{if eq 2 $.tabId}}selected{{end}}>B类</option>
+                                        <option value="3" {{if eq 3 $.tabId}}selected{{end}}>C类</option>
+                                    </select>
+                                </div>
+                            </div>
+                            {{end}}
+                            {{if or (eq .typeId 0) (eq .typeId 1)}}
+                            <div style="margin-top:10px;display: inline-block;">
+                                <div class="input-group table_filtrate">
+                                    流失天数筛选:
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="lossDays1" name="lossDays1" value="{{.lossDays1}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                    至
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="lossDays2" name="lossDays2" value="{{.lossDays2}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                </div>
+                                <div class="input-group table_filtrate">
+                                    打码量筛选:
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="bets1" name="bets1" value="{{.bets1}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                    至
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="bets2" name="bets2" value="{{.bets2}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                </div>
+                                <div class="input-group table_filtrate">
+                                    局均打码量筛选:
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="betAvg1" name="betAvg1" value="{{.betAvg1}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                    至
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="betAvg2" name="betAvg2" value="{{.betAvg2}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                </div>
+                            </div>
+                            {{end}}
+                            <div class="input-group input-group-sm">
+                                <button type="submit" class="btn">查询</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="space-4"></div>
+
+                {{if eq .typeId 0}}
+                <div class="table-panel" table-wrap="300">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th stickyL>日期</th>
+                                <th>日活数量</th>
+                                <th>总玩TP人数</th>
+                                <th>新顾客玩TP人数</th>
+                                <th>老顾客玩TP人数</th>
+                                <th>玩TP人数占日活比</th>
+                                <th>新顾客玩TP占新顾客日活比</th>
+                                <th>老顾客玩TP占老顾客日活比</th>
+                                <th>总局数</th>
+                                <th>人均局数</th>
+                                <th>局数中位数</th>
+                                <th>游戏总时长（min）</th>
+                                <th>游戏局均时长（min）</th>
+                                <th>游戏人均时长（min）</th>
+                                <th>总打码</th>
+                                <th>人均打码</th>
+                                <th>局均打码量</th>
+                                <th>胜利局数</th>
+                                <th>失败局数</th>
+                                <th>胜率</th>
+                                <th>胜局打码量</th>
+                                <th>败局打码量</th>
+                                <th>胜局均码量</th>
+                                <th>败局均码量</th>
+                                <th>胜局赢钱金额</th>
+                                <th>败局输钱金额</th>
+                                <th>净赢</th>
+                                <th>胜局均盈利</th>
+                                <th>败局均输额</th>
+                                <th>局均净赢</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--日期--> <td>{{$v.DateStr}}</td>
+                                <!--日活数量--> <td>{{$v.FLoginedUsers}}</td>
+                                <!--总玩crash人数--> <td>{{$v.Players}}</td>
+                                <!--新顾客玩crash人数--> <td>{{$v.NewPlayers}}</td>
+                                <!--老顾客玩crash人数--> <td>{{$v.OldPlayers}}</td>
+                                <!--玩crash人数占日活比--> <td>{{$v.FPlayerRate}}</td>
+                                <!--新顾客玩crash占新顾客日活比--> <td>{{$v.FNewPlayerRate}}</td>
+                                <!--老顾客玩crash占老顾客日活比--> <td>{{$v.FOldPlayerRate}}</td>
+                                <!--总局数--> <td>{{$v.BetRounds}}</td>
+                                <!--人均局数--> <td>{{$v.FPlayerRoundsAvg}}</td>
+                                <!--局数中位数--> <td>{{$v.FPlayerRoundsMedian}}</td>
+                                <!--游戏总时长（min）--> <td>{{$v.FGameTimes}}</td>
+                                <!--游戏局均时长（min)--> <td>{{$v.FGameTimesAvg}}</td>
+                                <!--游戏人均时长（min）--> <td>{{$v.FGameTimesPlayerAvg}}</td>
+                                <!--总打码--> <td>{{$v.FBets}}</td>
+                                <!--人均打码--> <td>{{$v.FPlayerBetsAvg}}</td>
+                                <!--局均打码量--> <td>{{$v.FRoundBetsAvg}}</td>
+                                <!--胜利局数--> <td>{{$v.WinRounds}}</td>
+                                <!--失败局数--> <td>{{$v.LoseRounds}}</td>
+                                <!--胜率--> <td>{{$v.FWinRate}}</td>
+                                <!--胜局打码量--> <td>{{$v.FWinBets}}</td>
+                                <!--败局打码量--> <td>{{$v.FLoseBets}}</td>
+                                <!--胜局均码量--> <td>{{$v.FWinBetsAvg}}</td>
+                                <!--败局均码量--> <td>{{$v.FLoseBetsAvg}}</td>
+                                <!--胜局赢钱金额--> <td>{{$v.FWins}}</td>
+                                <!--败局输钱金额--> <td>{{$v.FLoses}}</td>
+                                <!--净赢--> <td>{{$v.FCash}}</td>
+                                <!--胜局均盈利--> <td>{{$v.FWinsAvg}}</td>
+                                <!--败局均输额--> <td>{{$v.FLosesAvg}}</td>
+                                <!--局均净赢--> <td>{{$v.FCashAvg}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                {{else if eq .typeId 2}}
+                    <!-- TP房间统计 -->
+                    <div class="table-panel">
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">房间</th>
+                                    <th colspan="6">综合数据</th>
+                                    <th colspan="4">胜率</th>
+                                    <th colspan="4">返奖率</th>
+                                    <th colspan="13">牌型期望价值</th>
+                                </tr>
+                                <tr>
+                                    <th>局数</th>
+                                    <th>总下注</th>
+                                    <th>场均下注</th>
+                                    <th>总盈亏</th>
+                                    <th>主动升到此场次数</th>
+                                    <th>主动降到此场次数</th>
+                                    <th>2人局胜率</th>
+                                    <th>3人局胜率</th>
+                                    <th>4人局胜率</th>
+                                    <th>5人局胜率</th>
+                                    <th>2人局返奖率</th>
+                                    <th>3人局返奖率</th>
+                                    <th>4人局返奖率</th>
+                                    <th>5人局返奖率</th>
+                                    <th>筹码池上限</th>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $k, $v := .list.RoomInfo}}
+                                <tr>
+                                   <td>{{$v.Roomid}}</td>
+                                   <td>{{$v.AllRounds}}</td>
+                                   <td>{{ printf "%.2f" $v.FBets}}</td>
+                                   <td>{{ printf "%.2f" $v.RoundBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.TotalProfit}}</td>
+                                   <td>{{$v.UpNumber}}</td>
+                                   <td>{{$v.DownNumber}}</td>
+                                   <td>{{ printf "%.2f" $v.TwoWinRate}}%</td>
+                                   <td>{{ printf "%.2f" $v.ThreeWinRate}}%</td>
+                                   <td>{{ printf "%.2f" $v.FourWinRate}}%</td>
+                                   <td>{{ printf "%.2f" $v.FiveWinRate}}%</td>
+                                   <td>{{ printf "%.2f" $v.TwoBonusRate}}%</td>
+                                   <td>{{ printf "%.2f" $v.ThreeBonusRate}}%</td>
+                                   <td>{{ printf "%.2f" $v.FourBonusRate}}%</td>
+                                   <td>{{ printf "%.2f" $v.FiveBonusRate}}%</td>
+                                   <td>{{ printf "%.2f" $v.ChipPool}}</td>
+                                   <td>{{ printf "%.2f" $v.BZUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.BZDownBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.THSUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.THSDownBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DSZUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DSZDownBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DTHUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DTHDownBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DDZUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DDZDownBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DGPUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DGPDownBetAvg}}</td>
+                                </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                        <div class="space-4"></div>
+                        <p>期望轮次</p>
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $k, $v := .list.TurnInfo}}
+                                <tr>
+                                    <td>{{printf "%.2f" $v.BZUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.BZDownRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.THSUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.THSDownRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DSZUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DSZDownRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DTHUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DTHDownRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DDZUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DDZDownRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DGPUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DGPDownRoundAvg}}</td>
+                                 </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                        <div class="space-4"></div>
+                        <p>大赢局</p>
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $k, $v := .list.WinInfo}}
+                                <tr>
+                                    <td>{{$v.BZUpWinRounds}}</td>
+                                    <td>{{$v.BZDownWinRounds}}</td>
+                                    <td>{{$v.THSUpWinRounds}}</td>
+                                    <td>{{$v.THSDownWinRounds}}</td>
+                                    <td>{{$v.DSZUpWinRounds}}</td>
+                                    <td>{{$v.DSZDownWinRounds}}</td>
+                                    <td>{{$v.DTHUpWinRounds}}</td>
+                                    <td>{{$v.DTHDownWinRounds}}</td>
+                                    <td>{{$v.DDZUpWinRounds}}</td>
+                                    <td>{{$v.DDZDownWinRounds}}</td>
+                                    <td>{{$v.DGPUpWinRounds}}</td>
+                                    <td>{{$v.DGPDownWinRounds}}</td>
+                                 </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                        <div class="space-4"></div>
+                        <p>大输局</p>
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $k, $v := .list.LoseInfo}}
+                                <tr>
+                                    <td>{{$v.BZUpLoseRounds}}</td>
+                                    <td>{{$v.BZDownLoseRounds}}</td>
+                                    <td>{{$v.THSUpLoseRounds}}</td>
+                                    <td>{{$v.THSDownLoseRounds}}</td>
+                                    <td>{{$v.DSZUpLoseRounds}}</td>
+                                    <td>{{$v.DSZDownLoseRounds}}</td>
+                                    <td>{{$v.DTHUpLoseRounds}}</td>
+                                    <td>{{$v.DTHDownLoseRounds}}</td>
+                                    <td>{{$v.DDZUpLoseRounds}}</td>
+                                    <td>{{$v.DDZDownLoseRounds}}</td>
+                                    <td>{{$v.DGPUpLoseRounds}}</td>
+                                    <td>{{$v.DGPDownLoseRounds}}</td>
+                                 </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                    </div>
+                {{else if eq .typeId 3}}
+                    <!-- TP玩家行为 -->
+                    <div class="table-panel">
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>玩家ID</th>
+                                    <th>TP总局数</th>
+                                    <th>TP总下注</th>
+                                    <th>TP场均下注</th>
+                                    <th>TP总盈亏</th>
+                                    <!-- <th>TP场均时间</th> -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{else}}
+                                <tr>
+                                    <td>{{.list.Userid}}</td>
+                                    <td>{{.list.AllRounds}}</td>
+                                    <td>{{ printf "%.2f" .list.FBets}}</td>
+                                    <td>{{ printf "%.2f" .list.RoundBetAvg}}</td>
+                                    <td>{{ printf "%.2f" .list.TotalProfit}}</td>
+                                    </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                        <div class="space-4"></div>
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">房间</th>
+                                    <th colspan="6">综合数据</th>
+                                    <th colspan="4">胜率</th>
+                                    <th colspan="4">返奖率</th>
+                                    <th colspan="13">牌型期望价值</th>
+                                </tr>
+                                <tr>
+                                    <th>局数</th>
+                                    <th>总下注</th>
+                                    <th>场均下注</th>
+                                    <th>总盈亏</th>
+                                    <th>主动升到此场次数</th>
+                                    <th>主动降到此场次数</th>
+                                    <th>2人局胜率</th>
+                                    <th>3人局胜率</th>
+                                    <th>4人局胜率</th>
+                                    <th>5人局胜率</th>
+                                    <th>2人局返奖率</th>
+                                    <th>3人局返奖率</th>
+                                    <th>4人局返奖率</th>
+                                    <th>5人局返奖率</th>
+                                    <th>筹码池上限</th>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $k, $v := .list.RoomInfo}}
+                                <tr>
+                                   <td>{{$v.Roomid}}</td>
+                                   <td>{{$v.AllRounds}}</td>
+                                   <td>{{ printf "%.2f" $v.FBets}}</td>
+                                   <td>{{ printf "%.2f" $v.RoundBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.TotalProfit}}</td>
+                                   <td>{{$v.UpNumber}}</td>
+                                   <td>{{$v.DownNumber}}</td>
+                                   <td>{{ printf "%.2f" $v.TwoWinRate}}</td>
+                                   <td>{{ printf "%.2f" $v.ThreeWinRate}}</td>
+                                   <td>{{ printf "%.2f" $v.FourWinRate}}</td>
+                                   <td>{{ printf "%.2f" $v.FiveWinRate}}</td>
+                                   <td>{{ printf "%.2f" $v.TwoBonusRate}}</td>
+                                   <td>{{ printf "%.2f" $v.ThreeBonusRate}}</td>
+                                   <td>{{ printf "%.2f" $v.FourBonusRate}}</td>
+                                   <td>{{ printf "%.2f" $v.FiveBonusRate}}</td>
+                                   <td>{{ printf "%.2f" $v.ChipPool}}</td>
+                                   <td>{{ printf "%.2f" $v.BZUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.BZDownBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.THSUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.THSDownBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DSZUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DSZDownBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DTHUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DTHDownBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DDZUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DDZDownBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DGPUpBetAvg}}</td>
+                                   <td>{{ printf "%.2f" $v.DGPDownBetAvg}}</td>
+                                </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                        <div class="space-4"></div>
+                        <p>期望轮次</p>
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $k, $v := .list.TurnInfo}}
+                                <tr>
+                                    <td>{{printf "%.2f" $v.BZUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.BZDownRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.THSUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.THSDownRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DSZUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DSZDownRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DTHUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DTHDownRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DDZUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DDZDownRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DGPUpRoundAvg}}</td>
+                                    <td>{{printf "%.2f" $v.DGPDownRoundAvg}}</td>
+                                 </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                        <div class="space-4"></div>
+                        <p>大赢局</p>
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                 {{range $k, $v := .list.WinInfo}}
+                                <tr>
+                                    <td>{{$v.BZUpWinRounds}}</td>
+                                    <td>{{$v.BZDownWinRounds}}</td>
+                                    <td>{{$v.THSUpWinRounds}}</td>
+                                    <td>{{$v.THSDownWinRounds}}</td>
+                                    <td>{{$v.DSZUpWinRounds}}</td>
+                                    <td>{{$v.DSZDownWinRounds}}</td>
+                                    <td>{{$v.DTHUpWinRounds}}</td>
+                                    <td>{{$v.DTHDownWinRounds}}</td>
+                                    <td>{{$v.DDZUpWinRounds}}</td>
+                                    <td>{{$v.DDZDownWinRounds}}</td>
+                                    <td>{{$v.DGPUpWinRounds}}</td>
+                                    <td>{{$v.DGPDownWinRounds}}</td>
+                                 </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                        <div class="space-4"></div>
+                        <p>大输局</p>
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $k, $v := .list.LoseInfo}}
+                                <tr>
+                                    <td>{{$v.BZUpLoseRounds}}</td>
+                                    <td>{{$v.BZDownLoseRounds}}</td>
+                                    <td>{{$v.THSUpLoseRounds}}</td>
+                                    <td>{{$v.THSDownLoseRounds}}</td>
+                                    <td>{{$v.DSZUpLoseRounds}}</td>
+                                    <td>{{$v.DSZDownLoseRounds}}</td>
+                                    <td>{{$v.DTHUpLoseRounds}}</td>
+                                    <td>{{$v.DTHDownLoseRounds}}</td>
+                                    <td>{{$v.DDZUpLoseRounds}}</td>
+                                    <td>{{$v.DDZDownLoseRounds}}</td>
+                                    <td>{{$v.DGPUpLoseRounds}}</td>
+                                    <td>{{$v.DGPDownLoseRounds}}</td>
+                                 </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                        <div class="space-4"></div>
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th colspan="12">两人局弃牌率</th>
+                                    <th colspan="12">两人局跟注率</th>
+                                </tr>
+                                <tr>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $k, $v := .list.TwoRateInfo}}
+                                <tr>
+                                    <td>{{printf "%.2f" $v.BZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPDownFollowRate}}%</td>
+                                 </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                        <div class="space-4"></div>
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th colspan="12">三人局弃牌率</th>
+                                    <th colspan="12">三人局跟注率</th>
+                                </tr>
+                                <tr>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $k, $v := .list.ThreeRateInfo}}
+                                <tr>
+                                    <td>{{printf "%.2f" $v.BZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPDownFollowRate}}%</td>
+                                 </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                        <div class="space-4"></div>
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th colspan="12">四人局弃牌率</th>
+                                    <th colspan="12">四人局跟注率</th>
+                                </tr>
+                                <tr>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $k, $v := .list.FourRateInfo}}
+                                <tr>
+                                    <td>{{printf "%.2f" $v.BZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPDownFollowRate}}%</td>
+                                 </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                        <div class="space-4"></div>
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th colspan="12">五人局弃牌率</th>
+                                    <th colspan="12">五人局跟注率</th>
+                                </tr>
+                                <tr>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                    <th>大豹子</th>
+                                    <th>小豹子</th>
+                                    <th>大同花顺</th>
+                                    <th>小同花顺</th>
+                                    <th>大顺子</th>
+                                    <th>小顺子</th>
+                                    <th>大同花</th>
+                                    <th>小同花</th>
+                                    <th>大对子</th>
+                                    <th>小对子</th>
+                                    <th>大高牌</th>
+                                    <th>小高牌</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range $k, $v := .list.FiveRateInfo}}
+                                <tr>
+                                    <td>{{printf "%.2f" $v.BZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPUpDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPDownDiscardRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.BZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.THSDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DSZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DTHDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DDZDownFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPUpFollowRate}}%</td>
+                                    <td>{{printf "%.2f" $v.DGPDownFollowRate}}%</td>
+                                 </tr>
+                                {{end}}
+                                {{if eq .count 0}}
+                                <tr>
+                                    <td colspan="20">暂无记录...</td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="row" style="width: 90%">
+                        <div class="col-xs-12 center">
+                      
+                          <!-- <canvas id="online" width="100" height="120"></canvas> -->
+                          <canvas id="info"></canvas>
+                          <script src="../../assets/js/Chart.js"></script>
+                          
+                          <script>
+                            var ctx = document.getElementById('info').getContext('2d');
+                            var timelabel = {{.line.Dates}}; // 日期
+                            var Game = {{.line.TP}}; // TP
+                            var Game1 = {{.line.Pay}}; // 充值
+                            var Game2 = {{.line.Withdraw}}; // 提现
+                            var Game3 = {{.line.UpRoom}}; // 升房间
+                            var Game4 = {{.line.DownRoom}}; // 降房间
+                            var Game5 = {{.line.InPay}}; // 局内充值
+                            var chart = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels:timelabel,
+                                    datasets: [{
+                                        label: 'TP',
+                                        data: Game,
+                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                        borderColor: 'rgba(0, 123, 255, 1)',
+                                        borderWidth: 1
+                                    }
+                                    ,{
+                                        label: '充值',
+                                        data: Game1,
+                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                        borderColor: 'rgba(255, 99, 132, 1)',
+                                        borderWidth: 1
+                                    }
+                                    ,{
+                                        label: '提现',
+                                        data: Game2,
+                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                        borderColor: 'rgba(252, 186, 3, 1)',
+                                        borderWidth: 1
+                                    },{
+                                        label: '局内充值',
+                                        data: Game5,
+                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                        borderColor: 'rgb(20, 252, 3,1)',
+                                        borderWidth: 1
+                                    },{
+                                        label: '升房间',
+                                        data: Game3,
+                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                        borderColor: 'rgb(115, 3, 252,1)',
+                                        borderWidth: 1
+                                    }
+                                    ,{
+                                        label: '降房间',
+                                        data: Game5,
+                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 设置为透明色
+                                        borderColor: 'rgb(115, 3, 252,1)',
+                                        borderWidth: 1
+                                    }
+                                  ]
+                                },
+                                options: {
+                                    responsive: true,
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true
+                                        }
+                                    }
+                                }
+                            });
+                        </script>
+                        </div>
+                      </div>
+                {{else}}
+                <!-- TP明细 -->
+                <div class="table-panel" table-wrap="300">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th stickyL>玩家id</th>
+                                <th>玩家昵称</th>
+                                <th>玩家类型</th>
+                                <th>账号类型</th>
+                                <th>注册时间</th>
+                                <th>最后登录时间</th>
+                                <th>存活天数</th>
+                                <th>流失天数</th>
+                                <th>打码量</th>
+                                <th>下注局数</th>
+                                <th>局均打码量</th>
+                                <th>胜利局数</th>
+                                <th>失败局数</th>
+                                <th>胜率</th>
+                                <th>胜局打码量</th>
+                                <th>败局打码量</th>
+                                <th>胜局均码量</th>
+                                <th>败局均码量</th>
+                                <th>胜局赢钱金额</th>
+                                <th>败局输钱金额</th>
+                                <th>净赢</th>
+                                <th>胜局均盈利</th>
+                                <th>败局均输额</th>
+                                <th>局均净赢</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--序号--> <td>{{$v.No}}</td>
+                                <!--玩家id--> <td>{{$v.Id}}</td>
+                                <!--玩家昵称--> <td>{{$v.FNickname}}</td>
+                                <!--玩家类型--> <td>{{$v.FUserType}}</td>
+                                <!--账号类型--> <td>{{$v.FRegistArea}}</td>
+                                <!--注册时间--> <td>{{$v.FCtime}}</td>
+                                <!--最后登陆时间--> <td>{{$v.FLoginTime}}</td>
+                                {{if eq $k 0}}
+                                <!--存活天数--> <td>--</td>
+                                <!--流失天数--> <td>--</td>
+                                {{else}}
+                                <!--存活天数--> <td>{{$v.FLiveDays}}</td>
+                                <!--流失天数--> <td>{{$v.FLoseDays}}</td>
+                                {{end}}
+                                <!--crash打码量--> <td>{{ $v.FBets }}</td>
+                                <!--下注局数--> <td>{{$v.BetRounds}}</td>
+                                <!--局均打码量--> <td>{{$v.FRoundBetsAvg}}</td>
+                                <!--胜利局数--> <td>{{$v.WinRounds}}</td>
+                                <!--失败局数--> <td>{{$v.LoseRounds}}</td>
+                                <!--胜率--> <td>{{$v.FWinRate}}</td>
+                                <!--胜局打码量--> <td>{{$v.FWinBets}}</td>
+                                <!--败局打码量--> <td>{{$v.FLoseBets}}</td>
+                                <!--胜局均码量--> <td>{{$v.FWinBetsAvg}}</td>
+                                <!--败局均码量--> <td>{{$v.FLoseBetsAvg}}</td>
+                                <!--胜局赢钱金额--> <td>{{$v.FWins}}</td>
+                                <!--败局输钱金额--> <td>{{$v.FLoses}}</td>
+                                <!--净赢--> <td>{{$v.FCash}}</td>
+                                <!--胜局均盈利--> <td>{{$v.FWinsAvg}}</td>
+                                <!--败局均输额--> <td>{{$v.FLosesAvg}}</td>
+                                <!--局均净赢--> <td>{{$v.FCashAvg}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="row-page"> 
+                        {{if gt .count 20}}
+                            {{str2html .pageBar}}
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $("#selectPackage").on("change", function () {
+            var selectVal = $("#selectPackage").val()
+            console.log(selectVal)
+            $("#package_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change", function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias：" + selectVal)
+            $("#alias_id").val(selectVal)
+        });
+        // 用户类型
+        $("#sutype_id").on("change", function () {
+            var selectVal = $("#sutype_id").val()
+            console.log("sutype_id：" + selectVal)
+            $("#utype_id").val(selectVal)
+        });
+        // 账号类型
+        $("#selectTabId").on("change", function () {
+            var selectVal = $("#selectTabId").val()
+            $("#tab_id").val(selectVal)
+        });
+
+        // 用户类型
+        var tabIdVal = $("#tab_id").val()
+        if (tabIdVal != "") {
+            $('#selectTabId').selectpicker({ width: 200 });
+            $("#selectTabId").val(tabIdVal);
+            var str = tabIdVal == '0' ? '全部' :
+            tabIdVal == '1' ? 'A类' :
+            tabIdVal == '2' ? 'B类' :
+            tabIdVal == '3' ? 'C类' : '其他';
+            $('#tabId_div .filter-option-inner-inner').html(str);
+        } else {
+            $('#selectTabId').selectpicker({ width: 200 });
+        }
+
+        var packVal = $("#package_id").val()
+        if (packVal) {
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null) {
+                $("#selectPackage").val(arr)
+                $.each(arr, function (index, value) {
+                    if (value == "0") {
+                        arr[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr[index] = "其他";
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+        // 渠道别名
+        var aliasVal = $("#alias_id").val()
+        if (aliasVal) {
+            var arr1 = aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr1:" + arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+
+        // 用户类型
+        var utype_id = $("#utype_id").val()
+        if (utype_id == "") {
+            utype_id = "0";
+        }
+        $('#sutype_id').selectpicker({ width: 120 });
+        console.log('utype_id', utype_id)
+        var utypeids = utype_id.split(",");
+        var utypes = {0: "全部",1: "新手",3: "平民",4: "泡沫",5: "零充",6: "普充",7: "小R",8: "中R",9: "大R",10: "超大R",11: "手动",};
+        var utypeNames = [];
+        for (let i = 0; i < utypeids.length; i++) {
+            var utypeid = utypeids[i];
+            $(`#sutype_id option[value=${utypeid}]`).attr("selected", true);
+
+            var name = utypes[utypeid];
+            utypeNames.push(name);
+        }
+        var str = utypeNames.join(", ");
+        $('#utype_id_div .filter-option-inner-inner').html(str)
+    });
+
+</script>
+<style>
+    .profit{
+        color: 	#EEAD0E;
+    }
+</style>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.typeId}}) });
+</script>

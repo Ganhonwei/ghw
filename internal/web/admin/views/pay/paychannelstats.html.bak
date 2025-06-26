@@ -1,0 +1,200 @@
+<div class="row">
+    <div class="col-xs-12">
+    </div>
+</div>
+
+<div class="space-4"></div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <form class="form-inline" method="post" action="{{urlfor "PayController.PayChannelStats"}}">
+            <input type="hidden" name="status" value="{{.status}}" />
+            <div class="input-group table_filtrate">
+                时间:
+                <div class="input-group input-group-sm">
+                    <input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control"
+                        autocomplete="off" />
+                    <span class="input-group-addon">
+                        <i class="ace-icon fa fa-calendar"></i>
+                    </span>
+                </div>
+                至
+                <div class="input-group input-group-sm">
+                    <input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control"
+                        autocomplete="off" />
+                    <span class="input-group-addon">
+                        <i class="ace-icon fa fa-calendar"></i>
+                    </span>
+                </div>
+            </div>
+            <div class="input-group table_filtrate">
+                支付渠道:
+                <div class="input-group input-group-sm">
+                    <select name="channel_id" id="channel_id">
+                        {{range $k,$v := .channelList}}
+                        <option value="{{$v.Id}}" {{if eq $.channelId $v.Id}}selected{{end}}>{{$v.Name}}</option>
+                        {{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="input-group input-group-sm">
+                <button type="submit" class="btn">查询</button>
+            </div>
+        </form>
+        <div class="space-4"></div>
+
+        <div class="table-panel">
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>渠道</th>
+                        <th>总代收流水</th>
+                        <th>税率</th>
+                        <th>实际代收流水</th>
+                        <th>总代付流水</th>
+                        <th>税率</th>
+                        <th>实际代付流水</th>
+                        <th>代收税费</th>
+                        <th>代付税费</th>
+                        <th>总利润</th>
+                        <th>实际利润</th>
+                        <th>当日0点余额</th>
+                        <th>渠道记录余额</th>
+                        <!-- <th>当前余额</th> -->
+                        <th>差额</th>
+                        {{if $.isOperation }}
+				            <th>操作</th>
+				        {{end}}
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $k, $v := .list}}
+                    <tr>
+                        <td>{{date $v.SDate "Y-m-d"}}</td>
+                        <td>
+                            {{if eq $v.PayChannelName ""}}
+                                <span>全部</span>
+                            {{else}}
+                                <span>{{$v.PayChannelName}}</span>
+                            {{end}}
+                        </td>
+                        <td>{{ printf "%.2f" $v.FTotalPay}}</td>
+                        <td>
+                            {{if eq $v.PayChannelName ""}}
+                                <span>/</span>
+                            {{else}}
+                                <span>{{ printf "%.2f" $v.PayRate}}%</span>
+                            {{end}}
+                        </td>
+                        <td>{{ printf "%.2f" $v.FTotalPayAmount}}</td>
+                        <td>{{ printf "%.2f" $v.FTotalWithdraw}}</td>
+                        <td>
+                            {{if eq $v.PayChannelName ""}}
+                            <span>/</span>
+                            {{else}}
+                            <span>{{ printf "%.2f" $v.WithdrawRate}}%</span>
+                            {{end}}
+                        </td>
+                        <td>{{ printf "%.2f" $v.FTotalWithdrawAmount}}</td>
+                        <td>{{ printf "%.2f" $v.FPayHandlingFee}}</td>
+                        <td>{{ printf "%.2f" $v.FWithdrawHandlingFee}}</td>
+                        <td>
+                            {{if eq $v.IsTotal true}}
+                                <span class="green">{{ printf "%.2f" $v.TotalProfit}}</span>
+                            {{else}}
+                                <span class="red">{{ printf "%.2f" $v.TotalProfit}}</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{if eq $v.IsActual true}}
+                            <span class="green">{{ printf "%.2f" $v.ActualProfit}}</span>
+                            {{else}}
+                            <span class="red">{{ printf "%.2f" $v.ActualProfit}}</span>
+                            {{end}}
+                        </td>
+                        <td>{{ printf "%.2f" $v.FTodayBalance}}</td>
+                        <td>{{ printf "%.2f" $v.FPayChannelBalance}}</td>
+                        <!-- <td>
+                            {{if eq $v.CurrentBalance 0}}
+                                <span>/</span>
+                            {{else}}
+                                {{ printf "%.2f" $v.FCurrentBalance}}
+                            {{end}}
+                        </td> -->
+                        <td>{{ printf "%.2f" $v.FAmountDifference}}</td>
+                        {{if $.isOperation }}
+                        <td>
+                            <a style="margin-left: 5px;" data-toggle="modal" data-target="#addModal" data-id="{{$v.Date}}" data-channel="{{$v.PayChannel}}">备注</a>
+                        </td>
+				        {{end}}
+                    </tr>
+                    {{end}}
+
+                    {{if eq .count 0}}
+                    <tr>
+                        <td colspan="20">暂无记录...</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        <div class="row">
+            <div class="row-page">
+                {{if gt .count 20}}
+                {{str2html .pageBar}}
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+	<form class="form-inline ajax-form" method="post" action="{{urlfor "PayController.AddPayStatsRemark"}}">
+		<div class="modal-dialog" style="width: 800px !important;">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel">添加备注</h4>
+				</div>
+				<div class="modal-body">
+					<div id="alert-warning" class="alert alert-warning alert-dismissible hide" role="alert"></div>
+                    <input type="hidden" class="form-control" id="id" name="id" autocomplete="off">
+                    <input type="hidden" class="form-control" id="channel" name="channel" autocomplete="off">
+                    <div id="game-info">
+					</div>
+					<div class="form-group">
+						<span>备注：</span>
+                        <textarea name="remark" style="width: 600px;"  id="remark" class="form-control" rows="5" autocomplete="off" placeholder="请输入备注"></textarea>	
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn">确定</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+
+<script>
+	$(document).ready(function(){
+		$('#addModal').on('show.bs.modal', function (event) {
+			// 获取用户 ID
+			var rid = $(event.relatedTarget).data('id');
+            var cid = $(event.relatedTarget).data('channel');
+			var war = document.getElementById("alert-warning");
+			war.classList.add("hide");
+			var input = document.getElementById("id");
+			input.value = rid
+            var cinput = document.getElementById("channel");
+			cinput.value = cid
+            $.get("/admin/pay/addpaystatsremark?id=" + rid+"&"+"channelid="+cid, function(data){
+				// 将查询结果填充到模态框中
+				$('#game-info').html(data);
+			});
+		});
+	});
+</script>

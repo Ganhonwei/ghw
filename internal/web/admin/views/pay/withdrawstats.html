@@ -1,0 +1,119 @@
+<div class="row">
+	<div class="col-xs-12">
+		<form class="form-inline" method="post" action="{{urlfor "PayController.WithdrawStats"}}">
+			<input type="hidden" name="status" value="{{.status}}" />
+			<div class="input-group table_filtrate">
+				时间:
+				<div class="input-group input-group-sm">
+					<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+				至
+				<div class="input-group input-group-sm">
+					<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+					<span class="input-group-addon">
+						<i class="ace-icon fa fa-calendar"></i>
+					</span>
+				</div>
+			</div>
+			<div class="input-group table_filtrate">
+				提现金额:
+				<div class="input-group input-group-sm">
+					<input type="number" id="money_statr" min="0" name="money_statr" value="{{.money_statr}}" class="form-control number-input" autocomplete="off"/>
+				</div>
+				-
+				<div class="input-group input-group-sm">
+					<input type="number" id="money_end" min="0" name="money_end" value="{{.money_end}}" class="form-control number-input" autocomplete="off"/>
+				</div>
+			</div>
+			<div class="input-group input-group-sm">
+				<button type="submit" class="btn">查询</button>
+			</div>
+	</div>
+</div>
+</form>
+<div class="space-4"></div>
+
+<div class="table-panel">
+	<table class="table table-striped table-bordered table-hover">
+		<thead>
+			<tr>
+				<th>日期</th>
+				<th>提现总单数</th>
+				<th>提现总额</th>
+				<th>总通过单数</th>
+				<th>通过总额</th>
+				<th>人工通过单数</th>
+				<th>自动通过单数</th>
+				<th>人审占比</th>
+				<th>机审占比</th>
+				<th>转单数</th>
+				<th>转单付成单数</th>
+				<th>转单付成率</th>
+				<th>重复付款单数</th>
+				<th>重复付款多付金额</th>
+				<th>重复付款频次</th>
+				<th>被拒单数</th>
+				<th>被拒总额</th>
+				<th>被拒单均价</th>
+				<th>付成单数</th>
+				<th>付成总额</th>
+				<th>付成单均价</th>
+				<th>通过率</th>
+				<th>通过订单的付成率</th>
+				<th>平均审核时长(分)</th>
+				<th>平均滞单时长(分)</th>
+				<th>平均到账时长(分)</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{range $index, $v := .list}}
+			<tr>
+				<td>{{$v.SDate}}</td>
+				<td>{{$v.TotalNumber}}</td>
+				<td>{{printf "%.2f" $v.TotalAmount}}</td>
+				<td>{{$v.PassNumber}}</td>
+				<td>{{printf "%.2f" $v.PassAmount}}</td>
+				<td>{{$v.RgPassNumber}}</td>
+				<td>{{$v.JqPassNumber}}</td>
+				<td>{{printf "%.2f" $v.RgAuditRatio}}%</td>
+				<td>{{printf "%.2f" $v.JqAuditRatio}}%</td>
+				<td>{{$v.ZdNumber}}</td>
+				<td>{{$v.ZdSGNumber}}</td>
+				<td>{{printf "%.2f" $v.ZdRatio}}%</td>
+				<td>{{$v.CfNumber}}</td>
+				<td>{{printf "%.2f"  $v.FCfAmount}}</td>
+				<td>{{$v.CfFrequency}}</td>
+				<td>{{$v.RefuseNumber}}</td>
+				<td>{{printf "%.2f" $v.RefuseAmount}}</td>
+				<td>{{printf "%.2f" $v.RefuseAvg}}</td>
+				<td>{{$v.SuccessfulNumber}}</td>
+				<td>{{printf "%.2f" $v.SuccessfulAmount}}</td>
+				<td>{{printf "%.2f" $v.SuccessfulAvg}}</td>
+				<td>{{printf "%.2f" $v.PassRatio}}%</td>
+				<td>{{printf "%.2f" $v.SuccessfulRatio}}%</td>
+				<td>{{printf "%.2f" $v.AuditTimeAvg}}</td>
+				<td>{{printf "%.2f" $v.DelayTimeAvg}}</td>
+				<td>{{printf "%.2f" $v.ArrivalTimeAvg}}</td>
+			</tr>
+			{{end}}
+	
+			{{if eq .count 0}}
+			<tr>
+				<td colspan="20">暂无记录...</td>
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+</div>
+<div class="row">
+	<div class="row-page"> 
+		{{if gt .count 20}}
+		{{str2html .pageBar}}
+	{{end}}
+	</div>
+</div>
+</div>
+</div>

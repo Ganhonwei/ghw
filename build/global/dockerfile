@@ -1,0 +1,97 @@
+##############################################################################
+FROM golang:1.23.4 AS builder
+
+ARG BUILD_TYPE=release
+
+ENV CGO_ENABLED=0
+ENV GOPROXY=https://goproxy.cn,direct
+
+WORKDIR /build
+
+COPY go.mod go.sum ./
+COPY third_party ./third_party
+
+RUN go mod download
+
+RUN apt-get update && \
+    apt-get install -y wget xz-utils && \
+    wget https://github.com/upx/upx/releases/download/v4.2.4/upx-4.2.4-amd64_linux.tar.xz && \
+    tar -xf upx-4.2.4-amd64_linux.tar.xz && \
+    mv upx-4.2.4-amd64_linux/upx /usr/local/bin/ && \
+    rm -rf upx-4.0.2-amd64_linux*
+
+COPY . .
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    if [ "${BUILD_TYPE}" = "debug" ]; then \
+        go build -gcflags="all=-N -l" -o global ./cmd/global; \
+    else \
+        go build -ldflags "-s -w" -o global ./cmd/global; \
+    fi
+
+RUN if [ "${BUILD_TYPE}" = "debug" ]; then \
+        go install github.com/go-delve/delve/cmd/dlv@latest; \
+    else \
+        upx -1 global; \
+    fi
+##############################################################################
+FROM alpine:latest AS global
+
+ARG BUILD_TYPE=release
+ENV BUILD_TYPE=${BUILD_TYPE}
+
+RUN apk add --no-cache tzdata
+RUN apk add --no-cache curl
+
+WORKDIR /app
+
+COPY --from=builder /build/global .
+COPY build/global/entrypoint.sh /
+
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+##############################################################################
+FROM alpine:latest AS global-debug
+
+ARG BUILD_TYPE=release
+ENV BUILD_TYPE=${BUILD_TYPE}
+
+RUN apk add --no-cache tzdata
+RUN apk add --no-cache curl
+
+WORKDIR /app
+
+COPY --from=builder /build/global .
+COPY --from=builder /go/bin/dlv /usr/local/bin/dlv
+COPY build/global/entrypoint.sh /
+
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+##############################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

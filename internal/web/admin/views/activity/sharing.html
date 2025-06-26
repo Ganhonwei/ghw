@@ -1,0 +1,507 @@
+<!-- <div class="row">
+	<div class="col-xs-12">
+		
+		<a href="{{urlfor "ActivityController.Task"}}" class="btn btn-sm btn-default">
+			定时任务</a>
+		<a href="{{urlfor "ActivityController.Task1"}}" class="btn btn-sm btn-default">
+				定时任务</a>
+		<a href="{{urlfor "ActivityController.Task2"}}" class="btn btn-sm btn-default">
+					定时任务</a>
+		<a href="{{urlfor "ActivityController.Task3"}}" class="btn btn-sm btn-default">
+						定时任务</a>
+		<a href="{{urlfor "ActivityController.Task4"}}" class="btn btn-sm btn-default">
+							定时任务</a>
+		<a href="{{urlfor "ActivityController.Task5"}}" class="btn btn-sm btn-default">
+								定时任务</a>
+		<a href="{{urlfor "ActivityController.Task6"}}" class="btn btn-sm btn-default">
+									定时任务</a>
+		<a href="{{urlfor "ActivityController.Task7"}}" class="btn btn-sm btn-default">
+										定时任务</a>
+		<a href="{{urlfor "ActivityController.Task8"}}" class="btn btn-sm btn-default">
+											定时任务</a>
+	</div>
+</div>
+ -->
+
+<div class="row">
+	<div class="col-xs-12">
+		<div class="tabbable">
+			<ul class="nav nav-tabs" id="list-tab">
+				<li {{if eq .tabid 0}}class="active" {{end}}>
+					<a href="{{urlfor "ActivityController.Sharing" "tabid" 0}}">活动数据</a>
+				</li>
+				<li {{if eq .tabid 1}}class="active" {{end}}>
+					<a href="{{urlfor "ActivityController.Sharing" "tabid" 1}}">领取记录</a>
+				</li>
+				<li {{if eq .tabid 2}}class="active" {{end}}>
+					<a href="{{urlfor "ActivityController.Sharing" "tabid" 2}}">分享排名</a>
+				</li>
+				<li {{if eq .tabid 3}}class="active" {{end}}>
+					<a href="{{urlfor "ActivityController.Sharing" "tabid" 3}}">上下级设置</a>
+				</li>
+				<li {{if eq .tabid 4}}class="active" {{end}}>
+					<a href="{{urlfor "ActivityController.Sharing" "tabid" 4}}">活动配置</a>
+				</li>
+			</ul>
+			<div class="tab-content">
+				<div class="table-panel">
+					<input type="hidden" name="status" value="{{.status}}" />
+					{{if eq .tabid 0}}
+					<div>
+						<form class="form-inline" method="post" action="{{urlfor "ActivityController.Sharing" "tabid" 0}}">
+							<input type="hidden" name="status" value="{{.status}}" />
+							<div class="input-group table_filtrate">
+								时间:
+								<div class="input-group input-group-sm">
+									<input type="text" id="start_date" name="start_date" value="{{.startDate}}" class="form-control" autocomplete="off"/>
+									<span class="input-group-addon">
+										<i class="ace-icon fa fa-calendar"></i>
+									</span>
+								</div>
+								至
+								<div class="input-group input-group-sm">
+									<input type="text" id="end_date" name="end_date" value="{{.endDate}}" class="form-control" autocomplete="off"/>
+									<span class="input-group-addon">
+										<i class="ace-icon fa fa-calendar"></i>
+									</span>
+								</div>
+							</div>
+							<div class="input-group input-group-sm">
+								<button type="submit" class="btn">查询</button>
+							</div>
+						</form>
+						<div class="space-4"></div>
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>时间</th>
+									<th>邀请注册人数</th>
+									<th>流水奖励产出</th>
+									<th>首单充值奖励产出</th>
+									<th>总产出</th>
+								</tr>
+							</thead>
+							<tbody>
+								{{range $k, $v := .list}}
+								<tr>
+									<td>{{date $v.Rtime "Y-m-d"}}</td>
+									<td>{{$v.RegisterNumber}}</td>
+									<td>{{printf "%.2f" $v.WaterOutPut}}</td>
+									<td>{{printf "%.2f" $v.FirstOrderOutPut}}</td>
+									<td>{{printf "%.2f" $v.GrossOutput}}</td>
+								</tr>
+								{{end}}
+								
+								{{if eq .count 0}}
+								<tr>
+									<td colspan="20">暂无记录...</td>
+								</tr>
+								{{end}}
+							</tbody>
+						</table>
+					</div>
+					{{else if eq .tabid 1}}
+					<div table-wrap="300">
+						<form class="form-inline" method="post" action="{{urlfor "ActivityController.Sharing" "tabid" 1}}">
+							<input type="hidden" name="status" value="{{.status}}" />
+							<div class="input-group table_filtrate">
+								账号查询:
+								<div class="input-group input-group-sm">
+									<input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+										placeholder="玩家ID" autocomplete="off"/>
+									<span class="input-group-addon">
+										<i class="ace-icon fa fa-users"></i>
+									</span>
+								</div>
+							</div>
+							<div class="input-group table_filtrate">
+								<div class="input-group input-group-sm">
+									<select name="type_id" id="type_id">
+										{{range $k,$v := .typeList}}
+										<option value="{{$k}}" {{if eq $.typeId $k}}selected{{end}}>{{$v}}</option>
+										{{end}}
+									</select>
+								</div>
+							</div>
+							<div class="input-group table_filtrate">
+								渠道:
+								<div class="input-group" id="package_div">
+									<select id="selectPackage" class="selectpicker" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择渠道">
+										{{range $k,$v := .packageList}}
+										<option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+										{{end}}
+									</select>
+									<input type="hidden" id="package_id" name="package_id" value="{{.packageId}}" class="form-control" autocomplete="off" />
+								</div>
+							</div>
+							<div class="input-group input-group-sm">
+								<button type="submit" class="btn">查询</button>
+							</div>
+						</form>
+						<div class="space-4"></div>
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>领取时间</th>
+									<th>用户ID</th>
+									<th>渠道</th>
+									<th>领取类型</th>
+									<th>领取彩金</th>
+									<!-- <th>领取奖励金</th> -->
+								</tr>
+							</thead>
+							<tbody>
+								{{range $k, $v := .list}}
+								<tr>
+									<td>{{date $v.Rtime "Y-m-d H:i:s"}}</td>
+									<td>
+										<a href="{{urlfor "Statistics2Controller.PlayerData" "userid"  $v.Userid}}" target="_blank">{{$v.Userid}}</a>
+									</td>
+									<td>{{$v.BundleId}}</td>
+									<td>{{$v.GtypeName}}</td>
+									<td>{{printf "%.2f" $v.FCash}}</td>
+									<!-- <td>{{printf "%.2f" $v.FCoin}}</td> -->
+								</tr>
+								{{end}}
+								
+								{{if eq .count 0}}
+								<tr>
+									<td colspan="20">暂无记录...</td>
+								</tr>
+								{{end}}
+							</tbody>
+						</table>
+					</div>
+					{{else if eq .tabid 2}}
+					<div>
+						<form class="form-inline" method="post" action="{{urlfor "ActivityController.Sharing" "tabid" 2}}">
+							<input type="hidden" name="status" value="{{.status}}" />
+							<div class="input-group table_filtrate">
+								账号查询:
+								<div class="input-group input-group-sm">
+									<input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+										placeholder="玩家ID" autocomplete="off"/>
+									<span class="input-group-addon">
+										<i class="ace-icon fa fa-users"></i>
+									</span>
+								</div>
+							</div>
+							<div class="input-group table_filtrate">
+								<div class="input-group input-group-sm">
+									<select name="type_id" id="type_id">
+										{{range $k,$v := .typeList}}
+										<option value="{{$k}}" {{if eq $.typeId $k}}selected{{end}}>{{$v}}</option>
+										{{end}}
+									</select>
+								</div>
+							</div>
+							<div class="input-group table_filtrate">
+								渠道:
+								<div class="input-group" id="package_div">
+									<select id="selectPackage" class="selectpicker" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择渠道">
+										{{range $k,$v := .packageList}}
+										<option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+										{{end}}
+									</select>
+									<input type="hidden" id="package_id" name="package_id" value="{{.packageId}}" class="form-control" autocomplete="off" />
+								</div>
+							</div>
+							<div class="input-group input-group-sm">
+								<button type="submit" class="btn">查询</button>
+							</div>
+						</form>
+						<div class="space-4"></div>
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>用户ID</th>
+									<th>昵称</th>
+									<th>渠道</th>
+									<th>注册时间</th>
+									<th>最后登录时间</th>
+									<th>分享人数</th>
+								</tr>
+							</thead>
+							<tbody>
+								{{range $k, $v := .list}}
+								<tr>
+									<td>
+										<a href="{{urlfor "Statistics2Controller.PlayerData" "userid"  $v.Userid}}" target="_blank">{{$v.Userid}}</a>
+									</td>
+									<td>{{$v.Nickname}}</td>
+									<td>{{$v.AD_BundleId}}</td>
+									<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+									<td>
+										{{ if $v.LoginTime.IsZero }}
+										- <!-- 默认值为空时展示默认格式的时间 -->
+										{{ else }}
+										{{date $v.LoginTime "Y-m-d H:i:s"}} <!-- 不为空时展示时间字段的值 -->
+										{{ end }}
+									</td>
+									<td>{{$v.ShareCount}}</td>
+								</tr>
+								{{end}}
+								
+								{{if eq .count 0}}
+								<tr>
+									<td colspan="20">暂无记录...</td>
+								</tr>
+								{{end}}
+							</tbody>
+						</table>
+					</div>
+					{{else if eq .tabid 3}}
+					<div>
+						<form class="form-inline" method="post" action="{{urlfor "ActivityController.Sharing" "tabid" 3}}">
+							<input type="hidden" name="status" value="{{.status}}" />
+							<div class="input-group table_filtrate">
+								账号查询:
+								<div class="input-group input-group-sm">
+									<input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+										placeholder="玩家ID" autocomplete="off"/>
+									<span class="input-group-addon">
+										<i class="ace-icon fa fa-users"></i>
+									</span>
+								</div>
+							</div>
+							<div class="input-group table_filtrate">
+								<div class="input-group input-group-sm">
+									<select name="type_id" id="type_id">
+										{{range $k,$v := .typeList}}
+										<option value="{{$k}}" {{if eq $.typeId $k}}selected{{end}}>{{$v}}</option>
+										{{end}}
+									</select>
+								</div>
+							</div>
+							<div class="input-group table_filtrate">
+								渠道:
+								<div class="input-group" id="package_div">
+									<select id="selectPackage" class="selectpicker" multiple data-live-search="true" data-width="200px" style="width: 200px !important;" title="请选择渠道">
+										{{range $k,$v := .packageList}}
+										<option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>{{$v.Name}}</option>
+										{{end}}
+									</select>
+									<input type="hidden" id="package_id" name="package_id" value="{{.packageId}}" class="form-control" autocomplete="off" />
+								</div>
+							</div>
+							<div class="input-group input-group-sm">
+								<button type="submit" class="btn">查询</button>
+							</div>
+						</form>
+						<div class="space-4"></div>
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>用户ID</th>
+									<th>昵称</th>
+									<th>渠道</th>
+									<th>手机号</th>
+									<th>上级</th>
+									<th>下级</th>
+									<th>注册时间</th>
+									<th>注册IP</th>
+									<th>最后登录时间</th>
+									<th>IP地址</th>
+									<th>设备号</th>
+									{{if $.isOperation }}
+									<th>操作</th>
+									{{end}}
+								</tr>
+							</thead>
+							<tbody>
+								{{range $k, $v := .list}}
+								<tr>
+									<td>
+										<a href="{{urlfor "PlayerController.List" "userid" $v.Userid}}"  target="_blank">{{$v.Userid}}</a>
+									</td>
+									<td>{{$v.Nickname}}</td>
+									<td>{{$v.AD_BundleId}}</td>
+									<td>{{$v.Phone}}</td>
+									<td>
+										<a href="{{urlfor "PlayerController.List" "userid" $v.ShareSuperior}}" target="_blank">{{$v.ShareSuperior}}</a>
+									</td>
+									<td>
+										<div>
+											{{range $i, $o := $v.ShareBelow}}
+											<a href="{{urlfor "PlayerController.List" "userid" $i}}" target="_blank">{{$i}}</a>
+												<br/>
+											{{end}}
+										</div>
+									</td>
+									<td>{{date $v.Ctime "Y-m-d H:i:s"}}</td>
+									<td>{{$v.RegistIP}}</td>
+									<td>
+										{{ if $v.LoginTime.IsZero }}
+										- <!-- 默认值为空时展示默认格式的时间 -->
+										{{ else }}
+										{{date $v.LoginTime "Y-m-d H:i:s"}} <!-- 不为空时展示时间字段的值 -->
+										{{ end }}
+									</td>
+									<td>{{$v.LoginIP}}</td>
+									<td class="ellipsis" >
+										<div title="{{$v.AD_ADID}}" ondblclick="copyText(this)">
+											<span>{{$v.AD_ADID | StringCutOff }}</span>
+										</div>
+									</td>
+									{{if $.isOperation }}
+									<td>
+										<a style="margin-left: 5px;" data-toggle="modal" data-target="#addModal" data-id="{{$v.Userid}}" data-sup="{{$v.ShareSuperior}}">修改</a>
+									</td>
+									{{end}}
+								</tr>
+								{{end}}
+								
+								{{if eq .count 0}}
+								<tr>
+									<td colspan="20">暂无记录...</td>
+								</tr>
+								{{end}}
+							</tbody>
+						</table>
+					</div>
+					{{else if eq .tabid 4}}
+					<div>
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>分享活动ID</th>
+									<th>领奖充值要求</th>
+									<th>下线首单充值奖励</th>
+									<th>下线人数上限</th>
+									<th>第1层奖励比例</th>
+									<th>第2层奖励比例</th>
+								</tr>
+							</thead>
+							<tbody>
+								{{range $k, $v := .list}}
+								<tr>
+									<td>{{$v.Id}}</td>
+									<td>{{ printf "%.2f" $v.FRecharge}}</td>
+									<td>{{ printf "%.2f" $v.FFirstRecharge}}</td>
+									<td>{{$v.MaxPeople}}</td>
+									<td>{{ printf "%.2f" $v.FFirstReward}}</td>
+									<td>{{ printf "%.2f" $v.FSecondReward}}</td>
+								</tr>
+								{{end}}
+								
+								{{if eq .count 0}}
+								<tr>
+									<td colspan="20">暂无记录...</td>
+								</tr>
+								{{end}}
+							</tbody>
+						</table>
+					</div>
+					{{end}}
+					<div class="row">
+						<div class="row-page"> 
+							{{if gt .count 20}}
+							{{str2html .pageBar}}
+						{{end}}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+	<form class="form-inline ajax-form" method="post" action="{{urlfor "ActivityController.SuperiorEdit"}}">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel">修改</h4>
+				</div>
+				<div class="modal-body">
+					<div id="alert-warning" class="alert alert-warning alert-dismissible hide" role="alert"></div>
+					<div style="margin-bottom: 10px;">
+						<span>用户ID：</span>
+						<input readonly style="width: 150px;" type="text" class="form-control" id="curuser" name="curuser" >
+					</div>
+					<div >
+						<span>上级ID：</span>
+						<input style="width: 150px;" type="text" class="form-control" id="superioruser" name="superioruser" placeholder="请输入用户ID" autocomplete="off">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn">确定</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal -->
+	</form>
+</div>
+<script>
+	$(document).ready(function(){
+		$('#addModal').on('show.bs.modal', function (event) {
+			var war = document.getElementById("alert-warning");
+			console.log(war)
+			war.classList.add("hide");
+			// 获取用户 ID
+			var id = $(event.relatedTarget).data('id');
+			var sup = $(event.relatedTarget).data('sup');
+
+			var label = document.getElementById("curuser");
+			label.value = id
+			var input = document.getElementById("superioruser");
+			input.value=sup
+			// 发起 AJAX 请求查询用户信息
+			
+			// $.post("/admin/activity/superioredit?id=" + userId, function(data){
+			// 	// 将查询结果填充到模态框中
+			// 	$('#game-info').html(data);
+			// });
+		});
+	});
+	function copyText(event){
+		var clickedElement = event;
+		var text = clickedElement.getAttribute('title');
+
+		var textField = document.createElement('textarea');
+      textField.value = text;
+      document.body.appendChild(textField);
+      textField.select();
+      document.execCommand('copy');
+      document.body.removeChild(textField);
+      alert("设备号已成功复制！");
+	}
+
+	$(function () {
+        $("#selectPackage").on("change",function () {
+        	var selectVal = $("#selectPackage").val()
+        	console.log(selectVal);
+        	$("#package_id").val(selectVal);
+    	});
+
+        var packVal =  $("#package_id").val()
+        if (packVal != ""){
+            
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null){
+                $("#selectPackage").val(arr)
+                $.each(arr, function(index, value) {
+                    if (value == "0"){
+                        arr[index] = "全部"; 
+                    }
+                    if (value == "-"){
+                        arr[index] = "其他"; 
+                    }
+                });
+                var str = arr.join(",");
+				console.log("str:"+str)
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        }else{
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+    });
+</script>
+<script>
+	$(document).ready(function() { _StickyMemory({{$.tabid}}) });
+</script>

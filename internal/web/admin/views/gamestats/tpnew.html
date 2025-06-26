@@ -1,0 +1,969 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <div class="tabbable">
+            <ul class="nav nav-tabs" id="list-tab">
+                <li {{if eq .typeId 0}}class="active" {{end}}>
+                    <a href="{{urlfor "GameStatsController.TPNew" "typeId" 0}}">TP汇总</a>
+                </li>
+                <li {{if eq .typeId 1}}class="active" {{end}}>
+                    <a href="{{urlfor "GameStatsController.TPNew" "typeId" 1}}">TP明细</a>
+                </li>
+                <li {{if eq .typeId 2}}class="active" {{end}}>
+                    <a href="{{urlfor "GameStatsController.TPNew" "typeId" 2}}">乐极生悲</a>
+                </li>
+                <li {{if eq .typeId 3}}class="active" {{end}}>
+                    <a href="{{urlfor "GameStatsController.TPNew" "typeId" 3}}">高潮涌现</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <form class="form-inline" method="post" action="{{urlfor "GameStatsController.TPTPNew"}}">
+                            <input type="hidden" name="typeId" value="{{.typeId}}" />
+                            <input type="hidden" name="status" value="{{.status}}" />
+                            {{if ne .typeId 0}}
+                            <div class="input-group table_filtrate">
+                                账号查询:
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="userid" name="userid" value="{{.userid}}" class="form-control"
+                                        placeholder="玩家ID" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-users"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            {{end}}
+                            <div class="input-group table_filtrate">
+                                时间:
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="start_date" name="start_date" value="{{.startDate}}"
+                                        class="form-control" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                                至
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="end_date" name="end_date" value="{{.endDate}}"
+                                        class="form-control" autocomplete="off" />
+                                    <span class="input-group-addon">
+                                        <i class="ace-icon fa fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                渠道:
+                                <div class="input-group" id="package_div">
+                                    <select id="selectPackage" class="selectpicker" multiple data-live-search="true"
+                                        data-width="200px" style="width: 200px !important;" title="请选择渠道">
+                                        {{range $k,$v := .packageList}}
+                                        <option value="{{$v.Key}}" {{if eq $.packageId $v.Key}}selected{{end}}>
+                                            {{$v.Name}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="package_id" name="package_id" value="{{.packageId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <!-- <div class="input-group table_filtrate">
+                                渠道别名:
+                                <div class="input-group input-group-sm" id="alias_div">
+                                    <select id="selectAlias" class="selectpicker" multiple data-live-search="true"
+                                        data-width="100px" style="width: 100px !important;" title="请选择渠道别名">
+                                        {{range $k,$v := .packageAliasList}}
+                                        <option value="{{$v.Key}}" {{if eq $.aliasId $v.Key}}selected{{end}}>{{$v.Name}}
+                                        </option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="alias_id" name="alias_id" value="{{.aliasId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div> -->
+                            <div class="input-group table_filtrate">
+                                用户类型:
+                                <div class="input-group input-group-sm" id="utype_id_div">
+                                    <select id="sutype_id" class="selectpicker" multiple style="width: 80px;" data-live-search="true">
+                                        {{range $k,$v := .usertype}}
+                                        <option value="{{$k}}" >{{$v}}</option>
+                                        {{end}}
+                                    </select>
+                                    <input type="hidden" id="utype_id" name="utype_id" value="{{.usertypeId}}"
+                                        class="form-control" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="input-group table_filtrate">
+                                账号类型:
+                                <div class="input-group input-group-sm">
+                                    <select name="tab_id" id="tab_id" style="width: 80px;">
+                                        <option value="0" {{if eq 0 $.tabId}}selected{{end}}>全部</option>
+                                        <option value="1" {{if eq 1 $.tabId}}selected{{end}}>A类</option>
+                                        <option value="2" {{if eq 2 $.tabId}}selected{{end}}>B类</option>
+                                        <option value="3" {{if eq 3 $.tabId}}selected{{end}}>C类</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="margin-top:10px;display: inline-block;">
+                                <div class="input-group table_filtrate">
+                                    流失天数筛选:
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="lossDays1" name="lossDays1" value="{{.lossDays1}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                    至
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="lossDays2" name="lossDays2" value="{{.lossDays2}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                </div>
+                                <div class="input-group table_filtrate">
+                                    打码量筛选:
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="bets1" name="bets1" value="{{.bets1}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                    至
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="bets2" name="bets2" value="{{.bets2}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                </div>
+                                <div class="input-group table_filtrate">
+                                    局均打码量筛选:
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="betAvg1" name="betAvg1" value="{{.betAvg1}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                    至
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input min="0" type="number" id="betAvg2" name="betAvg2" value="{{.betAvg2}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                </div>
+                                <div class="input-group table_filtrate">
+                                    净赢筛选:
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input type="number" id="cash1" name="cash1" value="{{.cash1}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                    至
+                                    <div class="input-group input-group-sm" style="width:80px">
+                                        <input type="number" id="cash2" name="cash2" value="{{.cash2}}"
+                                            class="form-control" placeholder="" autocomplete="off" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <button type="submit" class="btn">查询</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="space-4"></div>
+
+                {{if eq .typeId 0}}
+                <div class="table-panel" table-wrap="330">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th stickyL>日期</th>
+                                <th>日活数量</th>
+                                <th>总玩tp人数</th>
+                                <th>新顾客玩tp人数</th>
+                                <th>老顾客玩tp人数</th>
+                                <th>玩tp人数占日活比</th>
+                                <th>新顾客玩tp占新顾客日活比</th>
+                                <th>老顾客玩tp占老顾客日活比</th>
+                                <th>总局数</th>
+                                <th>换桌频率</th>
+                                <th>人均局数</th>
+                                <th>局数中位数</th>
+                                <th>总打码</th>
+                                <th>人均打码</th>
+                                <th>局均打码量</th>
+                                <th>赢局数</th>
+                                <th>输局数</th>
+                                <th>玩家总胜率</th>
+                                <th>玩家2人局胜率</th>
+                                <th>玩家3人局胜率</th>
+                                <th>玩家4人局胜率</th>
+                                <th>玩家5人局胜率</th>
+                                <th>总返奖率</th>
+                                <th>玩家心率</th>
+                                <th>局内充触发总次数</th>
+                                <th>局内充总拉单次数</th>
+                                <th>局内充总实付次数</th>
+                                <th>赢局打码量</th>
+                                <th>输局打码量</th>
+                                <th>赢局均码量</th>
+                                <th>输局均码量</th>
+                                <th>赢局赢钱金额</th>
+                                <th>输局输钱金额</th>
+                                <th>净赢</th>
+                                <th>胜局均盈利</th>
+                                <th>败局均输额</th>
+                                <th>局均净赢</th>
+                                <th>玩家拿大豹子率</th>
+                                <th>玩家拿小豹子率</th>
+                                <th>玩家拿大顺金率</th>
+                                <th>玩家拿小顺金率</th>
+                                <th>玩家拿大顺子率</th>
+                                <th>玩家拿小顺子率</th>
+                                <th>玩家拿大同花率</th>
+                                <th>玩家拿小同花率</th>
+                                <th>玩家拿大对子率</th>
+                                <th>玩家拿小对子率</th>
+                                <th>玩家拿大高牌率</th>
+                                <th>玩家拿小高牌率</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>玩家拿大豹子胜率</th>
+                                <th>玩家拿小豹子胜率</th>
+                                <th>玩家拿大顺金胜率</th>
+                                <th>玩家拿小顺金胜率</th>
+                                <th>玩家拿大顺子胜率</th>
+                                <th>玩家拿小顺子胜率</th>
+                                <th>玩家拿大同花胜率</th>
+                                <th>玩家拿小同花胜率</th>
+                                <th>玩家拿大对子胜率</th>
+                                <th>玩家拿小对子胜率</th>
+                                <th>玩家拿大高牌胜率</th>
+                                <th>玩家拿小高牌胜率</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>冤人赢局数</th>
+                                <th>冤人输局数</th>
+                                <th>冤人赢局赢钱金额</th>
+                                <th>冤人输局输钱金额</th>
+                                <th>冤人局净赢</th>
+                                <th>偷鸡赢局数</th>
+                                <th>偷鸡输局数</th>
+                                <th>偷鸡赢钱额</th>
+                                <th>被偷鸡输钱额</th>
+                                <th>偷与被偷净赢</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--日期--> <td>{{$v.DateStr}}</td>
+                                <!--日活数量--> <td>{{$v.LoginedUsers}}</td>
+                                <!--总玩tp人数--> <td>{{$v.Players}}</td>
+                                <!--新顾客玩tp人数--> <td>{{$v.NewPlayers}}</td>
+                                <!--老顾客玩tp人数--> <td>{{$v.OldPlayers}}</td>
+                                <!--玩tp人数占日活比--> <td>{{$v.PlayerRate}}</td>
+                                <!--新顾客玩tp占新顾客日活比--> <td>{{$v.NewPlayerRate}}</td>
+                                <!--老顾客玩tp占老顾客日活比--> <td>{{$v.OldPlayerRate}}</td>
+                                <!--总局数--> <td>{{$v.AllRounds}}</td>
+                                <!--换桌频率--> <td>{{$v.HZFrequency}}</td>
+                                <!--人均局数--> <td>{{$v.PlayerRoundsAvg}}</td>
+                                <!--局数中位数--> <td>{{$v.PlayerRoundsMedian}}</td>
+                                <!--总打码--> <td>{{$v.FBets}}</td>
+                                <!--人均打码--> <td>{{$v.PlayerBetsAvg}}</td>
+                                <!--局均打码量--> <td>{{$v.RoundsBetsAvg}}</td>
+                                <!--赢局数--> <td>{{$v.WinRounds}}</td>
+                                <!--输局数--> <td>{{$v.LoseRounds}}</td>
+                                <!--玩家总胜率--> <td>{{$v.WinRate}}</td>
+                                <!--玩家2人局胜率--> <td>{{$v.WinRounds2Rate}}</td>
+                                <!--玩家3人局胜率--> <td>{{$v.WinRounds3Rate}}</td>
+                                <!--玩家4人局胜率--> <td>{{$v.WinRounds4Rate}}</td>
+                                <!--玩家5人局胜率--> <td>{{$v.WinRounds5Rate}}</td>
+                                <!--总返奖率--> <td>{{$v.RewardRate}}</td>
+                                <!--玩家心率--> <td>{{$v.PlayerHeartRate}}</td>
+                                <!--局内充触发总次数--> <td>{{$v.ChargeTimes}}</td>
+                                <!--局内充总拉单次数--> <td>{{$v.ChargeLaunchTimes}}</td>
+                                <!--局内充总实付次数--> <td>{{$v.ChargePayTimes}}</td>
+                                <!--赢局打码量--> <td>{{$v.FWinBets}}</td>
+                                <!--输局打码量--> <td>{{$v.FLoseBets}}</td>
+                                <!--赢局均码量--> <td>{{$v.FWinBetsAvg}}</td>
+                                <!--输局均码量--> <td>{{$v.FLoseBetsAvg}}</td>
+                                <!--赢局赢钱金额--> <td>{{$v.FWins}}</td>
+                                <!--输局输钱金额--> <td>{{$v.FLoses}}</td>
+                                <!--净赢--> <td>{{$v.FCash}}</td>
+                                <!--胜局均盈利--> <td>{{$v.FWinsAvg}}</td>
+                                <!--败局均输额--> <td>{{$v.FLosesAvg}}</td>
+                                <!--局均净赢--> <td>{{$v.FCashAvg}}</td>
+                                <!--玩家拿大豹子率--> <td>{{$v.Hua1Rate}}</td>
+                                <!--玩家拿小豹子率--> <td>{{$v.Hua2Rate}}</td>
+                                <!--玩家拿大顺金率--> <td>{{$v.Hua3Rate}}</td>
+                                <!--玩家拿小顺金率--> <td>{{$v.Hua4Rate}}</td>
+                                <!--玩家拿大顺子率--> <td>{{$v.Hua5Rate}}</td>
+                                <!--玩家拿小顺子率--> <td>{{$v.Hua6Rate}}</td>
+                                <!--玩家拿大同花率--> <td>{{$v.Hua7Rate}}</td>
+                                <!--玩家拿小同花率--> <td>{{$v.Hua8Rate}}</td>
+                                <!--玩家拿大对子率--> <td>{{$v.Hua9Rate}}</td>
+                                <!--玩家拿小对子率--> <td>{{$v.Hua10Rate}}</td>
+                                <!--玩家拿大高牌率--> <td>{{$v.Hua11Rate}}</td>
+                                <!--玩家拿小高牌率--> <td>{{$v.Hua12Rate}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--玩家拿大豹子胜率--> <td {{if eq $v.Hua1WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua1WinRate}}</td>
+                                <!--玩家拿小豹子胜率--> <td {{if eq $v.Hua2WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua2WinRate}}</td>
+                                <!--玩家拿大顺金胜率--> <td {{if eq $v.Hua3WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua3WinRate}}</td>
+                                <!--玩家拿小顺金胜率--> <td {{if eq $v.Hua4WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua4WinRate}}</td>
+                                <!--玩家拿大顺子胜率--> <td {{if eq $v.Hua5WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua5WinRate}}</td>
+                                <!--玩家拿小顺子胜率--> <td {{if eq $v.Hua6WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua6WinRate}}</td>
+                                <!--玩家拿大同花胜率--> <td {{if eq $v.Hua7WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua7WinRate}}</td>
+                                <!--玩家拿小同花胜率--> <td {{if eq $v.Hua8WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua8WinRate}}</td>
+                                <!--玩家拿大对子胜率--> <td {{if eq $v.Hua9WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua9WinRate}}</td>
+                                <!--玩家拿小对子胜率--> <td {{if eq $v.Hua10WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua10WinRate}}</td>
+                                <!--玩家拿大高牌胜率--> <td {{if eq $v.Hua11WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua11WinRate}}</td>
+                                <!--玩家拿小高牌胜率--> <td {{if eq $v.Hua12WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua12WinRate}}</td>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <!--冤人赢局数--> <td>{{$v.OpponentWinRound}}</td>
+                                <!--冤人输局数--> <td>{{$v.OpponentLoseRound}}</td>
+                                <!--冤人赢局赢钱金额--> <td>{{$v.FOpponentWins}}</td>
+                                <!--冤人输局输钱金额--> <td>{{$v.FOpponentLoses}}</td>
+                                <!--冤人局净赢--> <td>{{$v.FOpponentCash}}</td>
+                                <!--偷鸡赢局数--> <td>{{$v.HurtWinRound}}</td>
+                                <!--偷鸡输局数--> <td>{{$v.HurtLoseRound}}</td>
+                                <!--偷鸡赢钱额--> <td>{{$v.FHurtWins}}</td>
+                                <!--被偷鸡输钱额--> <td>{{$v.FHurtLoses}}</td>
+                                <!--偷与被偷净赢--> <td>{{$v.FHurtCash}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                {{else if eq .typeId 2}}
+                <div class="table-panel" table-wrap="330">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th stickyL>玩家id</th>
+                                <th>玩家昵称</th>
+                                <th>玩家类型</th>
+                                <th>账号类型</th>
+                                <th>注册时间</th>
+                                <th>最后登录时间</th>
+                                <th>存活天数</th>
+                                <th>流失天数</th>
+                                <th>总局数</th>
+                                <th>总打码量</th>
+                                <th>局均打码量</th>
+                                <th>策略局数</th>
+                                <th>策略局总打码</th>
+                                <th>策略局局均打码量</th>
+                                <th>玩家总胜率</th>
+                                <th>总返奖率</th>
+                                <th>玩家心率</th>
+                                <th>策略中胜率</th>
+                                <th>策略中返奖率</th>
+                                <th>极乐状态</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>被冤局数</th>
+                                <th>冤杀局数</th>
+                                <th>冤大局数</th>
+                                <th>冤逃局数</th>
+                                <th>被冤率</th>
+                                <th>冤杀率</th>
+                                <th>冤大率</th>
+                                <th>冤逃率</th>
+                                <th>冤人赢局数</th>
+                                <th>冤人输局数</th>
+                                <th>策略中冤人赢局赢钱金额</th>
+                                <th>策略中冤人输局输钱金额</th>
+                                <th>策略中冤家局胜率</th>
+                                <th>策略中冤家局净赢</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>策略中赢局打码量</th>
+                                <th>策略中输局打码量</th>
+                                <th>策略中赢局均码量</th>
+                                <th>策略中输局均码量</th>
+                                <th>策略中赢局赢钱金额</th>
+                                <th>策略中输局输钱金额</th>
+                                <th>策略中净赢</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>策略中玩家拿大豹子率</th>
+                                <th>策略中玩家拿小豹子率</th>
+                                <th>策略中玩家拿大顺金率</th>
+                                <th>策略中玩家拿小顺金率</th>
+                                <th>策略中玩家拿大顺子率</th>
+                                <th>策略中玩家拿小顺子率</th>
+                                <th>策略中玩家拿大同花率</th>
+                                <th>策略中玩家拿小同花率</th>
+                                <th>策略中玩家拿大对子率</th>
+                                <th>策略中玩家拿小对子率</th>
+                                <th>策略中玩家拿大高牌率</th>
+                                <th>策略中玩家拿小高牌率</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>策略中玩家大豹子胜率</th>
+                                <th>策略中玩家小豹子胜率</th>
+                                <th>策略中玩家大顺金胜率</th>
+                                <th>策略中玩家小顺金胜率</th>
+                                <th>策略中玩家大顺子胜率</th>
+                                <th>策略中玩家小顺子胜率</th>
+                                <th>策略中玩家大同花胜率</th>
+                                <th>策略中玩家小同花胜率</th>
+                                <th>策略中玩家大对子胜率</th>
+                                <th>策略中玩家小对子胜率</th>
+                                <th>策略中玩家大高牌胜率</th>
+                                <th>策略中玩家小高牌胜率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--序号--> <td>{{$v.No}}</td>
+                                <!--玩家id--> <td>{{$v.UserId}}</td>
+                                <!--玩家昵称--> <td>{{$v.Nickname}}</td>
+                                <!--玩家类型--> <td>{{$v.UserType}}</td>
+                                <!--账号类型--> <td>{{$v.RegistArea}}</td>
+                                <!--注册时间--> <td>{{$v.Ctime}}</td>
+                                <!--最后登录时间--> <td>{{$v.LoginTime}}</td>
+                                {{if eq $k 0}}
+                                <!--存活天数--> <td>--</td>
+                                <!--流失天数--> <td>--</td>
+                                {{else}}
+                                <!--存活天数--> <td>{{$v.LiveDays}}</td>
+                                <!--流失天数--> <td>{{$v.LoseDays}}</td>
+                                {{end}}
+                                <!--总局数--> <td>{{$v.AllRounds}}</td>
+                                <!--总打码量--> <td>{{$v.FBets}}</td>
+                                <!--局均打码量--> <td>{{$v.BetsAvg}}</td>
+                                <!--策略局数--> <td>{{$v.StrategyRounds}}</td>
+                                <!--策略局总打码--> <td>{{$v.FStrategyBets}}</td>
+                                <!--策略局局均打码量--> <td>{{$v.StrategyBetsAvg}}</td>
+                                <!--玩家总胜率--> <td>{{$v.WinRate}}</td>
+                                <!--总返奖率--> <td>{{$v.RewardRate}}</td>
+                                <!--玩家心率--> <td>{{$v.PlayerHeartRate}}</td>
+                                <!--策略中胜率--> <td>{{$v.StrategyWinRate}}</td>
+                                <!--策略中返奖率--> <td>{{$v.StrategyRewardRate}}</td>
+                                <!--极乐状态--> <td>{{$v.JlStatus}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--被冤局数--> <td>{{$v.ByRounds}}</td>
+                                <!--冤杀局数--> <td>{{$v.YsRounds}}</td>
+                                <!--冤大局数--> <td>{{$v.YdRounds}}</td>
+                                <!--冤逃局数--> <td>{{$v.YtRounds}}</td>
+                                <!--被冤率--> <td>{{$v.ByRate}}</td>
+                                <!--冤杀率--> <td>{{$v.YsRate}}</td>
+                                <!--冤大率--> <td>{{$v.YdRate}}</td>
+                                <!--冤逃率--> <td>{{$v.YtRate}}</td>
+                                <!--冤人赢局数--> <td>{{$v.OpponentWinRound}}</td>
+                                <!--冤人输局数--> <td>{{$v.OpponentLoseRound}}</td>
+                                <!--策略中冤人赢局赢钱金额--> <td>{{$v.OpponentWins}}</td>
+                                <!--策略中冤人输局输钱金额--> <td>{{$v.OpponentLoses}}</td>
+                                <!--策略中冤家局胜率--> <td>{{$v.OpponentWinRate}}</td>
+                                <!--策略中冤家局净赢--> <td>{{$v.FOpponentCash}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--策略中赢局打码量--> <td>{{$v.FStrategyWinBets}}</td>
+                                <!--策略中输局打码量--> <td>{{$v.FStrategyLoseBets}}</td>
+                                <!--策略中赢局均码量--> <td>{{$v.FStrategyWinBetAvg}}</td>
+                                <!--策略中输局均码量--> <td>{{$v.FStrategyLoseBetAvg}}</td>
+                                <!--策略中赢局赢钱金额--> <td>{{$v.FStrategyWins}}</td>
+                                <!--策略中输局输钱金额--> <td>{{$v.FStrategyLoses}}</td>
+                                <!--策略中净赢--> <td>{{$v.FStrategyCash}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--策略中玩家拿大豹子率--> <td>{{$v.Hua1Rate}}</td>
+                                <!--策略中玩家拿小豹子率--> <td>{{$v.Hua2Rate}}</td>
+                                <!--策略中玩家拿大顺金率--> <td>{{$v.Hua3Rate}}</td>
+                                <!--策略中玩家拿小顺金率--> <td>{{$v.Hua4Rate}}</td>
+                                <!--策略中玩家拿大顺子率--> <td>{{$v.Hua5Rate}}</td>
+                                <!--策略中玩家拿小顺子率--> <td>{{$v.Hua6Rate}}</td>
+                                <!--策略中玩家拿大同花率--> <td>{{$v.Hua7Rate}}</td>
+                                <!--策略中玩家拿小同花率--> <td>{{$v.Hua8Rate}}</td>
+                                <!--策略中玩家拿大对子率--> <td>{{$v.Hua9Rate}}</td>
+                                <!--策略中玩家拿小对子率--> <td>{{$v.Hua10Rate}}</td>
+                                <!--策略中玩家拿大高牌率--> <td>{{$v.Hua11Rate}}</td>
+                                <!--策略中玩家拿小高牌率--> <td>{{$v.Hua12Rate}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--策略中玩家大豹子胜率--> <td {{if eq $v.Hua1WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua1WinRate}}</td>
+                                <!--策略中玩家小豹子胜率--> <td {{if eq $v.Hua2WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua2WinRate}}</td>
+                                <!--策略中玩家大顺金胜率--> <td {{if eq $v.Hua3WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua3WinRate}}</td>
+                                <!--策略中玩家小顺金胜率--> <td {{if eq $v.Hua4WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua4WinRate}}</td>
+                                <!--策略中玩家大顺子胜率--> <td {{if eq $v.Hua5WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua5WinRate}}</td>
+                                <!--策略中玩家小顺子胜率--> <td {{if eq $v.Hua6WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua6WinRate}}</td>
+                                <!--策略中玩家大同花胜率--> <td {{if eq $v.Hua7WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua7WinRate}}</td>
+                                <!--策略中玩家小同花胜率--> <td {{if eq $v.Hua8WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua8WinRate}}</td>
+                                <!--策略中玩家大对子胜率--> <td {{if eq $v.Hua9WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua9WinRate}}</td>
+                                <!--策略中玩家大对子胜率--> <td {{if eq $v.Hua10WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua10WinRate}}</td>
+                                <!--策略中玩家大高牌胜率--> <td {{if eq $v.Hua11WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua11WinRate}}</td>
+                                <!--策略中玩家小高牌胜率--> <td {{if eq $v.Hua12WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua12WinRate}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="row-page"> 
+                        {{if gt .count 20}}
+                            {{str2html .pageBar}}
+                        {{end}}
+                    </div>
+                </div>
+                {{else if eq .typeId 3}}
+                <div class="table-panel" table-wrap="330">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th stickyL>玩家id</th>
+                                <th>玩家昵称</th>
+                                <th>玩家类型</th>
+                                <th>账号类型</th>
+                                <th>注册时间</th>
+                                <th>最后登陆时间</th>
+                                <th>存活天数</th>
+                                <th>流失天数</th>
+                                <th>总局数</th>
+                                <th>总打码</th>
+                                <th>局均打码量</th>
+                                <th>高潮局数</th>
+                                <th>高潮局总打码</th>
+                                <th>高潮局局均打码量</th>
+                                <th>高潮频率</th>
+                                <th>高潮局中胜率</th>
+                                <th>高潮局返奖率</th>
+                                <th>tp总返奖率</th>
+                                <th>tp总胜率</th>
+                                <th>玩家心率</th>
+                                <th>高潮局压制次数占比</th>
+                                <th>高潮局恩赐次数占比</th>
+                                <th>高潮局中赢局均码量</th>
+                                <th>高潮局中输局均码量</th>
+                                <th>高潮局中赢局赢钱金额</th>
+                                <th>高潮局中输局输钱金额</th>
+                                <th>高潮局中净赢</th>
+                                <th>高潮局中局内充触发次数</th>
+                                <th>高潮局中局内充拉单数</th>
+                                <th>高潮局中局内实际付款次数</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>高潮局中玩家拿大豹子率</th>
+                                <th>高潮局中玩家拿小豹子率</th>
+                                <th>高潮局中玩家拿大顺金率</th>
+                                <th>高潮局中玩家拿小顺金率</th>
+                                <th>高潮局中玩家拿大顺子率</th>
+                                <th>高潮局中玩家拿小顺子率</th>
+                                <th>高潮局中玩家拿大同花率</th>
+                                <th>高潮局中玩家拿小同花率</th>
+                                <th>高潮局中玩家拿大对子率</th>
+                                <th>高潮局中玩家拿小对子率</th>
+                                <th>高潮局中玩家拿大高牌率</th>
+                                <th>高潮局中玩家拿小高牌率</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>高潮局中玩家大豹子胜率</th>
+                                <th>高潮局中玩家小豹子胜率</th>
+                                <th>高潮局中玩家大顺金胜率</th>
+                                <th>高潮局中玩家小顺金胜率</th>
+                                <th>高潮局中玩家大顺子胜率</th>
+                                <th>高潮局中玩家小顺子胜率</th>
+                                <th>高潮局中玩家大同花胜率</th>
+                                <th>高潮局中玩家小同花胜率</th>
+                                <th>高潮局中玩家大对子胜率</th>
+                                <th>高潮局中玩家小对子胜率</th>
+                                <th>高潮局中玩家大高牌胜率</th>
+                                <th>高潮局中玩家小高牌胜率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!-- 序号 --> <td>{{$v.No}}</td>
+                                <!-- 玩家id --> <td>{{$v.UserId}}</td>
+                                <!-- 玩家昵称 --> <td>{{$v.Nickname}}</td>
+                                <!-- 玩家类型 --> <td>{{$v.UserType}}</td>
+                                <!-- 账号类型 --> <td>{{$v.RegistArea}}</td>
+                                <!-- 注册时间 --> <td>{{$v.Ctime}}</td>
+                                <!-- 最后登陆时间 --> <td>{{$v.LoginTime}}</td>
+                                {{if eq $k 0}}
+                                <!--存活天数--> <td>--</td>
+                                <!--流失天数--> <td>--</td>
+                                {{else}}
+                                <!--存活天数--> <td>{{$v.LiveDays}}</td>
+                                <!--流失天数--> <td>{{$v.LoseDays}}</td>
+                                {{end}}
+                                <!-- 总局数 --> <td>{{$v.AllRounds}}</td>
+                                <!-- 总打码 --> <td>{{$v.FBets}}</td>
+                                <!-- 局均打码量 --> <td>{{$v.BetsAvg}}</td>
+                                <!-- 高潮局数 --> <td>{{$v.StrategyRounds}}</td>
+                                <!-- 高潮局总打码 --> <td>{{$v.FStrategyBets}}</td>
+                                <!-- 高潮局局均打码量 --> <td>{{$v.StrategyBetsAvg}}</td>
+                                <!-- 高潮频率 --> <td>{{$v.StrategyRate}}</td>
+                                <!-- 高潮局中胜率 -->  <td>{{$v.StrategyWinRate}}</td>
+                                <!-- 高潮局返奖率 --> <td>{{$v.StrategyRewardRate}}</td>
+                                <!-- tp总返奖率 --> <td>{{$v.TpRebateRate}}</td>
+                                <!-- tp总胜率 --> <td>{{$v.TpWinRate}}</td>
+                                <!-- 玩家心率 --> <td>{{$v.PlayerHeartRate}}</td>
+                                <!-- 高潮局压制次数占比 --> <td>{{$v.HighRpRate}}</td>
+                                <!-- 高潮局恩赐次数占比 --> <td>{{$v.HighBpRate}}</td>
+                                <!-- 高潮局中赢局均码量 --> <td>{{$v.StrategyWinBetAvg}}</td>
+                                <!-- 高潮局中输局均码量 --> <td>{{$v.StrategyLoseBetAvg}}</td>
+                                <!-- 高潮局中赢局赢钱金额 --> <td>{{$v.FStrategyWins}}</td>
+                                <!-- 高潮局中输局输钱金额 --> <td>{{$v.FStrategyLoses}}</td>
+                                <!-- 高潮局中净赢 --> <td>{{$v.StrategyCash}}</td>
+                                <!-- 高潮局中局内充触发次数 --> <td>{{$v.HighChargeTimes}}</td>
+                                <!-- 高潮局中局内充拉单数 --> <td>{{$v.HighChargeLaunchTimes}}</td>
+                                <!-- 高潮局中局内实际付款次数 --> <td>{{$v.HighChargePayTimes}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--策略中玩家拿大豹子率--> <td>{{$v.Hua1Rate}}</td>
+                                <!--策略中玩家拿小豹子率--> <td>{{$v.Hua2Rate}}</td>
+                                <!--策略中玩家拿大顺金率--> <td>{{$v.Hua3Rate}}</td>
+                                <!--策略中玩家拿小顺金率--> <td>{{$v.Hua4Rate}}</td>
+                                <!--策略中玩家拿大顺子率--> <td>{{$v.Hua5Rate}}</td>
+                                <!--策略中玩家拿小顺子率--> <td>{{$v.Hua6Rate}}</td>
+                                <!--策略中玩家拿大同花率--> <td>{{$v.Hua7Rate}}</td>
+                                <!--策略中玩家拿小同花率--> <td>{{$v.Hua8Rate}}</td>
+                                <!--策略中玩家拿大对子率--> <td>{{$v.Hua9Rate}}</td>
+                                <!--策略中玩家拿小对子率--> <td>{{$v.Hua10Rate}}</td>
+                                <!--策略中玩家拿大高牌率--> <td>{{$v.Hua11Rate}}</td>
+                                <!--策略中玩家拿小高牌率--> <td>{{$v.Hua12Rate}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--策略中玩家大豹子胜率--> <td {{if eq $v.Hua1WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua1WinRate}}</td>
+                                <!--策略中玩家小豹子胜率--> <td {{if eq $v.Hua2WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua2WinRate}}</td>
+                                <!--策略中玩家大顺金胜率--> <td {{if eq $v.Hua3WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua3WinRate}}</td>
+                                <!--策略中玩家小顺金胜率--> <td {{if eq $v.Hua4WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua4WinRate}}</td>
+                                <!--策略中玩家大顺子胜率--> <td {{if eq $v.Hua5WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua5WinRate}}</td>
+                                <!--策略中玩家小顺子胜率--> <td {{if eq $v.Hua6WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua6WinRate}}</td>
+                                <!--策略中玩家大同花胜率--> <td {{if eq $v.Hua7WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua7WinRate}}</td>
+                                <!--策略中玩家小同花胜率--> <td {{if eq $v.Hua8WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua8WinRate}}</td>
+                                <!--策略中玩家大对子胜率--> <td {{if eq $v.Hua9WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua9WinRate}}</td>
+                                <!--策略中玩家大对子胜率--> <td {{if eq $v.Hua10WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua10WinRate}}</td>
+                                <!--策略中玩家大高牌胜率--> <td {{if eq $v.Hua11WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua11WinRate}}</td>
+                                <!--策略中玩家小高牌胜率--> <td {{if eq $v.Hua12WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua12WinRate}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="row-page"> 
+                        {{if gt .count 20}}
+                            {{str2html .pageBar}}
+                        {{end}}
+                    </div>
+                </div>
+                {{else}}
+                <!-- TP明细 -->
+                <div class="table-panel" table-wrap="330">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th stickyL>玩家id</th>
+                                <th>玩家昵称</th>
+                                <th>注册时间</th>
+                                <th>最后登录时间</th>
+                                <th>存活天数</th>
+                                <th>流失天数</th>
+                                <th>玩家类型</th>
+                                <th>账号类型</th>
+                                <th>总局数</th>
+                                <th>换桌频率</th>
+                                <th>总打码量</th>
+                                <th>局均打码量</th>
+                                <th>赢局数</th>
+                                <th>输局数</th>
+                                <th>玩家总胜率</th>
+                                <th>玩家2人局胜率</th>
+                                <th>玩家3人局胜率</th>
+                                <th>玩家4人局胜率</th>
+                                <th>玩家5人局胜率</th>
+                                <th>总返奖率</th>
+                                <th>玩家心率</th>
+                                <th>局内充触发总次数</th>
+                                <th>局内充总拉单次数</th>
+                                <th>局内充总实付次数</th>
+                                <th>赢局打码量</th>
+                                <th>输局打码量</th>
+                                <th>赢局均码量</th>
+                                <th>输局均码量</th>
+                                <th>赢局赢钱金额</th>
+                                <th>输局输钱金额</th>
+                                <th>净赢</th>
+                                <th>胜局均盈利</th>
+                                <th>败局均输额</th>
+                                <th>局均净赢</th>
+                                <th>玩家拿大豹子率</th>
+                                <th>玩家拿小豹子率</th>
+                                <th>玩家拿大顺金率</th>
+                                <th>玩家拿小顺金率</th>
+                                <th>玩家拿大顺子率</th>
+                                <th>玩家拿小顺子率</th>
+                                <th>玩家拿大同花率</th>
+                                <th>玩家拿小同花率</th>
+                                <th>玩家拿大对子率</th>
+                                <th>玩家拿小对子率</th>
+                                <th>玩家拿大高牌率</th>
+                                <th>玩家拿小高牌率</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>玩家拿大豹子胜率</th>
+                                <th>玩家拿小豹子胜率</th>
+                                <th>玩家拿大顺金胜率</th>
+                                <th>玩家拿小顺金胜率</th>
+                                <th>玩家拿大顺子胜率</th>
+                                <th>玩家拿小顺子胜率</th>
+                                <th>玩家拿大同花胜率</th>
+                                <th>玩家拿小同花胜率</th>
+                                <th>玩家拿大对子胜率</th>
+                                <th>玩家拿小对子胜率</th>
+                                <th>玩家拿大高牌胜率</th>
+                                <th>玩家拿小高牌胜率</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>冤人赢局数</th>
+                                <th>冤人输局数</th>
+                                <th>冤人赢局赢钱金额</th>
+                                <th>冤人输局输钱金额</th>
+                                <th>冤人局净赢</th>
+                                <th>偷鸡赢局数</th>
+                                <th>偷鸡输局数</th>
+                                <th>偷鸡赢钱额</th>
+                                <th>被偷鸡输钱额</th>
+                                <th>偷与被偷净赢</th>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <th>玩家总赢得最多的牌型</th>
+                                <th>玩家总输得最多的牌型</th>
+                                <th>玩家总赢得最多的牌型拿到的局数</th>
+                                <th>玩家总输得最多的牌型拿到的局数</th>
+                                <th>玩家总赢的最多的牌型总赢金额</th>
+                                <th>玩家总输得最多的牌型总输金额</th>
+                                <th>玩家总赢最多的牌型局均赢钱</th>
+                                <th>玩家总输最多牌型局均输钱</th>
+                                <th>玩家单局赢的最多的牌型</th>
+                                <th>玩家单局输的最多的牌型</th>
+                                <th>玩家单局赢最多牌型的赢钱金额</th>
+                                <th>玩家单局输最多牌型的输钱金额</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $k, $v := .list}}
+                            <tr>
+                                <!--序号--> <td>{{$v.No}}</td>
+                                <!--玩家id--> <td>{{$v.UserId}}</td>
+                                <!--玩家昵称--> <td>{{$v.Nickname}}</td>
+                                <!--注册时间--> <td>{{$v.Ctime}}</td>
+                                <!--最后登录时间--> <td>{{$v.LoginTime}}</td>
+                                {{if eq $k 0}}
+                                <!--存活天数--> <td>--</td>
+                                <!--流失天数--> <td>--</td>
+                                {{else}}
+                                <!--存活天数--> <td>{{$v.LiveDays}}</td>
+                                <!--流失天数--> <td>{{$v.LoseDays}}</td>
+                                {{end}}
+                                <!--玩家类型--> <td>{{$v.UserType}}</td>
+                                <!--账号类型--> <td>{{$v.RegistArea}}</td>
+                                <!--总局数--> <td>{{$v.AllRounds}}</td>
+                                <!--换桌频率--> <td>{{$v.HZFrequency}}</td>
+                                <!--总打码量--> <td>{{$v.FBets}}</td>
+                                <!--局均打码量--> <td>{{$v.BetsAvg}}</td>
+                                <!--赢局数--> <td>{{$v.WinRounds}}</td>
+                                <!--输局数--> <td>{{$v.LoseRounds}}</td>
+                                <!--玩家总胜率--> <td>{{$v.WinRate}}</td>
+                                <!--玩家2人局胜率--> <td>{{$v.WinRounds2Rate}}</td>
+                                <!--玩家3人局胜率--> <td>{{$v.WinRounds3Rate}}</td>
+                                <!--玩家4人局胜率--> <td>{{$v.WinRounds4Rate}}</td>
+                                <!--玩家5人局胜率--> <td>{{$v.WinRounds5Rate}}</td>
+                                <!--总返奖率--> <td>{{$v.RewardRate}}</td>
+                                <!--玩家心率--> <td>{{$v.PlayerHeartRate}}</td>
+                                <!--局内充触发总次数--> <td>{{$v.ChargeTimes}}</td>
+                                <!--局内充总拉单次数--> <td>{{$v.ChargeLaunchTimes}}</td>
+                                <!--局内充总实付次数--> <td>{{$v.ChargePayTimes}}</td>
+                                <!--赢局打码量--> <td>{{$v.FWinBets}}</td>
+                                <!--输局打码量--> <td>{{$v.FLoseBets}}</td>
+                                <!--赢局均码量--> <td>{{$v.FWinBetsAvg}}</td>
+                                <!--输局均码量--> <td>{{$v.FLoseBetsAvg}}</td>
+                                <!--赢局赢钱金额--> <td>{{$v.FWins}}</td>
+                                <!--输局输钱金额--> <td>{{$v.FLoses}}</td>
+                                <!--净赢--> <td>{{$v.FCash}}</td>
+                                <!--胜局均盈利--> <td>{{$v.FWinsAvg}}</td>
+                                <!--败局均输额--> <td>{{$v.FLosesAvg}}</td>
+                                <!--局均净赢--> <td>{{$v.FCashAvg}}</td>
+                                <!--玩家拿大豹子率--> <td>{{$v.Hua1Rate}}</td>
+                                <!--玩家拿小豹子率--> <td>{{$v.Hua2Rate}}</td>
+                                <!--玩家拿大顺金率--> <td>{{$v.Hua3Rate}}</td>
+                                <!--玩家拿小顺金率--> <td>{{$v.Hua4Rate}}</td>
+                                <!--玩家拿大顺子率--> <td>{{$v.Hua5Rate}}</td>
+                                <!--玩家拿小顺子率--> <td>{{$v.Hua6Rate}}</td>
+                                <!--玩家拿大同花率--> <td>{{$v.Hua7Rate}}</td>
+                                <!--玩家拿小同花率--> <td>{{$v.Hua8Rate}}</td>
+                                <!--玩家拿大对子率--> <td>{{$v.Hua9Rate}}</td>
+                                <!--玩家拿小对子率--> <td>{{$v.Hua10Rate}}</td>
+                                <!--玩家拿大高牌率--> <td>{{$v.Hua11Rate}}</td>
+                                <!--玩家拿小高牌率--> <td>{{$v.Hua12Rate}}</td>
+                                <td style="background-color: #b7b7b7;"></td>
+                                <!--玩家拿大豹子胜率--> <td {{if eq $v.Hua1WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua1WinRate}}</td>
+                                <!--玩家拿小豹子胜率--> <td {{if eq $v.Hua2WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua2WinRate}}</td>
+                                <!--玩家拿大顺金胜率--> <td {{if eq $v.Hua3WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua3WinRate}}</td>
+                                <!--玩家拿小顺金胜率--> <td {{if eq $v.Hua4WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua4WinRate}}</td>
+                                <!--玩家拿大顺子胜率--> <td {{if eq $v.Hua5WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua5WinRate}}</td>
+                                <!--玩家拿小顺子胜率--> <td {{if eq $v.Hua6WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua6WinRate}}</td>
+                                <!--玩家拿大同花胜率--> <td {{if eq $v.Hua7WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua7WinRate}}</td>
+                                <!--玩家拿小同花胜率--> <td {{if eq $v.Hua8WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua8WinRate}}</td>
+                                <!--玩家拿大对子胜率--> <td {{if eq $v.Hua9WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua9WinRate}}</td>
+                                <!--玩家拿小对子胜率--> <td {{if eq $v.Hua10WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua10WinRate}}</td>
+                                <!--玩家拿大高牌胜率--> <td {{if eq $v.Hua11WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua11WinRate}}</td>
+                                <!--玩家拿小高牌胜率--> <td {{if eq $v.Hua12WinRate "没拿过"}} style="color:red;" {{end}} >{{$v.Hua12WinRate}}</td>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <!--冤人赢局数--> <td>{{$v.OpponentWinRound}}</td>
+                                <!--冤人输局数--> <td>{{$v.OpponentLoseRound}}</td>
+                                <!--冤人赢局赢钱金额--> <td>{{$v.FOpponentWins}}</td>
+                                <!--冤人输局输钱金额--> <td>{{$v.FOpponentLoses}}</td>
+                                <!--冤人局净赢--> <td>{{$v.FOpponentCash}}</td>
+                                <!--偷鸡赢局数--> <td>{{$v.HurtWinRound}}</td>
+                                <!--偷鸡输局数--> <td>{{$v.HurtLoseRound}}</td>
+                                <!--偷鸡赢钱额--> <td>{{$v.FHurtWins}}</td>
+                                <!--被偷鸡输钱额--> <td>{{$v.FHurtLoses}}</td>
+                                <!--偷与被偷净赢--> <td>{{$v.FHurtCash}}</td>
+                                <th style="background-color: #b7b7b7;"></th>
+                                <!--玩家总赢得最多的牌型--> <td>{{$v.MaxWinHuaType}}</td>
+                                <!--玩家总输得最多的牌型--> <td>{{$v.MaxLoseHuaType}}</td>
+                                <!--玩家总赢得最多的牌型拿到的局数--> <td>{{$v.MaxWinHuaTypeRound}}</td>
+                                <!--玩家总输得最多的牌型拿到的局数--> <td>{{$v.MaxLoseHuaTypeRound}}</td>
+                                <!--玩家总赢的最多的牌型总赢金额--> <td>{{$v.FMaxWinHuaTypeAmount}}</td>
+                                <!--玩家总输得最多的牌型总输金额--> <td>{{$v.FMaxLoseHuaTypeAmount}}</td>
+                                <!--玩家总赢最多的牌型局均赢钱--> <td>{{$v.FMaxWinHuaTypeAmountAvg}}</td>
+                                <!--玩家总输最多牌型局均输钱--> <td>{{$v.FMaxLoseHuaTypeAmountAvg}}</td>
+                                <!--玩家单局赢的最多的牌型--> <td>{{$v.OnceMaxWinHuaType}}</td>
+                                <!--玩家单局输的最多的牌型--> <td>{{$v.OnceMaxLoseHuaType}}</td>
+                                <!--玩家单局赢最多牌型的赢钱金额--> <td>{{$v.FOnceMaxWinHuaTypeAmount}}</td>
+                                <!--玩家单局输最多牌型的输钱金额--> <td>{{$v.FOnceMaxLoseHuaTypeAmount}}</td>
+                            </tr>
+                            {{end}}
+                            {{if eq .count 0}}
+                            <tr>
+                                <td colspan="20">暂无记录...</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="row-page"> 
+                        {{if gt .count 20}}
+                            {{str2html .pageBar}}
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $("#selectPackage").on("change", function () {
+            var selectVal = $("#selectPackage").val()
+            console.log(selectVal)
+            $("#package_id").val(selectVal)
+        });
+        // 渠道别名
+        $("#selectAlias").on("change", function () {
+            var selectVal = $("#selectAlias").val()
+            console.log("selectAlias：" + selectVal)
+            $("#alias_id").val(selectVal)
+        });
+        // 用户类型
+        $("#sutype_id").on("change", function () {
+            var selectVal = $("#sutype_id").val()
+            console.log("sutype_id：" + selectVal)
+            $("#utype_id").val(selectVal)
+        });
+        // 账号类型
+        $("#selectTabId").on("change", function () {
+            var selectVal = $("#selectTabId").val()
+            $("#tab_id").val(selectVal)
+        });
+
+        // 用户类型
+        var tabIdVal = $("#tab_id").val()
+        if (tabIdVal != "") {
+            $('#selectTabId').selectpicker({ width: 200 });
+            $("#selectTabId").val(tabIdVal);
+            var str = tabIdVal == '0' ? '全部' :
+            tabIdVal == '1' ? 'A类' :
+            tabIdVal == '2' ? 'B类' :
+            tabIdVal == '3' ? 'C类' : '其他';
+            $('#tabId_div .filter-option-inner-inner').html(str);
+        } else {
+            $('#selectTabId').selectpicker({ width: 200 });
+        }
+
+        var packVal = $("#package_id").val()
+        if (packVal) {
+            var arr = packVal.split(",");
+            $('#selectPackage').selectpicker({ width: 200 });
+            if (arr != null) {
+                $("#selectPackage").val(arr)
+                $.each(arr, function (index, value) {
+                    if (value == "0") {
+                        arr[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr[index] = "其他";
+                    }
+                });
+                var str = arr.join(",");
+                $('#package_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectPackage').selectpicker({ width: 200 });
+        }
+
+        // 渠道别名
+        var aliasVal = $("#alias_id").val()
+        if (aliasVal) {
+            var arr1 = aliasVal.split(",");
+            $('#selectAlias').selectpicker({ width: 200 });
+            if (arr1 != null) {
+                console.log("arr1:" + arr1)
+                $("#selectAlias").val(arr1)
+                $.each(arr1, function (index, value) {
+                    if (value == "0") {
+                        arr1[index] = "全部";
+                    }
+                    if (value == "-") {
+                        arr1[index] = "其他";
+                    }
+                });
+                var str = arr1.join(",");
+                $('#alias_div .filter-option-inner-inner').html(str)
+            }
+        } else {
+            $('#selectAlias').selectpicker({ width: 200 });
+        }
+
+        // 用户类型
+        var utype_id = $("#utype_id").val()
+        if (utype_id == "") {
+            utype_id = "0";
+        }
+        $('#sutype_id').selectpicker({ width: 120 });
+        console.log('utype_id', utype_id)
+        var utypeids = utype_id.split(",");
+        var utypes = {0: "全部",1: "新手",3: "平民",4: "泡沫",5: "零充",6: "普充",7: "小R",8: "中R",9: "大R",10: "超大R",11: "手动",};
+        var utypeNames = [];
+        for (let i = 0; i < utypeids.length; i++) {
+            var utypeid = utypeids[i];
+            $(`#sutype_id option[value=${utypeid}]`).attr("selected", true);
+
+            var name = utypes[utypeid];
+            utypeNames.push(name);
+        }
+        var str = utypeNames.join(", ");
+        $('#utype_id_div .filter-option-inner-inner').html(str)
+    });
+
+</script>
+<style>
+    .profit{
+        color: 	#EEAD0E;
+    }
+</style>
+
+<script>
+	$(document).ready(function() { _StickyMemory({{$.typeId}}) });
+</script>

@@ -1,0 +1,442 @@
+<div id="app">
+  <div style="margin-bottom: 10px;" class="statistic-wrap">
+    <div class="stats-row-wrap">
+      <div class="stat-row-title">
+        <span >大盘历史累计</span>
+        <el-button icon="el-icon-refresh" circle size="small" @click="handleRefrash(1)" :loading="loading.history"></el-button>
+      </div>
+      <el-row :gutter="20">
+        <el-col :span="3">
+          <el-statistic :value="history.users" title="总注册用户" group-separator=","></el-statistic>
+        </el-col>
+        <el-col :span="3">
+          <el-statistic :value="history.bets" title="总打码量" group-separator=","></el-statistic>
+        </el-col>
+      </el-row>
+    </div>
+    <div class="stats-row-wrap">
+      <div class="stat-row-title">
+        <span>今日实时数据</span>
+        <el-button icon="el-icon-refresh" circle size="small" @click="handleRefrash(2)" :loading="loading.today"></el-button>
+        <!-- <span class="stat-row-icon" @click="handleRefrash(2)">
+          <i v-if="loading.today" class="el-icon-loading"></i>
+          <i v-else class="el-icon-refresh"></i>
+        </span> -->
+      </div>
+      <el-row :gutter="20">
+        <el-col :span="3">
+          <el-statistic :value="today.users" title="累计新注册" group-separator=","></el-statistic>
+        </el-col>
+        <el-col :span="3">
+          <el-statistic :value="today.pays" title="累计充值金额" group-separator="," :precision="2"></el-statistic>
+        </el-col>
+        <el-col :span="3">
+          <el-statistic :value="today.withdraws" title="累计提现金额" group-separator="," :precision="2"></el-statistic>
+        </el-col>
+        <el-col :span="3">
+          <el-statistic :value="today.bets" title="累计打码量" group-separator="," :precision="2"></el-statistic>
+        </el-col>
+      </el-row>
+    </div>
+    <div class="stats-row-wrap">
+      <el-row :gutter="20">
+        <el-col :span="3">
+          <el-statistic :value="today.onlineUsers" title="实时在线" group-separator=","></el-statistic>
+        </el-col>
+        <el-col :span="3">
+          <el-statistic :value="today.payUsers" title="累计充值人数" group-separator=","></el-statistic>
+        </el-col>
+        <el-col :span="3">
+          <el-statistic :value="today.withdrawUsers" title="累计提现人数" group-separator=","></el-statistic>
+        </el-col>
+        <el-col :span="3">
+          <el-statistic title="累计返奖率">
+            <template slot="formatter">
+              #{today.rabateRate}
+            </template>
+          </el-statistic>
+        </el-col>
+      </el-row>
+    </div>
+    <div class="stat-row-wrap">
+      <div class="stat-row-title">
+        <span >走势曲线</span>
+        <el-button icon="el-icon-refresh" circle size="small" @click="handleRefrash(3)" :loading="loading.trends"></el-button>
+        <!-- <span class="stat-row-icon" @click="handleRefrash(3)">
+          <i v-if="loading.trends" class="el-icon-loading"></i>
+          <i v-else class="el-icon-refresh"></i>
+        </span> -->
+      </div>
+      <div style="padding: 10px;">
+        <el-date-picker
+          v-model="trendsDateRange"
+          type="daterange"
+          format="yyyy-MM-dd"
+          value-format="yyyy-MM-dd"
+          size="mini"
+          style="width: 220px; height: 40px;"
+          range-separator=""
+          start-placeholder="开始日期"
+          end-placeholder="结束日期">
+        </el-date-picker>
+
+        <el-select v-model="trends" multiple placeholder="请选择" style="width: 400px; margin-left: 10px;">
+          <el-option
+            v-for="(item, i) in trendsOptions"
+            :key="i"
+            :label="item"
+            :value="i+1">
+          </el-option>
+        </el-select>
+      </div>
+      
+      <el-tabs v-model="trendTab" @tab-click="handleTrendTabClick" tab-position="top">
+        <el-tab-pane name="chart">
+          <span slot="label"><i class="el-icon-finished"></i> 折线图</span>
+          <div id="trends-stats" style="width:96%;height:500px;"></div>
+        </el-tab-pane>
+        <el-tab-pane name="table" :lazy="true">
+          <span slot="label"><i class="el-icon-tickets"></i> 表格</span>
+          <div style="text-align: right;font-size: 20px;margin: 0 20px 10px 0;">
+            <span @click="handleTrendTableDownload"><i class="el-icon-download"></i></span>
+          </div>
+          <div table-wrap="330">
+            <table class="table table-striped table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th stickyL>对比项</th>
+                  <th v-for="m in trendsMinutes" :key="m">#{m}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="s in tableSeries" :key="s.name">
+                  <td>#{s.name}</td>
+                  <td v-for="(v, i) in s.data" :key="i">#{v}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 创建 Vue 实例
+  new Vue({
+    delimiters: ['#{', '}'],
+    el: '#app',
+    data() {
+      return {
+        date: '5216',
+        loading: {
+          history: false,
+          today: false,
+          trends: false,
+        },
+        history: {
+          users: 0,
+          bets: 0,
+        },
+        today: {
+          users: 0,
+          pays: 0,
+          withdraws: 0,
+          bets: 0,
+          onlineUsers: 0,
+          payUsers: 0,
+          withdrawUsers: 0,
+          rabateRate: "0%",
+        },
+        trendTab: 'chart',
+        trendsChart: null,
+        trendsMinutes: [],
+        trendsOptions: [
+         "实时注册人数", "实时在线人数", "实时充值人数", "实时充值单数", "实时充值金额","实时提现人数", "实时提现单数", "实时提现金额",
+         "实时打码人数", "实时打码量", "累计注册人数" , "累计充值金额" ,"累计提现金额" ,"累计打码人数", "累计打码量",
+         "累计充投比", "新用户累计充投比", "老用户累计充投比"
+        ],
+        trends: [1,3],
+        trendsDateRange: ['', ''],
+        tableSeries: [],
+      };
+    },
+    created() {
+      this.initTrendsMinutes();
+
+      this.fetchHistory();
+      this.fetchToday();
+      this.fetchTrends();
+    },
+    methods: {
+      handleRefrash(rtype) {
+        if (rtype == 1) {
+          this.fetchHistory();
+        } else if (rtype == 2) {
+          this.fetchToday();
+        } else if (rtype == 3) {
+          this.fetchTrends();
+        }
+      },
+      fetchHistory() {
+        if (this.loading.history) {
+          return
+        }
+        this.loading.history = true;
+        fetchGET('/admin/statistics/livedata?action=History')
+          .then(res => {
+            // console.log('history: ', res);
+            this.history.users = res.data.users;
+            this.history.bets = res.data.bets;
+          })
+          .catch(err => {
+            this.$message({type: 'error', message: `${err.msg}`});
+          })
+          .finally(() => {
+            this.loading.history = false;
+          });
+      },
+      fetchToday() {
+        if (this.loading.today) {
+          return
+        }
+        this.loading.today = true;
+        fetchGET('/admin/statistics/livedata?action=Today')
+          .then(res => {
+            // console.log('today: ', res);
+            this.today = res.data;
+          })
+          .catch(err => {
+            this.$message({type: 'error', message: `${err.msg}`});
+          })
+          .finally(() => {
+            this.loading.today = false;
+          });
+      },
+      initTrendsMinutes() {
+        var date = new Date();
+        var today = formatDate(date);
+        date.setDate(date.getDate() - 1);
+        var yesterday = formatDate(date);
+        this.trendsDateRange = [yesterday, today];
+
+        var trendsMinutes = [];
+        for (var hour = 0; hour < 24; hour++) {
+          for (var minute = 0; minute < 60; minute++) {
+            var m = (10000 + hour*100 + minute + '');
+            var minute_time = m.slice(1,3) + ':' + m.slice(3);
+            trendsMinutes.push(minute_time);
+          }
+        }
+        this.trendsMinutes = trendsMinutes;
+        // console.log(this.trendsMinutes);
+      },
+      fetchTrends() {
+        if (this.loading.trends) {
+          return
+        }
+        this.loading.trends = true;
+        fetchPOST('/admin/statistics/livedata?action=Trend', {
+          stime: this.trendsDateRange[0], 
+          etime: this.trendsDateRange[1], 
+          trends: this.trends,
+        }).then(res => {
+            this.trendsChart = echarts.init(document.getElementById('trends-stats'));
+            this.trendsChart.clear();
+            var option = {
+              xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: this.trendsMinutes,
+              },
+              yAxis: [
+                { type: 'value', name: '数值', position: 'left' },
+                { type: 'value', name: '金额', position: 'right', axisLine: { color: '#f00' } }
+              ],
+              tooltip: {
+                trigger: 'axis'
+              },
+              legend: {
+                data: [],
+              },
+              grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+              },
+              toolbox: {
+                feature: {
+                  saveAsImage: {}
+                }
+              },
+              series: [],
+            };
+            var tableSeries = [];
+            if (res.data && res.data.length > 0) {
+              var colors = generateHighContrastColors(res.data.length);
+              for (var i = 0; i < res.data.length; i++) {
+                var data = res.data[i];
+                // var name = data.trend + '-' + data.dayTime;
+                option.legend.data.push(data.name);
+                var datas = [5,8,10,12,13,15,16,17,18].indexOf(data.trend) === -1 ? data.datas : data.datas.map(item => item.toFixed(2)) ;
+                option.series.push({
+                  data: datas,
+                  type: 'line',
+                  name: data.name,
+                  // stack: 'Total',
+                  // 1.实时注册人数、2.实时在线人数、3.实时充值人数、4.实时充值单数、5.实时充值金额、6.实时提现人数、7.实时提现单数、8.实时提现金额
+                  // 9.实时打码人数、10.实时打码量、11.累计注册人数、12.累计充值金额、13.累计提现金额、14.累计打码人数、15.累计打码量
+                  // 16.累计充投比、17.新用户累计充投比、18.老用户累计充投比
+                  yAxisIndex: [5,8,10,12,13,15].indexOf(data.trend) >= 0 ? 1 : 0,
+                });
+                tableSeries.push({
+                  name: data.name,
+                  data: datas,
+                });
+              }
+            }
+
+            // console.log('trends option: ', option);
+            this.trendsChart.setOption(option);
+            this.tableSeries = tableSeries;
+            _StickyMemory(0);
+            // this.today = res.data;
+          })
+          .catch(err => {
+            this.$message({type: 'error', message: `${err.msg}`});
+          })
+          .finally(() => {
+            this.loading.trends = false;
+          });
+      },
+      handleTrendTabClick(tab, event) {
+        if (tab.name === 'table') {
+          setTimeout(() => {
+            _StickyMemory(0);
+            // console.log('table active')
+          }, 1500);
+        }
+      },
+      handleTrendTableDownload() {
+        var headers = ['对比项'].concat(this.trendsMinutes);
+        var rows = this.tableSeries.map(s => [s.name].concat(s.data));
+        downloadCSV(headers, rows, '实时数据监控表格.csv');
+      },
+    },
+  });
+
+  //  downloadCSV(['name', 'age'], [['11', 22]], 'data.csv');
+  function downloadCSV(headers, rows, fileName) {
+    // 表头拼接
+    const header = headers.join(',') + '\n';
+    // 数据行拼接（\t防止科学计数法）
+    const body = rows.map(row => 
+      row.map(cell => `${cell}\t`).join(',')
+    ).join('\n');
+    
+    // 编码并创建链接
+    const uri = `data:text/csv;charset=utf-8,\ufeff${encodeURIComponent(header + body)}`;
+    const link = document.createElement('a');
+    link.href = uri;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+
+  function formatDate(date, separator = '-') {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return [year, month, day].join(separator);
+  }
+
+  function generateHighContrastColors(count = 20) {
+      const colors = [];
+      const step = 360 / count;
+      const saturation = 85; // 固定高饱和度
+      const minLightness = 30; // 最低亮度阈值
+      const maxLightness = 70; // 最高亮度阈值
+
+      for (let i = 0; i < count; i++) {
+          // 在 HSL 色相环上均匀分布
+          const hue = i * step;
+          // 交替生成明暗色调
+          const lightness = (i % 2 === 0) ? maxLightness : minLightness;
+          // 转换为 RGB
+          const rgb = hslToRgb(hue, saturation, lightness);
+          colors.push(`rgb(${rgb[0]},${rgb[1]},${rgb[2]})`);
+      }
+      return colors.slice(0, count);
+  }
+
+  // HSL 转 RGB 辅助函数（兼容算法）
+  function hslToRgb(h, s, l) {
+      h /= 360;
+      s /= 100;
+      l /= 100;
+      let r, g, b;
+      if (s === 0) {
+          r = g = b = l;
+      } else {
+          const hue2rgb = (p, q, t) => {
+              if (t < 0) t += 1;
+              if (t > 1) t -= 1;
+              if (t < 1/6) return p + (q - p) * 6 * t;
+              if (t < 1/2) return q;
+              if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+              return p;
+          };
+          const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+          const p = 2 * l - q;
+          r = hue2rgb(p, q, h + 1/3);
+          g = hue2rgb(p, q, h);
+          b = hue2rgb(p, q, h - 1/3);
+      }
+      return [
+          Math.round(r * 255),
+          Math.round(g * 255),
+          Math.round(b * 255)
+      ];
+  }
+ 
+</script>
+
+<style>
+  /* 修改主题色 */
+  /* :root {
+     --el-color-primary: #abbac3;
+   }
+   .el-button--primary {
+     background-color: var(--el-color-primary);
+   } */
+
+  .stats-row-wrap {
+    margin-bottom: 10px;
+  }
+  .stat-row-title {
+    font-size: 16px;
+    /* font-weight: bold; */
+    /* margin: 10px 0 10px 20px; */
+    margin: 0 0 5px 10px;
+  }
+  .stat-row-title>span:first-child  {
+    display: inline-block;
+    width: 120px;
+  }
+  /* .stat-row-icon {
+    cursor: pointer;
+    font-size: 20px;
+    color: #f9f4f4;
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    display: inline-block;
+    background-color: #b9b9b9;
+    text-align: center;
+    border-radius: 50%;
+  } */
+</style>
